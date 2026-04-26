@@ -6,6 +6,12 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
+// Second generator for standalone scripts (seed, migrations, etc.)
+// This creates a classic CJS-compatible client at the default location
+generator clientJs {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "sqlite"
 }
