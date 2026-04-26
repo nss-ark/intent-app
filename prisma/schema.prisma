@@ -1,0 +1,1005 @@
+// Intent - B2B SaaS Community Networking for Universities
+// SQLite for local dev, Postgres for production (schema-per-tenant)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS (SQLite doesn't support native enums,
+// so we use String fields with comments.)
+// When migrating to Postgres, convert these to
+// proper enum types.
+// ─────────────────────────────────────────────
+
+// ─────────────────────────────────────────────
+// CONTROL PLANE
+// ─────────────────────────────────────────────
+
+model Tenant {
+  id                String   @id @default(uuid())
+  slug              String   @unique
+  displayName       String
+  status            String   @default("TRIAL") // ACTIVE | SUSPENDED | TRIAL
+  schemaName        String?
+  settings          String?  // JSON blob
+  createdAt         DateTime @default(now())
+  contractStartDate DateTime?
+  contractEndDate   DateTime?
+  planTier          String?
+
+  users      User[]
+  adminUsers AdminUser[]
+
+  @@map("tenants")
+}
+
+model SuperAdmin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  role      String   @default("SUPER_ADMIN") // SUPER_ADMIN | SUPPORT | FINANCE | READ_ONLY
+  createdAt DateTime @default(now())
+
+  @@map("super_admins")
+}
+
+// ─────────────────────────────────────────────
+// CORE USER MODELS
+// ─────────────────────────────────────────────
+
+model User {
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  fullName              String
+  phoneNumber           String?
+  phoneVerified         Boolean   @default(false)
+  phoneVerifiedAt       DateTime?
+  photoUrl              String?
+  dateOfBirth           DateTime?
+  institutionMemberStatus String? // CURRENT_STUDENT | RECENT_GRAD | ALUMNI
+  graduationYear        Int?
+  program               String?
+  hashedPassword        String
+  tenantId              String
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
+  lastActiveAt          DateTime?
+  suspendedUntil        DateTime?
+  suspensionReason      String?
+
+  tenant                Tenant              @relation(fields: [tenantId], references: [id])
+  profile               UserProfile?
+  niches                UserNiche[]
+  education             UserEducation[]
+  experience            UserExperience[]
+  linkedinLinks         LinkedinLink[]
+  badges                UserBadge[]
+  openSignals           UserOpenSignal[]
+  savedUsers            SavedUser[]         @relation("UserSaves")
+  savedByUsers          SavedUser[]         @relation("SavedByUsers")
+  nudgesSent            Nudge[]             @relation("NudgeSender")
+  nudgesReceived        Nudge[]             @relation("NudgeReceiver")
+  nudgeRelationshipsAsSender   NudgeRelationship[] @relation("NudgeRelSender")
+  nudgeRelationshipsAsReceiver NudgeRelationship[] @relation("NudgeRelReceiver")
+  nudgeQuotas           NudgeQuota[]
+  conversationsAsA      Conversation[]      @relation("ConversationUserA")
+  conversationsAsB      Conversation[]      @relation("ConversationUserB")
+  messagesSent          Message[]
+  mentorshipsAsMentor   Mentorship[]        @relation("MentorUser")
+  mentorshipsAsMentee   Mentorship[]        @relation("MenteeUser")
+  mentorshipsProposed   Mentorship[]        @relation("MentorshipProposer")
+  surveyResponses       SurveyResponse[]
+  matchGroupMemberships MatchGroupMember[]
+  eventRsvps            EventRsvp[]
+  eventAttendances      EventAttendance[]
+  contributionEvents    ContributionEvent[]
+  gamificationState     UserGamificationState?
+  notifications         Notification[]
+  notificationPreference NotificationPreference?
+  adminUser             AdminUser?
+  auditLogsAsUser       AuditLog[]          @relation("AuditUser")
+  verificationRequests  VerificationRequest[]
+  consents              UserConsent[]
+  dataSubjectRequests   DataSubjectRequest[]
+  resourceShelfItems    ResourceShelfItem[]
+
+  @@index([tenantId])
+  @@index([email])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model UserProfile {
+  id                        String   @id @default(uuid())
+  userId                    String   @unique
+  missionStatement          String?  // "Intent" - max 200 chars
+  domainId                  String?
+  currentCity               String?
+  currentCountry            String?
+  yearsOfExperienceCached   Int?
+  profileCompletenessScore  Int      @default(0)
+  isVisibleInDiscovery      Boolean  @default(true)
+  acceptingNewConversations Boolean  @default(true)
+  weeklyInboxLimit          Int      @default(10)
+  updatedAt                 DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domain Domain? @relation(fields: [domainId], references: [id])
+
+  @@index([domainId])
+  @@index([isVisibleInDiscovery])
+  @@map("user_profiles")
+}
+
+model UserNiche {
+  userId   String
+  nicheId  String
+  position Int    // 1-3
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  niche Niche @relation(fields: [nicheId], references: [id])
+
+  @@id([userId, nicheId])
+  @@index([nicheId])
+  @@map("user_niches")
+}
+
+model UserEducation {
+  id             String  @id @default(uuid())
+  userId         String
+  programName    String
+  batchYear      Int?
+  specialization String?
+  verified       Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_education")
+}
+
+model UserExperience {
+  id                  String    @id @default(uuid())
+  userId              String
+  companyId           String?
+  freeTextCompanyName String?
+  title               String
+  startDate           DateTime?
+  endDate             DateTime?
+  isCurrent           Boolean   @default(false)
+  source              String    @default("MANUAL") // MANUAL | ADMIN_IMPORTED
+  verified            Boolean   @default(false)
+  verifiedAt          DateTime?
+  verifiedByAdminId   String?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company? @relation(fields: [companyId], references: [id])
+  verifiedByAdmin AdminUser? @relation("ExperienceVerifier", fields: [verifiedByAdminId], references: [id])
+
+  @@index([userId])
+  @@index([companyId])
+  @@map("user_experiences")
+}
+
+model LinkedinLink {
+  id                 String    @id @default(uuid())
+  userId             String
+  linkedinUrl        String
+  verifiedByAdminId  String?
+  verifiedAt         DateTime?
+  verificationStatus String    @default("UNVERIFIED") // UNVERIFIED | VERIFIED | MISMATCH
+
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verifiedByAdmin AdminUser? @relation("LinkedinVerifier", fields: [verifiedByAdminId], references: [id])
+
+  @@index([userId])
+  @@map("linkedin_links")
+}
+
+// ─────────────────────────────────────────────
+// TAXONOMY
+// ─────────────────────────────────────────────
+
+model Domain {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  displayName String
+  description String?
+  position    Int     @default(0)
+  isActive    Boolean @default(true)
+
+  profiles UserProfile[]
+
+  @@map("domains")
+}
+
+model Niche {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  displayName String
+  description String?
+  position    Int     @default(0)
+  isActive    Boolean @default(true)
+
+  userNiches UserNiche[]
+
+  @@map("niches")
+}
+
+model Company {
+  id             String  @id @default(uuid())
+  name           String
+  normalizedName String  @unique
+  logoUrl        String?
+  category       String?
+  isActive       Boolean @default(true)
+
+  experiences UserExperience[]
+
+  @@map("companies")
+}
+
+// ─────────────────────────────────────────────
+// BADGES & SIGNALS
+// ─────────────────────────────────────────────
+
+model BadgeTemplate {
+  id                   String  @id @default(uuid())
+  code                 String  @unique
+  displayNameDefault   String
+  descriptionDefault   String?
+  category             String  // IDENTITY | ACHIEVEMENT | SPECIAL
+  verificationRequired Boolean @default(false)
+  criteriaSchema       String? // JSON
+  visualTreatment      String? // JSON
+  defaultActive        Boolean @default(true)
+
+  tenantBadges TenantBadge[]
+
+  @@map("badge_templates")
+}
+
+model SignalTemplate {
+  id                   String  @id @default(uuid())
+  code                 String  @unique
+  displayNameDefault   String
+  descriptionDefault   String?
+  icon                 String?
+  signalType           String  // ASK | OFFER | MUTUAL
+  pairedTemplateId     String?
+  defaultActive        Boolean @default(true)
+
+  pairedTemplate SignalTemplate?  @relation("SignalPair", fields: [pairedTemplateId], references: [id])
+  pairedBy       SignalTemplate[] @relation("SignalPair")
+  tenantSignals  TenantSignal[]
+
+  @@map("signal_templates")
+}
+
+model TenantBadge {
+  id               String  @id @default(uuid())
+  templateId       String
+  displayName      String?
+  description      String?
+  visualTreatment  String? // JSON
+  isActive         Boolean @default(true)
+  criteriaOverride String? // JSON
+
+  template   BadgeTemplate @relation(fields: [templateId], references: [id])
+  userBadges UserBadge[]
+
+  @@index([templateId])
+  @@map("tenant_badges")
+}
+
+model TenantSignal {
+  id          String  @id @default(uuid())
+  templateId  String
+  displayName String?
+  isActive    Boolean @default(true)
+
+  template    SignalTemplate   @relation(fields: [templateId], references: [id])
+  userSignals UserOpenSignal[]
+  nudgeSignals NudgeSignal[]
+
+  @@index([templateId])
+  @@map("tenant_signals")
+}
+
+model UserBadge {
+  id                    String    @id @default(uuid())
+  userId                String
+  tenantBadgeId         String
+  awardedAt             DateTime  @default(now())
+  awardedByAdminId      String?
+  expiresAt             DateTime?
+  verificationRequestId String?
+  isVisible             Boolean   @default(true)
+
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantBadge         TenantBadge          @relation(fields: [tenantBadgeId], references: [id])
+  awardedByAdmin      AdminUser?           @relation("BadgeAwarder", fields: [awardedByAdminId], references: [id])
+  verificationRequest VerificationRequest? @relation(fields: [verificationRequestId], references: [id])
+
+  @@index([userId])
+  @@index([tenantBadgeId])
+  @@map("user_badges")
+}
+
+model UserOpenSignal {
+  userId         String
+  tenantSignalId String
+  isOpen         Boolean  @default(true)
+  updatedAt      DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantSignal TenantSignal @relation(fields: [tenantSignalId], references: [id])
+
+  @@id([userId, tenantSignalId])
+  @@map("user_open_signals")
+}
+
+// ─────────────────────────────────────────────
+// CONNECTION LAYER
+// ─────────────────────────────────────────────
+
+model SavedUser {
+  id          String   @id @default(uuid())
+  userId      String
+  savedUserId String
+  note        String?
+  createdAt   DateTime @default(now())
+
+  user      User @relation("UserSaves", fields: [userId], references: [id], onDelete: Cascade)
+  savedUser User @relation("SavedByUsers", fields: [savedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, savedUserId])
+  @@index([savedUserId])
+  @@map("saved_users")
+}
+
+model Nudge {
+  id              String    @id @default(uuid())
+  senderUserId    String
+  receiverUserId  String
+  message         String?   // max 400 chars
+  status          String    @default("SENT") // SENT | ACCEPTED | DECLINED | IGNORED | EXPIRED
+  sentAt          DateTime  @default(now())
+  respondedAt     DateTime?
+  responseMessage String?
+  expiresAt       DateTime?
+  conversationId  String?
+
+  sender       User          @relation("NudgeSender", fields: [senderUserId], references: [id])
+  receiver     User          @relation("NudgeReceiver", fields: [receiverUserId], references: [id])
+  conversation Conversation? @relation("NudgeConversation", fields: [conversationId], references: [id])
+  signals      NudgeSignal[]
+
+  @@index([senderUserId])
+  @@index([receiverUserId])
+  @@index([status])
+  @@map("nudges")
+}
+
+model NudgeSignal {
+  nudgeId        String
+  tenantSignalId String
+
+  nudge        Nudge        @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
+  tenantSignal TenantSignal @relation(fields: [tenantSignalId], references: [id])
+
+  @@id([nudgeId, tenantSignalId])
+  @@map("nudge_signals")
+}
+
+model NudgeRelationship {
+  senderUserId   String
+  receiverUserId String
+  lastNudgedAt   DateTime
+  countLifetime  Int      @default(0)
+  lastOutcome    String?  // ACCEPTED | DECLINED | IGNORED | EXPIRED
+  cooldownUntil  DateTime?
+
+  sender   User @relation("NudgeRelSender", fields: [senderUserId], references: [id])
+  receiver User @relation("NudgeRelReceiver", fields: [receiverUserId], references: [id])
+
+  @@id([senderUserId, receiverUserId])
+  @@map("nudge_relationships")
+}
+
+model NudgeQuota {
+  userId         String
+  weekStartDate  DateTime
+  nudgesSentCount Int     @default(0)
+  weeklyLimit    Int      @default(5)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, weekStartDate])
+  @@map("nudge_quotas")
+}
+
+model Conversation {
+  id                   String    @id @default(uuid())
+  userAId              String
+  userBId              String
+  createdAt            DateTime  @default(now())
+  lastMessageAt        DateTime?
+  isArchivedByA        Boolean   @default(false)
+  isArchivedByB        Boolean   @default(false)
+  originatedFromNudgeId String?
+
+  userA      User        @relation("ConversationUserA", fields: [userAId], references: [id])
+  userB      User        @relation("ConversationUserB", fields: [userBId], references: [id])
+  messages   Message[]
+  nudges     Nudge[]     @relation("NudgeConversation")
+  mentorship Mentorship?
+
+  @@unique([userAId, userBId])
+  @@index([userBId])
+  @@map("conversations")
+}
+
+model Message {
+  id                String    @id @default(uuid())
+  conversationId    String
+  senderUserId      String
+  body              String
+  sentAt            DateTime  @default(now())
+  readAtByRecipient DateTime?
+  deletedAt         DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderUserId], references: [id])
+
+  @@index([conversationId])
+  @@index([senderUserId])
+  @@map("messages")
+}
+
+model Mentorship {
+  id               String    @id @default(uuid())
+  conversationId   String    @unique
+  mentorUserId     String
+  menteeUserId     String
+  status           String    @default("PROPOSED") // PROPOSED | ACTIVE | PAUSED | COMPLETED | DECLINED
+  goal             String?
+  cadence          String?   // EVERY_2_WEEKS | MONTHLY | AD_HOC
+  proposedByUserId String
+  startedAt        DateTime?
+  endedAt          DateTime?
+  completionReason String?
+
+  conversation Conversation       @relation(fields: [conversationId], references: [id])
+  mentor       User               @relation("MentorUser", fields: [mentorUserId], references: [id])
+  mentee       User               @relation("MenteeUser", fields: [menteeUserId], references: [id])
+  proposedBy   User               @relation("MentorshipProposer", fields: [proposedByUserId], references: [id])
+  sessions     MentorshipSession[]
+
+  @@index([mentorUserId])
+  @@index([menteeUserId])
+  @@map("mentorships")
+}
+
+model MentorshipSession {
+  id                  String    @id @default(uuid())
+  mentorshipId        String
+  scheduledFor        DateTime?
+  completedAt         DateTime?
+  mentorMarkedComplete Boolean  @default(false)
+  menteeMarkedComplete Boolean  @default(false)
+  mentorReflection    String?
+  menteeReflection    String?
+  sessionNumber       Int
+
+  mentorship Mentorship @relation(fields: [mentorshipId], references: [id], onDelete: Cascade)
+
+  @@index([mentorshipId])
+  @@map("mentorship_sessions")
+}
+
+// ─────────────────────────────────────────────
+// SURVEYS & MATCHING
+// ─────────────────────────────────────────────
+
+model Survey {
+  id                   String    @id @default(uuid())
+  title                String
+  description          String?
+  createdByAdminId     String?
+  theme                String?
+  status               String    @default("DRAFT") // DRAFT | PUBLISHED | CLOSED | ARCHIVED
+  publishedAt          DateTime?
+  closesAt             DateTime?
+  targetAudienceFilter String?   // JSON
+  matchingStrategy     String?   // OVERLAP | COMPLEMENTARITY
+  matchGroupSizeMin    Int       @default(2)
+  matchGroupSizeMax    Int       @default(4)
+
+  createdByAdmin AdminUser?       @relation("SurveyCreator", fields: [createdByAdminId], references: [id])
+  questions      SurveyQuestion[]
+  responses      SurveyResponse[]
+  matchGroups    MatchGroup[]
+
+  @@map("surveys")
+}
+
+model SurveyQuestion {
+  id           String @id @default(uuid())
+  surveyId     String
+  position     Int
+  questionText String
+  questionType String // SINGLE_SELECT | MULTI_SELECT
+  isRequired   Boolean @default(true)
+
+  survey  Survey         @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  options SurveyOption[]
+  answers SurveyResponseAnswer[]
+
+  @@index([surveyId])
+  @@map("survey_questions")
+}
+
+model SurveyOption {
+  id          String @id @default(uuid())
+  questionId  String
+  position    Int
+  optionText  String
+  optionValue String?
+
+  question SurveyQuestion       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  SurveyResponseAnswer[]
+
+  @@index([questionId])
+  @@map("survey_options")
+}
+
+model SurveyResponse {
+  id          String   @id @default(uuid())
+  surveyId    String
+  userId      String
+  submittedAt DateTime @default(now())
+
+  survey  Survey                 @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  user    User                   @relation(fields: [userId], references: [id])
+  answers SurveyResponseAnswer[]
+
+  @@unique([surveyId, userId])
+  @@index([userId])
+  @@map("survey_responses")
+}
+
+model SurveyResponseAnswer {
+  id         String @id @default(uuid())
+  responseId String
+  questionId String
+  optionId   String
+
+  response SurveyResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  question SurveyQuestion @relation(fields: [questionId], references: [id])
+  option   SurveyOption   @relation(fields: [optionId], references: [id])
+
+  @@index([responseId])
+  @@index([questionId])
+  @@map("survey_response_answers")
+}
+
+model MatchGroup {
+  id                String   @id @default(uuid())
+  surveyId          String
+  computedAt        DateTime @default(now())
+  matchingSignature String?  // JSON
+  proposedMeetupId  String?
+
+  survey  Survey             @relation(fields: [surveyId], references: [id])
+  members MatchGroupMember[]
+  meetup  Meetup?
+
+  @@index([surveyId])
+  @@map("match_groups")
+}
+
+model MatchGroupMember {
+  matchGroupId String
+  userId       String
+  fitScore     Float?
+  notifiedAt   DateTime?
+  optedIn      Boolean?
+
+  matchGroup MatchGroup @relation(fields: [matchGroupId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@id([matchGroupId, userId])
+  @@map("match_group_members")
+}
+
+model Meetup {
+  id               String    @id @default(uuid())
+  matchGroupId     String    @unique
+  status           String    @default("PROPOSED") // PROPOSED | SCHEDULED | COMPLETED | CANCELLED
+  proposedDate     DateTime?
+  confirmedDate    DateTime?
+  venueId          String?
+  organizerAdminId String?
+  summaryAfter     String?
+
+  matchGroup     MatchGroup @relation(fields: [matchGroupId], references: [id])
+  venue          Venue?     @relation(fields: [venueId], references: [id])
+  organizerAdmin AdminUser? @relation("MeetupOrganizer", fields: [organizerAdminId], references: [id])
+  events         Event[]    @relation("EventFromMeetup")
+
+  @@index([venueId])
+  @@map("meetups")
+}
+
+model Venue {
+  id       String  @id @default(uuid())
+  name     String
+  address  String?
+  city     String?
+  capacity Int?
+  notes    String?
+
+  meetups Meetup[]
+  events  Event[]
+
+  @@map("venues")
+}
+
+// ─────────────────────────────────────────────
+// EVENTS
+// ─────────────────────────────────────────────
+
+model Event {
+  id                  String    @id @default(uuid())
+  title               String
+  description         String?
+  source              String    @default("ADMIN_ORGANIZED") // ADMIN_ORGANIZED | SYSTEM_GENERATED
+  eventType           String?   // PANEL | WORKSHOP | REUNION | DINNER | TALK
+  startsAt            DateTime
+  endsAt              DateTime?
+  timezone            String    @default("Asia/Kolkata")
+  venueId             String?
+  capacity            Int?
+  rsvpDeadline        DateTime?
+  isPublished         Boolean   @default(false)
+  createdByAdminId    String?
+  generatedFromMeetupId String?
+  coverImageUrl       String?
+
+  venue          Venue?            @relation(fields: [venueId], references: [id])
+  createdByAdmin AdminUser?        @relation("EventCreator", fields: [createdByAdminId], references: [id])
+  generatedFrom  Meetup?           @relation("EventFromMeetup", fields: [generatedFromMeetupId], references: [id])
+  rsvps          EventRsvp[]
+  attendances    EventAttendance[]
+
+  @@index([venueId])
+  @@index([startsAt])
+  @@index([isPublished])
+  @@map("events")
+}
+
+model EventRsvp {
+  id      String   @id @default(uuid())
+  eventId String
+  userId  String
+  status  String   @default("ATTENDING") // ATTENDING | WAITLISTED | DECLINED
+  rsvpAt  DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
+  @@index([userId])
+  @@map("event_rsvps")
+}
+
+model EventAttendance {
+  id          String   @id @default(uuid())
+  eventId     String
+  userId      String
+  checkedInAt DateTime @default(now())
+  checkedInBy String?
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
+  @@index([userId])
+  @@map("event_attendances")
+}
+
+// ─────────────────────────────────────────────
+// GAMIFICATION
+// ─────────────────────────────────────────────
+
+model ContributionEvent {
+  id                String   @id @default(uuid())
+  userId            String
+  eventType         String
+  pointsAwarded     Int      @default(0)
+  relatedEntityType String?
+  relatedEntityId   String?
+  occurredAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([occurredAt])
+  @@map("contribution_events")
+}
+
+model GamificationRule {
+  id          String    @id @default(uuid())
+  eventType   String
+  pointsValue Int
+  conditions  String?   // JSON
+  isActive    Boolean   @default(true)
+  validFrom   DateTime?
+  validUntil  DateTime?
+
+  @@map("gamification_rules")
+}
+
+model UserGamificationState {
+  userId                    String @id
+  totalPoints               Int    @default(0)
+  currentLevel              Int    @default(1)
+  levelAchievedAt           DateTime @default(now())
+  currentStreakWeeks        Int    @default(0)
+  longestStreakWeeks        Int    @default(0)
+  nudgesSentLifetime        Int    @default(0)
+  nudgesAcceptedLifetime    Int    @default(0)
+  nudgesReceivedLifetime    Int    @default(0)
+  nudgesRespondedLifetime   Int    @default(0)
+  mentorshipsAsMentorCount  Int    @default(0)
+  mentorshipsAsMenteeCount  Int    @default(0)
+  eventsAttendedCount       Int    @default(0)
+  eventsHostedCount         Int    @default(0)
+  resourcesSharedCount      Int    @default(0)
+  surveysCompletedCount     Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_gamification_states")
+}
+
+model LevelDefinition {
+  id             String  @id @default(uuid())
+  levelNumber    Int     @unique
+  displayName    String
+  pointsRequired Int
+  unlockPayload  String? // JSON
+
+  @@map("level_definitions")
+}
+
+// ─────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────
+
+model Notification {
+  id                String    @id @default(uuid())
+  userId            String
+  type              String
+  title             String
+  body              String?
+  relatedEntityType String?
+  relatedEntityId   String?
+  readAt            DateTime?
+  createdAt         DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([readAt])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  userId           String  @id
+  emailEnabled     Boolean @default(true)
+  pushEnabled      Boolean @default(true)
+  inAppEnabled     Boolean @default(true)
+  quietHoursStart  String? // HH:MM format
+  quietHoursEnd    String? // HH:MM format
+  timezone         String  @default("Asia/Kolkata")
+  digestFrequency  String  @default("IMMEDIATE") // IMMEDIATE | DAILY | WEEKLY
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+// ─────────────────────────────────────────────
+// ADMIN & AUDIT
+// ─────────────────────────────────────────────
+
+model AdminUser {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  email          String    @unique
+  name           String
+  role           String    @default("OPERATOR") // OWNER | OPERATOR | MODERATOR
+  status         String    @default("INVITED")  // ACTIVE | INVITED | SUSPENDED
+  tenantId       String?
+  invitedBy      String?
+  invitedAt      DateTime  @default(now())
+  joinedAt       DateTime?
+  suspendedUntil DateTime?
+
+  user                    User                  @relation(fields: [userId], references: [id])
+  tenant                  Tenant?               @relation(fields: [tenantId], references: [id])
+  inviter                 AdminUser?            @relation("AdminInviter", fields: [invitedBy], references: [id])
+  invitees                AdminUser[]           @relation("AdminInviter")
+  auditLogs               AuditLog[]            @relation("AuditAdmin")
+  verificationReviews     VerificationRequest[] @relation("VerificationReviewer")
+  experienceVerifications UserExperience[]      @relation("ExperienceVerifier")
+  linkedinVerifications   LinkedinLink[]        @relation("LinkedinVerifier")
+  badgesAwarded           UserBadge[]           @relation("BadgeAwarder")
+  surveysCreated          Survey[]              @relation("SurveyCreator")
+  meetupsOrganized        Meetup[]              @relation("MeetupOrganizer")
+  eventsCreated           Event[]               @relation("EventCreator")
+  dataSubjectRequests     DataSubjectRequest[]  @relation("DSRHandler")
+
+  @@index([tenantId])
+  @@map("admin_users")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  actorUserId  String?
+  actorAdminId String?
+  action       String
+  targetType   String?
+  targetId     String?
+  payload      String?  // JSON
+  occurredAt   DateTime @default(now())
+  ipAddress    String?
+  userAgent    String?
+
+  actorUser  User?      @relation("AuditUser", fields: [actorUserId], references: [id])
+  actorAdmin AdminUser? @relation("AuditAdmin", fields: [actorAdminId], references: [id])
+
+  @@index([actorUserId])
+  @@index([actorAdminId])
+  @@index([action])
+  @@index([occurredAt])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}
+
+model VerificationRequest {
+  id                String    @id @default(uuid())
+  userId            String
+  requestType       String
+  payload           String?   // JSON
+  status            String    @default("SUBMITTED") // SUBMITTED | IN_REVIEW | INFO_REQUESTED | APPROVED | REJECTED
+  submittedAt       DateTime  @default(now())
+  reviewedByAdminId String?
+  reviewedAt        DateTime?
+  adminNotes        String?
+  version           Int       @default(1)
+
+  user            User                       @relation(fields: [userId], references: [id])
+  reviewedByAdmin AdminUser?                 @relation("VerificationReviewer", fields: [reviewedByAdminId], references: [id])
+  evidenceFiles   VerificationEvidenceFile[]
+  userBadges      UserBadge[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("verification_requests")
+}
+
+model VerificationEvidenceFile {
+  id                    String    @id @default(uuid())
+  verificationRequestId String
+  fileStorageKey        String
+  fileType              String?
+  uploadedAt            DateTime  @default(now())
+  deletedAt             DateTime?
+
+  verificationRequest VerificationRequest @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+
+  @@index([verificationRequestId])
+  @@map("verification_evidence_files")
+}
+
+// ─────────────────────────────────────────────
+// DPDPA (Data Protection)
+// ─────────────────────────────────────────────
+
+model PolicyVersion {
+  id               String    @id @default(uuid())
+  policyType       String    // TERMS_OF_SERVICE | PRIVACY_POLICY | COOKIE_POLICY
+  versionNumber    Int
+  effectiveFrom    DateTime
+  effectiveTo      DateTime?
+  contentUrl       String
+  summaryOfChanges String?
+
+  consents UserConsent[]
+
+  @@unique([policyType, versionNumber])
+  @@map("policy_versions")
+}
+
+model UserConsent {
+  id              String    @id @default(uuid())
+  userId          String
+  consentType     String    // TERMS_OF_SERVICE | PRIVACY_POLICY | PROFILE_VISIBILITY | MARKETING | THIRD_PARTY
+  policyVersionId String?
+  acceptedAt      DateTime  @default(now())
+  ipAddress       String?
+  userAgent       String?
+  withdrawnAt     DateTime?
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  policyVersion PolicyVersion? @relation(fields: [policyVersionId], references: [id])
+
+  @@index([userId])
+  @@index([consentType])
+  @@map("user_consents")
+}
+
+model DataSubjectRequest {
+  id                String    @id @default(uuid())
+  userId            String
+  requestType       String    // ACCESS | ERASURE | CORRECTION | PORTABILITY | WITHDRAWAL
+  status            String    @default("SUBMITTED") // SUBMITTED | IN_PROGRESS | COMPLETED | REJECTED
+  submittedAt       DateTime  @default(now())
+  dueBy             DateTime?
+  completedAt       DateTime?
+  responsePayloadUrl String?
+  adminHandlerId    String?
+  rejectionReason   String?
+
+  user         User       @relation(fields: [userId], references: [id])
+  adminHandler AdminUser? @relation("DSRHandler", fields: [adminHandlerId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@map("data_subject_requests")
+}
+
+// ─────────────────────────────────────────────
+// RESOURCE SHELF
+// ─────────────────────────────────────────────
+
+model ResourceCategory {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  displayName String
+  isActive    Boolean @default(true)
+
+  items ResourceShelfItem[]
+
+  @@map("resource_categories")
+}
+
+model ResourceShelfItem {
+  id              String   @id @default(uuid())
+  userId          String
+  categoryId      String
+  title           String
+  description     String?
+  canSharePointer Boolean  @default(false)
+  canRunSession   Boolean  @default(false)
+  tags            String?  // JSON array
+  createdAt       DateTime @default(now())
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category ResourceCategory @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([categoryId])
+  @@map("resource_shelf_items")
+}
