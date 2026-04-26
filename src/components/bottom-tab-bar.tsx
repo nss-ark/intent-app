@@ -10,7 +10,7 @@ const tabs = [
   { href: "/inbox", label: "Inbox", icon: Mail },
   { href: "/surveys", label: "Surveys", icon: ClipboardList },
   { href: "/saved", label: "Saved", icon: Bookmark },
-  { href: "/profile", label: "Profile", icon: User },
+  { href: "/my-profile", label: "Profile", icon: User },
 ] as const;
 
 export function BottomTabBar() {
