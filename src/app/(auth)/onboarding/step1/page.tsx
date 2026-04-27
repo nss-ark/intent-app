@@ -54,10 +54,13 @@ export default function OnboardingStep1() {
   // Load saved data
   useEffect(() => {
     try {
-      const signup = JSON.parse(localStorage.getItem("intent_signup") || "{}");
+      // Pre-fill fullName from sessionStorage signup data
+      const signup = JSON.parse(sessionStorage.getItem("intent_signup") || "{}");
       if (signup.fullName) setFullName(signup.fullName);
 
+      // Restore step1 progress from localStorage
       const step1 = JSON.parse(localStorage.getItem("intent_step1") || "{}");
+      if (step1.fullName) setFullName(step1.fullName);
       if (step1.program) setProgram(step1.program);
       if (step1.classYear) setClassYear(step1.classYear);
       if (step1.specialization) setSpecialization(step1.specialization);

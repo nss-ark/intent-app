@@ -12,8 +12,9 @@ import {
   MessageSquare,
   Eye,
   Star,
+  Loader2,
 } from "lucide-react";
-import { currentUser } from "@/data/sample-members";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { AvatarPlaceholder } from "@/components/avatar-placeholder";
 import { Button } from "@/components/ui/button";
 
@@ -111,7 +112,62 @@ function ActivityRow({
 /* ------------------------------------------------------------------ */
 
 export default function MyProfilePage() {
-  const user = currentUser;
+  const { data: user, isLoading, isError } = useCurrentUser();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--intent-bg)]">
+        <Loader2 className="size-8 animate-spin text-[var(--intent-amber)]" />
+      </div>
+    );
+  }
+
+  if (isError || !user) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--intent-bg)]">
+        <p className="text-[var(--intent-text-secondary)]">
+          Could not load your profile
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => window.location.reload()}
+          className="rounded-xl"
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  /* Derive display values from API data */
+  const location = [user.profile?.currentCity, user.profile?.currentCountry]
+    .filter(Boolean)
+    .join(", ");
+
+  const currentExp = user.experience.find((e) => e.isCurrent);
+  const subtitle = [
+    user.program,
+    user.graduationYear ? `Class of ${user.graduationYear}` : null,
+    location || null,
+  ]
+    .filter(Boolean)
+    .join(" \u00B7 ");
+
+  const gamification = user.gamificationState;
+  const totalPoints = gamification?.totalPoints ?? 0;
+  const currentLevel = gamification?.currentLevel ?? 0;
+  const nudgesSent = gamification?.nudgesSentLifetime ?? 0;
+
+  /* Categorize open signals */
+  const askSignals = user.openSignals.filter(
+    (s) => s.isOpen && s.tenantSignal.template.signalType === "ASK"
+  );
+  const offerSignals = user.openSignals.filter(
+    (s) => s.isOpen && s.tenantSignal.template.signalType === "OFFER"
+  );
+  const mutualSignals = user.openSignals.filter(
+    (s) => s.isOpen && s.tenantSignal.template.signalType === "MUTUAL"
+  );
 
   return (
     <div className="min-h-screen bg-[var(--intent-bg)]">
@@ -140,12 +196,7 @@ export default function MyProfilePage() {
         <div className="rounded-2xl bg-white p-6 shadow-[var(--card-shadow)]">
           {/* Avatar with camera overlay */}
           <div className="relative mx-auto w-fit">
-            <AvatarPlaceholder
-              name={user.fullName}
-              gradientFrom={user.gradientFrom}
-              gradientTo={user.gradientTo}
-              size={96}
-            />
+            <AvatarPlaceholder name={user.fullName} size={96} />
             <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[var(--intent-amber)] shadow-sm">
               <Camera size={14} className="text-white" />
             </div>
@@ -156,7 +207,7 @@ export default function MyProfilePage() {
             {user.fullName}
           </h2>
           <p className="mt-1 text-center text-[13px] text-[var(--intent-text-secondary)]">
-            {user.program} Class of {user.classYear} &middot; {user.city}
+            {subtitle}
           </p>
 
           {/* Edit profile button */}
@@ -174,9 +225,15 @@ export default function MyProfilePage() {
 
         {/* Quick stats */}
         <div className="mt-4 flex gap-3">
-          <StatCard value="12" label="Connections" />
-          <StatCard value="Level 2" label="Contributor" />
-          <StatCard value="47" label="Points" />
+          <StatCard
+            value={String(user.niches.length + user.badges.length)}
+            label="Connections"
+          />
+          <StatCard
+            value={currentLevel > 0 ? `Level ${currentLevel}` : "—"}
+            label="Contributor"
+          />
+          <StatCard value={String(totalPoints)} label="Points" />
         </div>
 
         {/* Your Intent */}
@@ -186,7 +243,10 @@ export default function MyProfilePage() {
           </h3>
           <div className="rounded-2xl bg-[var(--intent-amber-subtle)]/60 p-4">
             <p className="text-[14px] italic leading-relaxed text-[var(--intent-text-primary)]">
-              &ldquo;{user.intent}&rdquo;
+              &ldquo;
+              {user.profile?.missionStatement ||
+                "No mission statement yet. Tell the community what you are looking for."}
+              &rdquo;
             </p>
             <Link
               href="/my-profile/edit"
@@ -205,20 +265,20 @@ export default function MyProfilePage() {
           <div className="divide-y divide-[var(--intent-text-tertiary)] overflow-hidden rounded-2xl bg-white shadow-[var(--card-shadow)]">
             <OpenToRow
               icon={ArrowDown}
-              count={3}
-              label="Asks"
+              count={askSignals.length}
+              label={askSignals.length === 1 ? "Ask" : "Asks"}
               color="amber"
             />
             <OpenToRow
               icon={ArrowUp}
-              count={1}
-              label="Offer"
+              count={offerSignals.length}
+              label={offerSignals.length === 1 ? "Offer" : "Offers"}
               color="green"
             />
             <OpenToRow
               icon={ArrowLeftRight}
-              count={2}
-              label="Mutuals"
+              count={mutualSignals.length}
+              label={mutualSignals.length === 1 ? "Mutual" : "Mutuals"}
               color="neutral"
             />
           </div>
@@ -233,17 +293,17 @@ export default function MyProfilePage() {
             <ActivityRow
               icon={MessageSquare}
               label="Nudges sent"
-              value="8"
+              value={String(nudgesSent)}
             />
             <ActivityRow
               icon={Eye}
               label="Profile views"
-              value="34 this week"
+              value="—"
             />
             <ActivityRow
               icon={Star}
               label="Endorsements"
-              value="5"
+              value={String(user.badges.length)}
             />
           </div>
         </div>

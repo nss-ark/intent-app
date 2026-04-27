@@ -10,77 +10,124 @@ import {
   ChevronRight,
   Plus,
   TrendingUp,
+  Loader2,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/hooks/use-api";
+import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 
-/* ── Static data ──────────────────────────────────────────────────────── */
+/* ── Types ───────────────────────────────────────────────────────────── */
 
-const metrics = [
-  {
-    label: "Active Members",
-    value: "1,247",
-    change: "+24 this week",
-    changeColor: "text-[var(--intent-green)]",
-    icon: Users,
-  },
-  {
-    label: "Nudges Sent",
-    value: "3,891",
-    change: "+412 this week",
-    changeColor: "text-[var(--intent-text-secondary)]",
-    icon: Send,
-  },
-  {
-    label: "Meetups Held",
-    value: "23",
-    change: "+5 this week",
-    changeColor: "text-[var(--intent-text-secondary)]",
-    icon: Coffee,
-  },
-  {
-    label: "Pending Verifications",
-    value: "12",
-    change: "Review needed",
-    changeColor: "text-[var(--intent-amber)]",
-    icon: ShieldAlert,
-  },
-];
+interface DashboardMetrics {
+  activeMembers: number;
+  activeMembersChange: number;
+  nudgesSent: number;
+  nudgesSentChange: number;
+  meetupsHeld: number;
+  meetupsHeldChange: number;
+  pendingVerifications: number;
+}
 
-const pendingVerifications = [
-  {
-    id: "1",
-    name: "Karthik Subramanyam",
-    photo: "KS",
-    badge: "Founder Badge",
-    type: "Pre-revenue",
-  },
-  {
-    id: "2",
-    name: "Sneha Ramaswamy",
-    photo: "SR",
-    badge: "Company Verification",
-    type: "Sequoia",
-  },
-  {
-    id: "3",
-    name: "Aditi Bhatnagar",
-    photo: "AB",
-    badge: "Domain Expert",
-    type: "Badge",
-  },
-];
+interface Verification {
+  id: string;
+  userName: string;
+  userInitials: string;
+  badgeName: string;
+  badgeType: string;
+}
 
-const recentActivity = [
-  { text: "Riya Mehrotra completed her profile", time: "2 min ago" },
-  { text: "Survey 'Career Goals 2026' received 84 responses", time: "15 min ago" },
-  { text: "Pranav Bhattacharya requested Founder Badge", time: "1h ago" },
-  { text: "Batch import: 48 new members added from CSV", time: "3h ago" },
-  { text: "Event 'ISB Connect Delhi' published", time: "5h ago" },
-];
+interface RecentActivityItem {
+  id: string;
+  text: string;
+  time: string;
+}
 
-/* ── Component ────────────────────────────────────────────────────────── */
+/* ── Fallback static data (used while API loads or on error) ─────── */
+
+const fallbackMetrics: DashboardMetrics = {
+  activeMembers: 0,
+  activeMembersChange: 0,
+  nudgesSent: 0,
+  nudgesSentChange: 0,
+  meetupsHeld: 0,
+  meetupsHeldChange: 0,
+  pendingVerifications: 0,
+};
+
+/* ── Component ───────────────────────────────────────────────────────── */
 
 export default function AdminDashboardPage() {
+  const {
+    data: dashboard,
+    isLoading: dashboardLoading,
+    error: dashboardError,
+  } = useQuery<DashboardMetrics>({
+    queryKey: ["admin-dashboard"],
+    queryFn: () => apiFetch("/api/admin/dashboard"),
+  });
+
+  const {
+    data: verifications,
+    isLoading: verificationsLoading,
+  } = useQuery<Verification[]>({
+    queryKey: ["admin-verifications"],
+    queryFn: () => apiFetch("/api/admin/verifications"),
+  });
+
+  const {
+    data: activityData,
+    isLoading: activityLoading,
+  } = useQuery<RecentActivityItem[]>({
+    queryKey: ["admin-activity"],
+    queryFn: () => apiFetch("/api/admin/activity"),
+  });
+
+  const metrics = dashboard ?? fallbackMetrics;
+  const pendingVerifications = verifications ?? [];
+  const recentActivity = activityData ?? [];
+
+  const metricTiles = [
+    {
+      label: "Active Members",
+      value: metrics.activeMembers.toLocaleString(),
+      change: metrics.activeMembersChange > 0
+        ? `+${metrics.activeMembersChange} this week`
+        : "No change",
+      changeColor: metrics.activeMembersChange > 0
+        ? "text-[var(--intent-green)]"
+        : "text-[var(--intent-text-secondary)]",
+      icon: Users,
+    },
+    {
+      label: "Nudges Sent",
+      value: metrics.nudgesSent.toLocaleString(),
+      change: metrics.nudgesSentChange > 0
+        ? `+${metrics.nudgesSentChange} this week`
+        : "No change",
+      changeColor: "text-[var(--intent-text-secondary)]",
+      icon: Send,
+    },
+    {
+      label: "Meetups Held",
+      value: metrics.meetupsHeld.toLocaleString(),
+      change: metrics.meetupsHeldChange > 0
+        ? `+${metrics.meetupsHeldChange} this week`
+        : "No change",
+      changeColor: "text-[var(--intent-text-secondary)]",
+      icon: Coffee,
+    },
+    {
+      label: "Pending Verifications",
+      value: String(metrics.pendingVerifications),
+      change: metrics.pendingVerifications > 0 ? "Review needed" : "All clear",
+      changeColor: metrics.pendingVerifications > 0
+        ? "text-[var(--intent-amber)]"
+        : "text-[var(--intent-green)]",
+      icon: ShieldAlert,
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-[1000px] px-4 py-6 md:px-8 md:py-8">
       {/* Header */}
@@ -115,36 +162,51 @@ export default function AdminDashboardPage() {
         </p>
       </div>
 
+      {/* Error banner */}
+      {dashboardError && !dashboardLoading && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm text-red-700">
+            Could not load dashboard metrics. You may not have admin access.
+          </p>
+        </div>
+      )}
+
       {/* Metric tiles - 2x2 grid */}
       <div className="mb-8 grid grid-cols-2 gap-3 md:gap-4">
-        {metrics.map((metric) => {
-          const Icon = metric.icon;
-          return (
-            <div
-              key={metric.label}
-              className="rounded-xl border border-[var(--intent-text-tertiary)] bg-white p-4 md:p-5"
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-wider text-[var(--intent-text-secondary)]">
-                  {metric.label}
-                </span>
-                <Icon
-                  className="size-4 text-[var(--intent-text-secondary)]"
-                  strokeWidth={1.5}
-                />
+        {dashboardLoading ? (
+          <div className="col-span-2 flex items-center justify-center py-12">
+            <Loader2 className="size-6 animate-spin text-[var(--intent-amber)]" />
+          </div>
+        ) : (
+          metricTiles.map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <div
+                key={metric.label}
+                className="rounded-xl border border-[var(--intent-text-tertiary)] bg-white p-4 md:p-5"
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wider text-[var(--intent-text-secondary)]">
+                    {metric.label}
+                  </span>
+                  <Icon
+                    className="size-4 text-[var(--intent-text-secondary)]"
+                    strokeWidth={1.5}
+                  />
+                </div>
+                <p className="font-heading text-2xl font-semibold text-[var(--intent-text-primary)] md:text-3xl">
+                  {metric.value}
+                </p>
+                <p className={`mt-1 flex items-center gap-1 text-xs font-medium ${metric.changeColor}`}>
+                  {metric.change.startsWith("+") && (
+                    <TrendingUp className="size-3" />
+                  )}
+                  {metric.change}
+                </p>
               </div>
-              <p className="font-heading text-2xl font-semibold text-[var(--intent-text-primary)] md:text-3xl">
-                {metric.value}
-              </p>
-              <p className={`mt-1 flex items-center gap-1 text-xs font-medium ${metric.changeColor}`}>
-                {metric.change.startsWith("+") && (
-                  <TrendingUp className="size-3" />
-                )}
-                {metric.change}
-              </p>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {/* Pending Verifications */}
@@ -160,34 +222,46 @@ export default function AdminDashboardPage() {
             View all
           </Link>
         </div>
-        <div className="space-y-2">
-          {pendingVerifications.map((v) => (
-            <div
-              key={v.id}
-              className="flex items-center gap-3 rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-4 py-3"
-            >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--intent-amber-subtle)] text-xs font-semibold text-[var(--intent-amber)]">
-                {v.photo}
+        {verificationsLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="size-6 animate-spin text-[var(--intent-amber)]" />
+          </div>
+        ) : pendingVerifications.length === 0 ? (
+          <div className="rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-4 py-6 text-center">
+            <p className="text-sm text-[var(--intent-text-secondary)]">
+              No pending verifications
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {pendingVerifications.map((v) => (
+              <div
+                key={v.id}
+                className="flex items-center gap-3 rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-4 py-3"
+              >
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--intent-amber-subtle)] text-xs font-semibold text-[var(--intent-amber)]">
+                  {v.userInitials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--intent-text-primary)] truncate">
+                    {v.userName}
+                  </p>
+                  <p className="text-xs text-[var(--intent-text-secondary)]">
+                    {v.badgeName} &middot; {v.badgeType}
+                  </p>
+                </div>
+                <Link href={`/admin/verify/${v.id}`}>
+                  <Button
+                    variant="outline"
+                    className="h-8 rounded-lg border-[var(--intent-amber)] text-xs font-medium text-[var(--intent-amber)] hover:bg-[var(--intent-amber-subtle)]"
+                  >
+                    Review
+                  </Button>
+                </Link>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--intent-text-primary)] truncate">
-                  {v.name}
-                </p>
-                <p className="text-xs text-[var(--intent-text-secondary)]">
-                  {v.badge} &middot; {v.type}
-                </p>
-              </div>
-              <Link href={`/admin/verify/${v.id}`}>
-                <Button
-                  variant="outline"
-                  className="h-8 rounded-lg border-[var(--intent-amber)] text-xs font-medium text-[var(--intent-amber)] hover:bg-[var(--intent-amber-subtle)]"
-                >
-                  Review
-                </Button>
-              </Link>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Recent Activity */}
@@ -195,25 +269,37 @@ export default function AdminDashboardPage() {
         <h2 className="mb-3 font-heading text-base font-semibold text-[var(--intent-text-primary)]">
           Recent activity
         </h2>
-        <div className="rounded-xl border border-[var(--intent-text-tertiary)] bg-white">
-          {recentActivity.map((item, i) => (
-            <div
-              key={i}
-              className={`flex items-start justify-between px-4 py-3 ${
-                i < recentActivity.length - 1
-                  ? "border-b border-[var(--intent-text-tertiary)]"
-                  : ""
-              }`}
-            >
-              <p className="text-sm text-[var(--intent-text-primary)]">
-                {item.text}
-              </p>
-              <span className="ml-3 shrink-0 text-xs text-[var(--intent-text-secondary)]">
-                {item.time}
-              </span>
-            </div>
-          ))}
-        </div>
+        {activityLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="size-6 animate-spin text-[var(--intent-amber)]" />
+          </div>
+        ) : recentActivity.length === 0 ? (
+          <div className="rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-4 py-6 text-center">
+            <p className="text-sm text-[var(--intent-text-secondary)]">
+              No recent activity
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-[var(--intent-text-tertiary)] bg-white">
+            {recentActivity.map((item, i) => (
+              <div
+                key={item.id}
+                className={`flex items-start justify-between px-4 py-3 ${
+                  i < recentActivity.length - 1
+                    ? "border-b border-[var(--intent-text-tertiary)]"
+                    : ""
+                }`}
+              >
+                <p className="text-sm text-[var(--intent-text-primary)]">
+                  {item.text}
+                </p>
+                <span className="ml-3 shrink-0 text-xs text-[var(--intent-text-secondary)]">
+                  {formatDistanceToNow(new Date(item.time), { addSuffix: true })}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}

@@ -1,25 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
-import { sampleMembers } from "@/data/sample-members";
+import { useState, useMemo, useRef, useCallback } from "react";
+import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
+import { useDiscovery, useDiscoveryFilters } from "@/hooks/use-discovery";
 import { MemberCard } from "@/components/member-card";
 import { FilterPills } from "@/components/filter-pills";
 import { FilterDrawer } from "@/components/filter-drawer";
-
-/* ------------------------------------------------------------------ */
-/* Filter pill options                                                 */
-/* ------------------------------------------------------------------ */
-
-const filterOptions = [
-  { label: "All", value: "all" },
-  { label: "Class of 2018", value: "2018" },
-  { label: "Bangalore", value: "bangalore" },
-  { label: "Climate", value: "climate" },
-  { label: "VC/PE", value: "vcpe" },
-  { label: "Fintech", value: "fintech" },
-  { label: "Mumbai", value: "mumbai" },
-];
 
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
@@ -29,35 +15,51 @@ export default function HomePage() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Simple client-side filtering for demo
-  const filteredMembers = sampleMembers.filter((m) => {
-    // Search filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchesSearch =
-        m.fullName.toLowerCase().includes(q) ||
-        m.domain.toLowerCase().includes(q) ||
-        m.city.toLowerCase().includes(q) ||
-        m.currentCompany.toLowerCase().includes(q) ||
-        m.intent.toLowerCase().includes(q);
-      if (!matchesSearch) return false;
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setDebouncedSearch(value), 300);
+  }, []);
+
+  // Build API filter params from the active pill
+  // Pill values use prefixes: "year:2018", "city:Bangalore", "domain:vc_pe", "niche:fintech"
+  const apiFilters = useMemo(() => {
+    const filters: Record<string, string> = {};
+    if (debouncedSearch) filters.search = debouncedSearch;
+    if (activeFilter.startsWith("year:")) filters.classYear = activeFilter.slice(5);
+    else if (activeFilter.startsWith("city:")) filters.city = activeFilter.slice(5);
+    else if (activeFilter.startsWith("domain:")) filters.domain = activeFilter.slice(7);
+    else if (activeFilter.startsWith("niche:")) filters.niche = activeFilter.slice(6);
+    return filters;
+  }, [activeFilter, debouncedSearch]);
+
+  const { data, isLoading, error } = useDiscovery({ ...apiFilters, pageSize: 20 });
+  const { data: filterData } = useDiscoveryFilters();
+
+  const members = data?.members ?? [];
+
+  // Build filter pills dynamically from DB, with typed prefixes
+  const filterOptions = useMemo(() => {
+    const pills = [{ label: "All", value: "all" }];
+    if (filterData) {
+      filterData.classYears.slice(0, 2).forEach((y) =>
+        pills.push({ label: `Class of ${y}`, value: `year:${y}` })
+      );
+      filterData.cities.slice(0, 3).forEach((c) =>
+        pills.push({ label: c, value: `city:${c}` })
+      );
+    } else {
+      pills.push(
+        { label: "Class of 2018", value: "year:2018" },
+        { label: "Bangalore", value: "city:Bangalore" },
+        { label: "Mumbai", value: "city:Mumbai" },
+      );
     }
-
-    if (activeFilter === "all") return true;
-    if (activeFilter === "2018") return m.classYear === 2018;
-    if (activeFilter === "bangalore")
-      return m.city.toLowerCase() === "bangalore";
-    if (activeFilter === "climate")
-      return m.domain.toLowerCase().includes("climate");
-    if (activeFilter === "vcpe")
-      return m.domain.toLowerCase().includes("vc") || m.domain.toLowerCase().includes("pe");
-    if (activeFilter === "fintech")
-      return m.domain.toLowerCase().includes("fintech");
-    if (activeFilter === "mumbai")
-      return m.city.toLowerCase() === "mumbai";
-    return true;
-  });
+    return pills;
+  }, [filterData]);
 
   return (
     <div className="min-h-screen bg-[var(--intent-bg)]">
@@ -66,12 +68,9 @@ export default function HomePage() {
         style={{ borderColor: "var(--intent-text-tertiary)" }}
       >
         <div className="mx-auto flex h-14 max-w-[1200px] items-center justify-between px-4">
-          {/* Wordmark */}
           <h1 className="font-heading text-xl font-bold tracking-tight text-[var(--intent-text-primary)]">
             intent
           </h1>
-
-          {/* Right icons */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSearchOpen(!searchOpen)}
@@ -80,11 +79,10 @@ export default function HomePage() {
             >
               <Search size={18} strokeWidth={1.5} />
             </button>
-            <FilterDrawer resultCount={filteredMembers.length} />
+            <FilterDrawer resultCount={members.length} />
           </div>
         </div>
 
-        {/* Search bar (expandable) */}
         {searchOpen && (
           <div className="mx-auto max-w-[1200px] px-4 pb-3">
             <div className="flex items-center gap-2 rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 py-2">
@@ -93,13 +91,13 @@ export default function HomePage() {
                 type="text"
                 placeholder="Search by name, domain, city..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="flex-1 bg-transparent text-[14px] text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)] outline-none"
                 autoFocus
               />
               {searchQuery && (
                 <button
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => { setSearchQuery(""); setDebouncedSearch(""); }}
                   className="text-[var(--intent-text-secondary)] hover:text-[var(--intent-text-primary)]"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -111,7 +109,6 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Filter pills */}
         <div className="mx-auto max-w-[1200px]">
           <FilterPills
             pills={filterOptions}
@@ -123,7 +120,17 @@ export default function HomePage() {
 
       {/* ── Card grid ──────────────────────────────────────────────── */}
       <div className="mx-auto max-w-[1200px] px-4 py-4 md:py-6">
-        {filteredMembers.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 size={32} className="animate-spin text-[var(--intent-amber)]" />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="text-[14px] text-[var(--intent-text-secondary)]">
+              Failed to load members. Please try again.
+            </p>
+          </div>
+        ) : members.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--intent-amber-subtle)]">
               <Search size={28} className="text-[var(--intent-amber)]" />
@@ -137,7 +144,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
-            {filteredMembers.map((member) => (
+            {members.map((member) => (
               <MemberCard key={member.id} member={member} />
             ))}
           </div>

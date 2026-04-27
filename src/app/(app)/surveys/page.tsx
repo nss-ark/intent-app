@@ -5,57 +5,26 @@ import {
   ClipboardList,
   CheckCircle2,
   Clock,
-  ChevronRight,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-/* ------------------------------------------------------------------ */
-/* Survey data                                                         */
-/* ------------------------------------------------------------------ */
-
-interface Survey {
-  id: string;
-  title: string;
-  status: "active" | "completed" | "upcoming";
-  questionCount?: number;
-  estimatedSeconds?: number;
-  closesIn?: string;
-  opensOn?: string;
-  completedGroup?: string;
-}
-
-const surveys: Survey[] = [
-  {
-    id: "career-fork",
-    title: "Career Fork",
-    status: "active",
-    questionCount: 7,
-    estimatedSeconds: 60,
-    closesIn: "3 days",
-  },
-  {
-    id: "values-alignment",
-    title: "Values Alignment",
-    status: "completed",
-    completedGroup: "Group B",
-  },
-  {
-    id: "post-grad-plans",
-    title: "Post-graduation plans",
-    status: "upcoming",
-    opensOn: "Oct 20",
-  },
-];
+import { useSurveys, type SurveyListItem } from "@/hooks/use-surveys";
+import { formatDistanceToNow } from "date-fns";
 
 /* ------------------------------------------------------------------ */
 /* Survey card                                                         */
 /* ------------------------------------------------------------------ */
 
-function SurveyCard({ survey }: { survey: Survey }) {
-  const isActive = survey.status === "active";
-  const isCompleted = survey.status === "completed";
-  const isUpcoming = survey.status === "upcoming";
+function SurveyCard({ survey }: { survey: SurveyListItem }) {
+  const isCompleted = survey.hasResponded;
+  const isActive = (survey.status === "PUBLISHED" || survey.status === "ACTIVE") && !isCompleted;
+  const isUpcoming = survey.status === "DRAFT";
+
+  const closesInLabel =
+    survey.closesAt
+      ? `Closes in ${formatDistanceToNow(new Date(survey.closesAt))}`
+      : null;
 
   return (
     <div className="intent-card p-5">
@@ -94,19 +63,18 @@ function SurveyCard({ survey }: { survey: Survey }) {
             </h3>
             {isActive && (
               <p className="mt-0.5 text-[13px] text-[var(--intent-text-secondary)]">
-                {survey.questionCount} questions &middot;{" "}
-                {survey.estimatedSeconds} seconds &middot; Closes in{" "}
-                {survey.closesIn}
+                {survey._count.questions} question{survey._count.questions !== 1 ? "s" : ""}
+                {closesInLabel && <> &middot; {closesInLabel}</>}
               </p>
             )}
             {isCompleted && (
               <p className="mt-0.5 text-[13px] text-[var(--intent-text-secondary)]">
-                You were matched into {survey.completedGroup}
+                Completed
               </p>
             )}
-            {isUpcoming && (
+            {isUpcoming && survey.publishedAt && (
               <p className="mt-0.5 text-[13px] text-[var(--intent-text-secondary)]">
-                Opens {survey.opensOn}
+                Opens {formatDistanceToNow(new Date(survey.publishedAt), { addSuffix: true })}
               </p>
             )}
           </div>
@@ -131,7 +99,7 @@ function SurveyCard({ survey }: { survey: Survey }) {
           {isUpcoming && (
             <span className="flex items-center gap-1 text-[13px] text-[var(--intent-text-secondary)]">
               <Clock size={14} strokeWidth={1.5} />
-              {survey.opensOn}
+              Upcoming
             </span>
           )}
         </div>
@@ -145,6 +113,8 @@ function SurveyCard({ survey }: { survey: Survey }) {
 /* ------------------------------------------------------------------ */
 
 export default function SurveysPage() {
+  const { data: surveys, isLoading } = useSurveys();
+
   return (
     <div className="min-h-screen bg-[var(--intent-bg)]">
       {/* Header */}
@@ -164,12 +134,33 @@ export default function SurveysPage() {
         </div>
       </header>
 
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-20">
+          <Loader2
+            size={28}
+            className="animate-spin text-[var(--intent-amber)]"
+          />
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && surveys && surveys.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <p className="text-[15px] text-[var(--intent-text-secondary)]">
+            No surveys available
+          </p>
+        </div>
+      )}
+
       {/* Survey list */}
-      <div className="mx-auto max-w-[640px] px-4 py-4 space-y-3">
-        {surveys.map((survey) => (
-          <SurveyCard key={survey.id} survey={survey} />
-        ))}
-      </div>
+      {surveys && surveys.length > 0 && (
+        <div className="mx-auto max-w-[640px] px-4 py-4 space-y-3">
+          {surveys.map((survey) => (
+            <SurveyCard key={survey.id} survey={survey} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

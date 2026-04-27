@@ -10,31 +10,74 @@ import {
   Gem,
   Link2,
   Lock,
+  Loader2,
 } from "lucide-react";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 /* ------------------------------------------------------------------ */
-/* Hardcoded data                                                      */
+/* Level definitions (mirrors prisma seed)                             */
 /* ------------------------------------------------------------------ */
 
-const badges = [
+const LEVELS = [
+  { level: 1, name: "Newcomer", pointsRequired: 0 },
+  { level: 2, name: "Contributor", pointsRequired: 25 },
+  { level: 3, name: "Connector", pointsRequired: 75 },
+  { level: 4, name: "Pillar", pointsRequired: 200 },
+];
+
+function getLevelInfo(level: number) {
+  return LEVELS.find((l) => l.level === level) ?? LEVELS[0];
+}
+
+function getNextLevelInfo(level: number) {
+  return LEVELS.find((l) => l.level === level + 1) ?? null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Badge icon mapping                                                  */
+/* ------------------------------------------------------------------ */
+
+const BADGE_ICON_MAP: Record<string, React.ElementType> = {
+  CLASS_BADGE: GraduationCap,
+  FIRST_CONNECTION: Link2,
+  FIRST_SURVEY: ClipboardCheck,
+  TOP_MENTOR: Crown,
+  CONNECTOR: Users,
+  PILLAR: Gem,
+};
+
+const BADGE_GRADIENT_MAP: Record<string, { from: string; to: string }> = {
+  CLASS_BADGE: { from: "#B8762A", to: "#D4A053" },
+  FIRST_CONNECTION: { from: "#2D4A3A", to: "#3D6B52" },
+  FIRST_SURVEY: { from: "#B8762A", to: "#D4A053" },
+  TOP_MENTOR: { from: "#B8762A", to: "#D4A053" },
+  CONNECTOR: { from: "#2D4A3A", to: "#3D6B52" },
+  PILLAR: { from: "#B8762A", to: "#D4A053" },
+};
+
+/* ------------------------------------------------------------------ */
+/* Static fallback badge definitions (when no badges from API)         */
+/* ------------------------------------------------------------------ */
+
+const FALLBACK_BADGES = [
   {
     label: "Class of 2026",
     icon: GraduationCap,
-    active: true,
+    active: false,
     gradientFrom: "#B8762A",
     gradientTo: "#D4A053",
   },
   {
     label: "First Connection",
     icon: Link2,
-    active: true,
+    active: false,
     gradientFrom: "#2D4A3A",
     gradientTo: "#3D6B52",
   },
   {
     label: "First Survey",
     icon: ClipboardCheck,
-    active: true,
+    active: false,
     gradientFrom: "#B8762A",
     gradientTo: "#D4A053",
   },
@@ -61,29 +104,28 @@ const badges = [
   },
 ];
 
-const weekStats = [
-  { label: "Nudges responded within 48 hours", value: "2", points: "+10 pts" },
-  { label: "Sessions completed", value: "1", points: "+15 pts" },
-  { label: "Survey completed", value: "1", points: "+5 pts" },
-  { label: "Meetup attended", value: "1", points: "+20 pts" },
-];
-
-const lifetimeStats = [
-  { number: "12", label: "Connections made" },
-  { number: "8", label: "Mentorship sessions" },
-  { number: "3", label: "Events attended" },
-  { number: "47", label: "Total points" },
-  { number: "5", label: "Surveys completed" },
-  { number: "2", label: "Resources shared" },
-];
-
 /* ------------------------------------------------------------------ */
 /* Progress bar segments                                               */
 /* ------------------------------------------------------------------ */
 
-function SegmentedProgressBar() {
-  // 4 segments: 1 full, 2 full, 3 at 60%, 4 empty
-  const segments = [1.0, 1.0, 0.6, 0.0];
+function SegmentedProgressBar({
+  currentPoints,
+  currentLevel,
+}: {
+  currentPoints: number;
+  currentLevel: number;
+}) {
+  // Build segments based on level thresholds
+  const segments = LEVELS.map((l) => {
+    if (currentLevel > l.level) return 1.0; // Fully completed level
+    if (currentLevel < l.level) return 0.0; // Not yet reached
+    // Current level: show partial progress toward next level
+    const nextLevel = getNextLevelInfo(l.level);
+    if (!nextLevel) return 1.0; // Max level
+    const range = nextLevel.pointsRequired - l.pointsRequired;
+    if (range <= 0) return 1.0;
+    return Math.min(1, (currentPoints - l.pointsRequired) / range);
+  });
 
   return (
     <div className="flex gap-1.5">
@@ -115,9 +157,9 @@ function SegmentedProgressBar() {
 function BadgeCard({
   badge,
 }: {
-  badge: (typeof badges)[number];
+  badge: (typeof FALLBACK_BADGES)[number];
 }) {
-  const Icon = badge.active ? badge.icon : badge.icon;
+  const Icon = badge.icon;
 
   return (
     <div className="flex shrink-0 flex-col items-center gap-2">
@@ -168,6 +210,80 @@ function BadgeCard({
 
 export default function ContributionsPage() {
   const router = useRouter();
+  const { data: user, isLoading } = useCurrentUser();
+
+  // Extract gamification data from user, with safe defaults
+  const gamification = user?.gamificationState;
+  const totalPoints = gamification?.totalPoints ?? 0;
+  const currentLevel = gamification?.currentLevel ?? 1;
+  const currentStreakWeeks = gamification?.currentStreakWeeks ?? 0;
+  const nudgesSentLifetime = gamification?.nudgesSentLifetime ?? 0;
+  const nudgesAcceptedLifetime = gamification?.nudgesAcceptedLifetime ?? 0;
+
+  // Extended gamification state (returned by API but not fully typed in hook)
+  const gamificationAny = gamification as Record<string, number> | null;
+  const surveysCompletedCount = gamificationAny?.surveysCompletedCount ?? 0;
+  const eventsAttendedCount = gamificationAny?.eventsAttendedCount ?? 0;
+  const mentorshipsAsMentorCount = gamificationAny?.mentorshipsAsMentorCount ?? 0;
+  const resourcesSharedCount = gamificationAny?.resourcesSharedCount ?? 0;
+
+  const levelInfo = getLevelInfo(currentLevel);
+  const nextLevel = getNextLevelInfo(currentLevel);
+
+  // Build badge list from user data, falling back to defaults
+  const userBadgeCodes = new Set(
+    (user?.badges ?? []).map((b) => b.tenantBadge.template.code)
+  );
+
+  const badges = FALLBACK_BADGES.map((fb) => {
+    // Try to match against known badge codes
+    const matchingCode = Object.keys(BADGE_ICON_MAP).find(
+      (code) => BADGE_ICON_MAP[code] === fb.icon
+    );
+    const isActive = matchingCode ? userBadgeCodes.has(matchingCode) : false;
+    const gradient = matchingCode ? BADGE_GRADIENT_MAP[matchingCode] : null;
+    return {
+      ...fb,
+      active: isActive || fb.active, // Keep active if API confirms it
+      gradientFrom: gradient?.from ?? fb.gradientFrom,
+      gradientTo: gradient?.to ?? fb.gradientTo,
+    };
+  });
+
+  // Build lifetime stats from real data
+  const lifetimeStats = [
+    { number: String(nudgesAcceptedLifetime), label: "Connections made" },
+    { number: String(mentorshipsAsMentorCount), label: "Mentorship sessions" },
+    { number: String(eventsAttendedCount), label: "Events attended" },
+    { number: String(totalPoints), label: "Total points" },
+    { number: String(surveysCompletedCount), label: "Surveys completed" },
+    { number: String(resourcesSharedCount), label: "Resources shared" },
+  ];
+
+  // Progress description
+  const progressText = nextLevel
+    ? `${totalPoints} / ${nextLevel.pointsRequired} points to next level`
+    : `${totalPoints} points -- max level reached!`;
+
+  const levelDescription = nextLevel
+    ? `You're a ${levelInfo.name}. ${nextLevel.name}s get an extra 2 nudges per week and early access to high-demand panels.`
+    : `You've reached ${levelInfo.name} -- the highest level. Thank you for your incredible contributions!`;
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--intent-bg)]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2
+            size={32}
+            className="animate-spin text-[var(--intent-text-secondary)]"
+          />
+          <p className="text-[14px] text-[var(--intent-text-secondary)]">
+            Loading your contributions...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--intent-bg)]">
@@ -209,32 +325,34 @@ export default function ContributionsPage() {
             className="text-[11px] font-semibold uppercase tracking-wider"
             style={{ color: "#B8762A" }}
           >
-            Level 2
+            Level {currentLevel}
           </p>
           <h2
             className="mt-1 text-[28px] font-semibold leading-tight"
             style={{ color: "#1A1A1A" }}
           >
-            Contributor
+            {levelInfo.name}
           </h2>
 
           <div className="mt-5">
-            <SegmentedProgressBar />
+            <SegmentedProgressBar
+              currentPoints={totalPoints}
+              currentLevel={currentLevel}
+            />
           </div>
 
           <p
             className="mt-3 text-[13px]"
             style={{ color: "#6B6B66" }}
           >
-            47 / 75 points to next level
+            {progressText}
           </p>
 
           <p
             className="mt-3 text-[14px] leading-relaxed"
             style={{ color: "#6B6B66" }}
           >
-            You&apos;re a Contributor. Connectors get an extra 2 nudges per week
-            and early access to high-demand panels.
+            {levelDescription}
           </p>
         </div>
 
@@ -250,37 +368,56 @@ export default function ContributionsPage() {
           </div>
         </div>
 
-        {/* ── This Week Section ────────────────────────────────── */}
+        {/* ── Streak Section ──────────────────────────────────── */}
         <div className="mt-8">
           <h3 className="text-[16px] font-semibold text-[var(--intent-text-primary)]">
-            This week
+            Activity streak
           </h3>
           <div
             className="mt-4 overflow-hidden rounded-2xl bg-white"
             style={{ boxShadow: "var(--card-shadow)" }}
           >
-            {weekStats.map((stat, i) => (
-              <div key={stat.label}>
-                {i > 0 && (
-                  <div
-                    className="mx-4 h-px"
-                    style={{ backgroundColor: "#E8E4DA" }}
-                  />
-                )}
-                <div className="flex items-center justify-between px-4 py-3.5">
-                  <p className="flex-1 text-[14px] text-[var(--intent-text-primary)]">
-                    {stat.label}:{" "}
-                    <span className="font-semibold">{stat.value}</span>
-                  </p>
-                  <span
-                    className="ml-3 shrink-0 text-[13px] font-semibold"
-                    style={{ color: "#B8762A" }}
-                  >
-                    {stat.points}
-                  </span>
-                </div>
-              </div>
-            ))}
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <p className="flex-1 text-[14px] text-[var(--intent-text-primary)]">
+                Current streak
+              </p>
+              <span
+                className="ml-3 shrink-0 text-[13px] font-semibold"
+                style={{ color: "#B8762A" }}
+              >
+                {currentStreakWeeks} {currentStreakWeeks === 1 ? "week" : "weeks"}
+              </span>
+            </div>
+            <div
+              className="mx-4 h-px"
+              style={{ backgroundColor: "#E8E4DA" }}
+            />
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <p className="flex-1 text-[14px] text-[var(--intent-text-primary)]">
+                Nudges sent
+              </p>
+              <span
+                className="ml-3 shrink-0 text-[13px] font-semibold"
+                style={{ color: "#B8762A" }}
+              >
+                {nudgesSentLifetime}
+              </span>
+            </div>
+            <div
+              className="mx-4 h-px"
+              style={{ backgroundColor: "#E8E4DA" }}
+            />
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <p className="flex-1 text-[14px] text-[var(--intent-text-primary)]">
+                Nudges accepted
+              </p>
+              <span
+                className="ml-3 shrink-0 text-[13px] font-semibold"
+                style={{ color: "#B8762A" }}
+              >
+                {nudgesAcceptedLifetime}
+              </span>
+            </div>
           </div>
         </div>
 

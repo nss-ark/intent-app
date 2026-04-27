@@ -5,14 +5,18 @@ import { MapPin, ArrowDown, ArrowUp, CheckCircle2, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeroPlaceholder, AvatarPlaceholder } from "@/components/avatar-placeholder";
 import { Separator } from "@/components/ui/separator";
-import type { SampleMember } from "@/data/sample-members";
+import type { DiscoveryMember } from "@/hooks/use-discovery";
 
 interface MemberCardProps {
-  member: SampleMember;
+  member: DiscoveryMember;
   className?: string;
 }
 
 export function MemberCard({ member, className }: MemberCardProps) {
+  const asks = member.openSignals?.filter((s) => s.signalType === "ASK").length ?? 0;
+  const offers = member.openSignals?.filter((s) => s.signalType === "OFFER" || s.signalType === "MUTUAL").length ?? 0;
+  const isFounder = member.badges?.some((b) => b.displayName?.toLowerCase().includes("founder")) ?? false;
+
   return (
     <Link
       href={`/profile/${member.id}`}
@@ -24,8 +28,6 @@ export function MemberCard({ member, className }: MemberCardProps) {
       {/* Photo area */}
       <HeroPlaceholder
         name={member.fullName}
-        gradientFrom={member.gradientFrom}
-        gradientTo={member.gradientTo}
         minHeight={220}
         className="rounded-t-2xl"
       />
@@ -45,7 +47,7 @@ export function MemberCard({ member, className }: MemberCardProps) {
                   className="shrink-0 fill-[var(--intent-green)] text-white"
                 />
               )}
-              {member.isFounder && (
+              {isFounder && (
                 <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-[var(--intent-green)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
                   <Shield size={10} />
                   Founder
@@ -53,89 +55,75 @@ export function MemberCard({ member, className }: MemberCardProps) {
               )}
             </div>
             <p className="mt-0.5 text-[13px] text-[var(--intent-text-secondary)]">
-              {member.yearsOfExperience} yrs &middot; Class of {member.classYear}
+              {member.yearsOfExperience} yrs &middot; Class of {member.graduationYear}
             </p>
           </div>
         </div>
 
-        {/* Company badges */}
-        <div className="flex items-center gap-1.5">
-          <AvatarPlaceholder
-            name={member.currentCompany}
-            size={24}
-            gradientFrom={member.gradientFrom}
-            gradientTo={member.gradientTo}
-          />
-          <span className="text-[13px] font-medium text-[var(--intent-text-primary)]">
-            {member.currentCompany}
-          </span>
-          {member.previousCompanies.map((co) => (
-            <span key={co} className="flex items-center gap-1">
-              <span className="text-[var(--intent-text-secondary)]">&rarr;</span>
-              <AvatarPlaceholder name={co} size={20} />
-              <span className="text-[12px] text-[var(--intent-text-secondary)]">
-                {co}
-              </span>
+        {/* Company badge */}
+        {member.currentCompany && (
+          <div className="flex items-center gap-1.5">
+            <AvatarPlaceholder name={member.currentCompany} size={24} />
+            <span className="text-[13px] font-medium text-[var(--intent-text-primary)]">
+              {member.currentCompany}
             </span>
-          ))}
-        </div>
+          </div>
+        )}
 
         {/* Domain tag */}
-        <div>
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--intent-amber)]">
-            {member.domain}
-          </span>
-        </div>
+        {member.domain && (
+          <div>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--intent-amber)]">
+              {member.domain.displayName}
+            </span>
+          </div>
+        )}
 
         {/* Niche pills */}
         <div className="flex flex-wrap gap-1.5">
-          {member.niches.slice(0, 3).map((niche) => (
+          {member.niches?.slice(0, 3).map((niche) => (
             <span
-              key={niche}
+              key={niche.id}
               className="rounded-full bg-[var(--muted)] px-2.5 py-1 text-[11px] font-medium text-[var(--intent-text-secondary)]"
             >
-              {niche}
+              {niche.displayName}
             </span>
           ))}
         </div>
 
         {/* Location */}
-        <div className="flex items-center gap-1 text-[13px] text-[var(--intent-text-secondary)]">
-          <MapPin size={14} strokeWidth={1.5} />
-          <span>{member.city}</span>
-        </div>
+        {member.currentCity && (
+          <div className="flex items-center gap-1 text-[13px] text-[var(--intent-text-secondary)]">
+            <MapPin size={14} strokeWidth={1.5} />
+            <span>{member.currentCity}</span>
+          </div>
+        )}
 
         {/* Intent statement */}
-        <p className="text-[14px] italic leading-relaxed text-[var(--intent-text-secondary)]">
-          &ldquo;{member.intent}&rdquo;
-        </p>
+        {member.missionStatement && (
+          <p className="text-[14px] italic leading-relaxed text-[var(--intent-text-secondary)]">
+            &ldquo;{member.missionStatement}&rdquo;
+          </p>
+        )}
 
         {/* Divider */}
         <Separator className="bg-[var(--intent-text-tertiary)]" />
 
         {/* Asks / Offers row */}
         <div className="flex items-center gap-4">
-          {member.asks > 0 && (
+          {asks > 0 && (
             <div className="flex items-center gap-1 text-[13px] font-medium">
-              <ArrowDown
-                size={14}
-                strokeWidth={2}
-                className="text-[var(--intent-amber)]"
-              />
+              <ArrowDown size={14} strokeWidth={2} className="text-[var(--intent-amber)]" />
               <span className="text-[var(--intent-amber)]">
-                {member.asks} {member.asks === 1 ? "Ask" : "Asks"}
+                {asks} {asks === 1 ? "Ask" : "Asks"}
               </span>
             </div>
           )}
-          {member.offers > 0 && (
+          {offers > 0 && (
             <div className="flex items-center gap-1 text-[13px] font-medium">
-              <ArrowUp
-                size={14}
-                strokeWidth={2}
-                className="text-[var(--intent-green)]"
-              />
+              <ArrowUp size={14} strokeWidth={2} className="text-[var(--intent-green)]" />
               <span className="text-[var(--intent-green)]">
-                {member.offers} {member.offers === 1 ? "Offer" : "Offers"}
+                {offers} {offers === 1 ? "Offer" : "Offers"}
               </span>
             </div>
           )}

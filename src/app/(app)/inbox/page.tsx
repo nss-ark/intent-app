@@ -2,86 +2,63 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Loader2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { NudgeRow } from "@/components/nudge-row";
+import { useReceivedNudges, useSentNudges } from "@/hooks/use-nudges";
+import type { NudgeItem } from "@/hooks/use-nudges";
+import { useSavedUsers, useUnsaveUser } from "@/hooks/use-saved-users";
+import { getInitials } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
-// ── Sample data ────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────
 
-const tabs = [
-  { id: "received", label: "Received", count: 3 },
-  { id: "sent", label: "Sent", count: null },
-  { id: "chats", label: "Chats", count: null },
-  { id: "saved", label: "Saved", count: null },
-] as const;
+function mapNudgeToRow(nudge: NudgeItem, role: "received" | "sent") {
+  const person = role === "received" ? nudge.sender : nudge.receiver;
+  return {
+    id: nudge.id,
+    senderName: person.fullName,
+    senderPhotoUrl: person.photoUrl,
+    senderBadge: null as string | null,
+    signal:
+      nudge.signals[0]?.tenantSignal?.template?.displayNameDefault ?? "",
+    messagePreview: nudge.message ?? "",
+    timestamp: formatDistanceToNow(new Date(nudge.sentAt), {
+      addSuffix: true,
+    }),
+    isRead: nudge.status !== "SENT",
+  };
+}
 
-type TabId = (typeof tabs)[number]["id"];
+// ── Tab config ────────────────────────────────────────────────────────
 
-const recentNudges = [
-  {
-    id: "nudge-001",
-    senderName: "Vikram Subramanian",
-    senderPhotoUrl: null,
-    senderBadge: "Founder",
-    signal: "Looking for a co-founder",
-    messagePreview:
-      "Arjun, your background at Flipkart and your interest in fintech caught my eye. I'm building a...",
-    timestamp: "2h ago",
-    isRead: false,
-  },
-  {
-    id: "nudge-002",
-    senderName: "Priya Reddy",
-    senderPhotoUrl: null,
-    senderBadge: null,
-    signal: "Open to coffee chat",
-    messagePreview:
-      "Hi Arjun! I noticed we're both in Hyderabad. Would love to chat about your...",
-    timestamp: "1d ago",
-    isRead: false,
-  },
-  {
-    id: "nudge-003",
-    senderName: "Rohan Kapoor",
-    senderPhotoUrl: null,
-    senderBadge: null,
-    signal: "Curious about Tiger Global",
-    messagePreview:
-      "Hey Arjun, saw your interest in VC. Happy to share my experience...",
-    timestamp: "3d ago",
-    isRead: true,
-  },
-];
-
-const earlierNudges = [
-  {
-    id: "nudge-004",
-    senderName: "Meera Iyer",
-    senderPhotoUrl: null,
-    senderBadge: null,
-    signal: "Looking for a mentor in this domain",
-    messagePreview:
-      "Hi! I'm transitioning into product management and your journey from engineering to PM...",
-    timestamp: "5d ago",
-    isRead: true,
-  },
-  {
-    id: "nudge-005",
-    senderName: "Siddharth Nair",
-    senderPhotoUrl: null,
-    senderBadge: "Alumni",
-    signal: "Open to giving referrals",
-    messagePreview:
-      "Arjun, I saw you're interested in fintech roles. We have a couple of openings at...",
-    timestamp: "6d ago",
-    isRead: true,
-  },
-];
+type TabId = "received" | "sent" | "chats" | "saved";
 
 // ── Component ──────────────────────────────────────────────────────────
 
 export default function InboxPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("received");
+
+  const received = useReceivedNudges();
+  const sent = useSentNudges();
+  const saved = useSavedUsers();
+  const unsaveUser = useUnsaveUser();
+
+  const receivedItems = received.data?.items ?? [];
+  const sentItems = sent.data?.items ?? [];
+  const savedItems = saved.data?.items ?? [];
+
+  const unreadCount = receivedItems.filter((n) => n.status === "SENT").length;
+  const savedCount = saved.data?.total ?? 0;
+
+  const tabs: { id: TabId; label: string; count: number | null }[] = [
+    { id: "received", label: "Received", count: unreadCount || null },
+    { id: "sent", label: "Sent", count: null },
+    { id: "chats", label: "Chats", count: null },
+    { id: "saved", label: "Saved", count: savedCount || null },
+  ];
 
   const handleNudgeClick = (id: string) => {
     router.push(`/inbox/${id}`);
@@ -182,60 +159,139 @@ export default function InboxPage() {
         <div className="max-w-[640px] mx-auto">
           {activeTab === "received" && (
             <div>
-              {/* Recent nudges */}
-              <div className="divide-y divide-[#E8E4DA]/60">
-                {recentNudges.map((nudge) => (
-                  <NudgeRow
-                    key={nudge.id}
-                    {...nudge}
-                    onClick={handleNudgeClick}
+              {received.isLoading && (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2
+                    size={32}
+                    className="animate-spin text-[#B8762A]"
                   />
-                ))}
-              </div>
+                </div>
+              )}
 
-              {/* Section header */}
-              <div className="px-4 py-3 bg-[#F2EFE8]/50">
-                <p className="text-xs font-semibold text-[#6B6B66] uppercase tracking-wider">
-                  Earlier this week
-                </p>
-              </div>
+              {received.isError && (
+                <div className="flex flex-col items-center justify-center py-20 px-4">
+                  <p className="text-sm text-[#D94141] mb-2">
+                    Failed to load nudges
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => received.refetch()}
+                    className="text-sm font-medium text-[#B8762A] hover:underline"
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
 
-              {/* Earlier nudges */}
-              <div className="divide-y divide-[#E8E4DA]/60">
-                {earlierNudges.map((nudge) => (
-                  <NudgeRow
-                    key={nudge.id}
-                    {...nudge}
-                    onClick={handleNudgeClick}
-                  />
-                ))}
-              </div>
+              {received.isSuccess && receivedItems.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-20 px-4">
+                  <div className="w-16 h-16 rounded-full bg-[#F2EFE8] flex items-center justify-center mb-4">
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#6B6B66"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-[#1A1A1A] mb-1">
+                    No nudges yet
+                  </p>
+                  <p className="text-xs text-[#6B6B66] text-center max-w-[240px]">
+                    When someone sends you a nudge, it&apos;ll appear here.
+                  </p>
+                </div>
+              )}
+
+              {received.isSuccess && receivedItems.length > 0 && (
+                <div className="divide-y divide-[#E8E4DA]/60">
+                  {receivedItems.map((nudge) => {
+                    const row = mapNudgeToRow(nudge, "received");
+                    return (
+                      <NudgeRow
+                        key={row.id}
+                        {...row}
+                        onClick={handleNudgeClick}
+                      />
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === "sent" && (
-            <div className="flex flex-col items-center justify-center py-20 px-4">
-              <div className="w-16 h-16 rounded-full bg-[#F2EFE8] flex items-center justify-center mb-4">
-                <svg
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#6B6B66"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="22" y1="2" x2="11" y2="13" />
-                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium text-[#1A1A1A] mb-1">
-                No sent nudges yet
-              </p>
-              <p className="text-xs text-[#6B6B66] text-center max-w-[240px]">
-                When you send nudges to people, they&apos;ll appear here.
-              </p>
+            <div>
+              {sent.isLoading && (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2
+                    size={32}
+                    className="animate-spin text-[#B8762A]"
+                  />
+                </div>
+              )}
+
+              {sent.isError && (
+                <div className="flex flex-col items-center justify-center py-20 px-4">
+                  <p className="text-sm text-[#D94141] mb-2">
+                    Failed to load sent nudges
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => sent.refetch()}
+                    className="text-sm font-medium text-[#B8762A] hover:underline"
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+
+              {sent.isSuccess && sentItems.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-20 px-4">
+                  <div className="w-16 h-16 rounded-full bg-[#F2EFE8] flex items-center justify-center mb-4">
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#6B6B66"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-[#1A1A1A] mb-1">
+                    No sent nudges yet
+                  </p>
+                  <p className="text-xs text-[#6B6B66] text-center max-w-[240px]">
+                    When you send nudges to people, they&apos;ll appear here.
+                  </p>
+                </div>
+              )}
+
+              {sent.isSuccess && sentItems.length > 0 && (
+                <div className="divide-y divide-[#E8E4DA]/60">
+                  {sentItems.map((nudge) => {
+                    const row = mapNudgeToRow(nudge, "sent");
+                    return (
+                      <NudgeRow
+                        key={row.id}
+                        {...row}
+                        onClick={handleNudgeClick}
+                      />
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -265,27 +321,131 @@ export default function InboxPage() {
           )}
 
           {activeTab === "saved" && (
-            <div className="flex flex-col items-center justify-center py-20 px-4">
-              <div className="w-16 h-16 rounded-full bg-[#F2EFE8] flex items-center justify-center mb-4">
-                <svg
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#6B6B66"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium text-[#1A1A1A] mb-1">
-                No saved profiles
-              </p>
-              <p className="text-xs text-[#6B6B66] text-center max-w-[240px]">
-                Bookmark profiles you want to revisit later.
-              </p>
+            <div>
+              {saved.isLoading && (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2
+                    size={32}
+                    className="animate-spin text-[#B8762A]"
+                  />
+                </div>
+              )}
+
+              {saved.isError && (
+                <div className="flex flex-col items-center justify-center py-20 px-4">
+                  <p className="text-sm text-[#D94141] mb-2">
+                    Failed to load saved profiles
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => saved.refetch()}
+                    className="text-sm font-medium text-[#B8762A] hover:underline"
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+
+              {saved.isSuccess && savedItems.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-20 px-4">
+                  <div className="w-16 h-16 rounded-full bg-[#F2EFE8] flex items-center justify-center mb-4">
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#6B6B66"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-[#1A1A1A] mb-1">
+                    No saved profiles
+                  </p>
+                  <p className="text-xs text-[#6B6B66] text-center max-w-[240px]">
+                    Bookmark profiles you want to revisit later.
+                  </p>
+                </div>
+              )}
+
+              {saved.isSuccess && savedItems.length > 0 && (
+                <div className="divide-y divide-[#E8E4DA]/60">
+                  {savedItems.map((item) => {
+                    const user = item.savedUser;
+                    const exp = user.experience[0];
+                    const role = exp
+                      ? exp.company?.name
+                        ? `${exp.title} at ${exp.company.name}`
+                        : exp.freeTextCompanyName
+                          ? `${exp.title} at ${exp.freeTextCompanyName}`
+                          : exp.title
+                      : null;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-3 px-4 py-3"
+                      >
+                        <Link
+                          href={`/profile/${user.id}`}
+                          className="flex items-center gap-3 flex-1 min-w-0"
+                        >
+                          <div className="w-11 h-11 rounded-full bg-[#F2EFE8] flex items-center justify-center shrink-0 overflow-hidden">
+                            {user.photoUrl ? (
+                              <img
+                                src={user.photoUrl}
+                                alt={user.fullName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm font-medium text-[#6B6B66]">
+                                {getInitials(user.fullName)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-[#1A1A1A] truncate">
+                              {user.fullName}
+                            </p>
+                            {role && (
+                              <p className="text-xs text-[#6B6B66] truncate">
+                                {role}
+                              </p>
+                            )}
+                            {user.profile?.currentCity && (
+                              <p className="text-xs text-[#6B6B66]">
+                                {user.profile.currentCity}
+                              </p>
+                            )}
+                          </div>
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => unsaveUser.mutate(user.id)}
+                          className="shrink-0 text-[#6B6B66] hover:text-[#D94141] transition-colors p-1.5"
+                          aria-label={`Remove ${user.fullName} from saved`}
+                        >
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="#B8762A"
+                            stroke="#B8762A"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

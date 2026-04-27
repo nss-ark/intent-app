@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Send, Clock, ShieldCheck, Users, ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Send,
+  Clock,
+  ShieldCheck,
+  Users,
+  ArrowRight,
+  Loader2,
+} from "lucide-react";
 import { IntentWordmark } from "@/components/intent-wordmark";
 import { Button } from "@/components/ui/button";
 
-const steps = [
+const nextSteps = [
   {
     icon: ShieldCheck,
     title: "Profile review",
@@ -27,18 +35,141 @@ const steps = [
   },
 ];
 
+async function saveOnboardingData(): Promise<{
+  firstName: string;
+  error: string | null;
+}> {
+  let firstName = "there";
+  try {
+    // Read all onboarding step data from localStorage
+    const step1 = JSON.parse(localStorage.getItem("intent_step1") || "{}");
+    const step2 = JSON.parse(localStorage.getItem("intent_step2") || "{}");
+    const step3 = JSON.parse(localStorage.getItem("intent_step3") || "{}");
+    const step4 = JSON.parse(localStorage.getItem("intent_step4") || "{}");
+
+    if (step1.fullName) {
+      firstName = step1.fullName.split(" ")[0];
+    }
+
+    // Save profile data (step1 + step3 fields)
+    const profilePayload: Record<string, unknown> = {
+      isVisibleInDiscovery: true,
+    };
+    if (step1.fullName) profilePayload.fullName = step1.fullName;
+    if (step1.city) profilePayload.currentCity = step1.city;
+    if (step1.country) profilePayload.currentCountry = step1.country;
+    if (step3.intent) profilePayload.missionStatement = step3.intent;
+
+    const profileRes = await fetch("/api/users/me/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profilePayload),
+    });
+
+    if (!profileRes.ok) {
+      const profileJson = await profileRes.json();
+      console.error("Profile save failed:", profileJson);
+      return {
+        firstName,
+        error: "Failed to save profile. You can update it later from settings.",
+      };
+    }
+
+    // Save step2 career data: current experience + past experiences
+    if (step2.currentCompany || step2.currentTitle) {
+      try {
+        // Save current experience
+        await fetch("/api/users/me/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            experience: [
+              {
+                companyName: step2.currentCompany || "",
+                title: step2.currentTitle || "",
+                isCurrent: true,
+              },
+              ...(step2.pastExperiences ?? [])
+                .filter((exp: { company: string; title: string }) => exp.company || exp.title)
+                .map((exp: { company: string; title: string }) => ({
+                  companyName: exp.company,
+                  title: exp.title,
+                  isCurrent: false,
+                })),
+            ],
+          }),
+        });
+      } catch (err) {
+        console.error("Experience save failed:", err);
+        // Non-blocking — user can edit later
+      }
+    }
+
+    // Save signals: resolve signal codes to tenant signal IDs
+    if (Object.keys(step4).length > 0) {
+      // Fetch tenant signals to get the code-to-ID mapping
+      const signalsListRes = await fetch("/api/users/me/signals");
+      if (signalsListRes.ok) {
+        const signalsListJson = await signalsListRes.json();
+        const tenantSignals: { id: string; code: string }[] =
+          signalsListJson.data ?? [];
+
+        // Map step4 codes to tenant signal IDs
+        const signals = tenantSignals.map((ts) => ({
+          tenantSignalId: ts.id,
+          isOpen: step4[ts.code] === true,
+        }));
+
+        if (signals.length > 0) {
+          const signalsRes = await fetch("/api/users/me/signals", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ signals }),
+          });
+
+          if (!signalsRes.ok) {
+            const signalsJson = await signalsRes.json();
+            console.error("Signals save failed:", signalsJson);
+            // Non-blocking error
+          }
+        }
+      }
+    }
+
+    // Clear localStorage onboarding data
+    localStorage.removeItem("intent_step1");
+    localStorage.removeItem("intent_step2");
+    localStorage.removeItem("intent_step3");
+    localStorage.removeItem("intent_step4");
+    // Clear sessionStorage signup data
+    sessionStorage.removeItem("intent_signup");
+
+    return { firstName, error: null };
+  } catch (err) {
+    console.error("Onboarding save error:", err);
+    return {
+      firstName,
+      error: "Something went wrong saving your profile. You can update it later.",
+    };
+  }
+}
+
 export default function OnboardingCompletePage() {
+  const router = useRouter();
   const [fullName, setFullName] = useState("there");
+  const [saving, setSaving] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const didRun = useRef(false);
 
   useEffect(() => {
-    try {
-      const step1 = JSON.parse(localStorage.getItem("intent_step1") || "{}");
-      if (step1.fullName) {
-        setFullName(step1.fullName.split(" ")[0]);
-      }
-    } catch {
-      // ignore
-    }
+    if (didRun.current) return;
+    didRun.current = true;
+
+    saveOnboardingData().then(({ firstName, error: saveError }) => {
+      setFullName(firstName);
+      setError(saveError);
+      setSaving(false);
+    });
   }, []);
 
   return (
@@ -49,62 +180,78 @@ export default function OnboardingCompletePage() {
 
         {/* Celebration icon */}
         <div className="mt-10 md:mt-14 w-20 h-20 rounded-full bg-[#F5EDE0] flex items-center justify-center">
-          <Send className="w-8 h-8 text-[#B8762A]" />
+          {saving ? (
+            <Loader2 className="w-8 h-8 text-[#B8762A] animate-spin" />
+          ) : (
+            <Send className="w-8 h-8 text-[#B8762A]" />
+          )}
         </div>
 
         {/* Heading */}
         <h1 className="mt-6 text-2xl md:text-3xl font-heading font-semibold text-[#1A1A1A] tracking-tight text-center">
-          Welcome to Intent.
+          {saving ? "Setting up your profile..." : "Welcome to Intent."}
         </h1>
         <p className="mt-2 text-base text-[#6B6B66] text-center leading-relaxed max-w-[380px]">
-          Your profile card is being reviewed, {fullName}. We&apos;ll notify
-          you once you&apos;re verified.
+          {saving
+            ? "Hang tight while we save your details."
+            : `Your profile card is being reviewed, ${fullName}. We'll notify you once you're verified.`}
         </p>
 
-        {/* What happens next */}
-        <div className="mt-10 w-full">
-          <h2 className="text-sm font-semibold text-[#6B6B66] uppercase tracking-wider text-center">
-            What happens next
-          </h2>
-          <div className="mt-6 space-y-4">
-            {steps.map((step, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-4 rounded-2xl bg-white border border-[#E8E4DA] shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4"
-              >
-                <div className="w-10 h-10 rounded-xl bg-[#F5EDE0] flex items-center justify-center shrink-0">
-                  <step.icon className="w-5 h-5 text-[#B8762A]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#1A1A1A]">
-                    {step.title}
-                  </p>
-                  <p className="mt-0.5 text-xs text-[#6B6B66] leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
-              </div>
-            ))}
+        {error && (
+          <div className="mt-4 w-full rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            {error}
           </div>
-        </div>
+        )}
+
+        {/* What happens next */}
+        {!saving && (
+          <div className="mt-10 w-full">
+            <h2 className="text-sm font-semibold text-[#6B6B66] uppercase tracking-wider text-center">
+              What happens next
+            </h2>
+            <div className="mt-6 space-y-4">
+              {nextSteps.map((step, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-4 rounded-2xl bg-white border border-[#E8E4DA] shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-[#F5EDE0] flex items-center justify-center shrink-0">
+                    <step.icon className="w-5 h-5 text-[#B8762A]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-[#1A1A1A]">
+                      {step.title}
+                    </p>
+                    <p className="mt-0.5 text-xs text-[#6B6B66] leading-relaxed">
+                      {step.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bottom CTAs */}
-      <div className="w-full max-w-[500px] mt-10 flex flex-col items-center gap-3">
-        <Link href="/home" className="w-full">
-          <Button className="w-full h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors">
+      {!saving && (
+        <div className="w-full max-w-[500px] mt-10 flex flex-col items-center gap-3">
+          <Button
+            onClick={() => router.push("/home")}
+            className="w-full h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors"
+          >
             Take me to my profile
           </Button>
-        </Link>
 
-        <Link
-          href="/home"
-          className="flex items-center gap-1.5 text-sm font-medium text-[#6B6B66] hover:text-[#1A1A1A] transition-colors py-2"
-        >
-          Browse other ISB members
-          <ArrowRight className="w-4 h-4" />
-        </Link>
-      </div>
+          <Link
+            href="/home"
+            className="flex items-center gap-1.5 text-sm font-medium text-[#6B6B66] hover:text-[#1A1A1A] transition-colors py-2"
+          >
+            Browse other ISB members
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

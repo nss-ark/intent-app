@@ -1,18 +1,7 @@
-import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { apiSuccess, apiError, withAuth } from "@/lib/api-helpers";
 
-export async function GET() {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return NextResponse.json(
-      { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
-      { status: 401 }
-    );
-  }
-
+export const GET = withAuth(async (_request, _context, session) => {
   try {
     const user = await db.user.findUnique({
       where: { id: session.user.id },
@@ -62,21 +51,13 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: { code: "NOT_FOUND", message: "User not found" } },
-        { status: 404 }
-      );
+      return apiError("NOT_FOUND", "User not found", 404);
     }
 
-    // Strip hashedPassword from response
     const { hashedPassword: _, ...safeUser } = user;
-
-    return NextResponse.json({ success: true, data: safeUser });
+    return apiSuccess(safeUser);
   } catch (error) {
     console.error("Error fetching user profile:", error);
-    return NextResponse.json(
-      { success: false, error: { code: "INTERNAL_ERROR", message: "Failed to fetch profile" } },
-      { status: 500 }
-    );
+    return apiError("INTERNAL_ERROR", "Failed to fetch profile", 500);
   }
-}
+});

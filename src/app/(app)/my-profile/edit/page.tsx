@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Camera,
   ChevronRight,
@@ -9,9 +10,9 @@ import {
   Briefcase,
   Building2,
 } from "lucide-react";
-import { currentUser } from "@/data/sample-members";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { apiFetch } from "@/hooks/use-api";
 import { AvatarPlaceholder } from "@/components/avatar-placeholder";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 
@@ -92,11 +93,46 @@ function NichePill({
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const user = currentUser;
+  const queryClient = useQueryClient();
+  const { data: user, isLoading } = useCurrentUser();
 
-  const [intentText, setIntentText] = useState(user.intent);
+  const [intentText, setIntentText] = useState("");
   const [discoveryVisible, setDiscoveryVisible] = useState(true);
-  const [niches, setNiches] = useState<string[]>([...user.niches]);
+  const [niches, setNiches] = useState<string[]>([]);
+  const [formReady, setFormReady] = useState(false);
+
+  // Initialize form state when user data arrives
+  useEffect(() => {
+    if (user && !formReady) {
+      setIntentText(user.profile?.missionStatement ?? "");
+      setDiscoveryVisible(user.profile?.isVisibleInDiscovery ?? true);
+      setNiches(user.niches.map((n) => n.niche.displayName));
+      setFormReady(true);
+    }
+  }, [user, formReady]);
+
+  // Save mutation
+  const saveMutation = useMutation({
+    mutationFn: (data: {
+      missionStatement: string;
+      isVisibleInDiscovery: boolean;
+    }) =>
+      apiFetch("/api/users/me/profile", {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      router.push("/my-profile");
+    },
+  });
+
+  const handleSave = () => {
+    saveMutation.mutate({
+      missionStatement: intentText,
+      isVisibleInDiscovery: discoveryVisible,
+    });
+  };
 
   const maxChars = 200;
   const charCount = intentText.length;
@@ -104,6 +140,59 @@ export default function EditProfilePage() {
   function handleRemoveNiche(niche: string) {
     setNiches((prev) => prev.filter((n) => n !== niche));
   }
+
+  // ── Loading state ───────────────────────────────────────────────────
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-[var(--intent-bg)]">
+        <div className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-[var(--intent-text-tertiary)] bg-white/95 px-4 backdrop-blur-md safe-top">
+          <button
+            onClick={() => router.back()}
+            className="text-[14px] font-medium text-[var(--intent-text-primary)] hover:opacity-70"
+          >
+            Cancel
+          </button>
+          <h1 className="text-[16px] font-semibold text-[var(--intent-text-primary)]">
+            Edit profile
+          </h1>
+          <div className="w-10" />
+        </div>
+        <div className="mx-auto max-w-[640px] px-4 pt-6">
+          <div className="animate-pulse space-y-6">
+            <div className="flex flex-col items-center">
+              <div className="w-24 h-24 rounded-full bg-[var(--muted)]" />
+              <div className="mt-3 h-4 w-24 rounded bg-[var(--muted)]" />
+            </div>
+            <div className="h-4 w-28 rounded bg-[var(--muted)]" />
+            <div className="h-[120px] rounded-2xl bg-[var(--muted)]" />
+            <div className="h-4 w-20 rounded bg-[var(--muted)]" />
+            <div className="h-[100px] rounded-2xl bg-[var(--muted)]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Build display helpers from API data
+  const currentExp = user.experience.find((e) => e.isCurrent);
+  const currentRole = currentExp?.title ?? "";
+  const currentCompany =
+    currentExp?.company?.name ?? currentExp?.freeTextCompanyName ?? "";
+
+  // Count open signals by type
+  const askSignals = user.openSignals.filter(
+    (s) => s.isOpen && s.tenantSignal.template.signalType.toLowerCase() === "ask"
+  );
+  const offerSignals = user.openSignals.filter(
+    (s) =>
+      s.isOpen && s.tenantSignal.template.signalType.toLowerCase() === "offer"
+  );
+  const mutualSignals = user.openSignals.filter(
+    (s) =>
+      s.isOpen &&
+      s.tenantSignal.template.signalType.toLowerCase() === "mutual"
+  );
 
   return (
     <div className="min-h-screen bg-[var(--intent-bg)]">
@@ -119,24 +208,42 @@ export default function EditProfilePage() {
           Edit profile
         </h1>
         <button
-          onClick={() => router.push("/my-profile")}
-          className="text-[14px] font-semibold text-[var(--intent-amber)] hover:opacity-70"
+          onClick={handleSave}
+          disabled={saveMutation.isPending}
+          className="text-[14px] font-semibold text-[var(--intent-amber)] hover:opacity-70 disabled:opacity-50"
         >
-          Save
+          {saveMutation.isPending ? "Saving..." : "Save"}
         </button>
       </div>
 
       {/* ── Content ───────────────────────────────────────────────── */}
       <div className="mx-auto max-w-[640px] px-4 pb-32 pt-6">
+        {/* Save error */}
+        {saveMutation.isError && (
+          <div className="mb-4 rounded-xl bg-red-50 border border-red-200 p-4">
+            <p className="text-sm text-red-700">
+              {saveMutation.error instanceof Error
+                ? saveMutation.error.message
+                : "Failed to save. Please try again."}
+            </p>
+          </div>
+        )}
+
         {/* Photo section */}
         <div className="flex flex-col items-center">
           <div className="relative">
-            <AvatarPlaceholder
-              name={user.fullName}
-              gradientFrom={user.gradientFrom}
-              gradientTo={user.gradientTo}
-              size={96}
-            />
+            {user.photoUrl ? (
+              <img
+                src={user.photoUrl}
+                alt={user.fullName}
+                className="w-24 h-24 rounded-full object-cover"
+              />
+            ) : (
+              <AvatarPlaceholder
+                name={user.fullName}
+                size={96}
+              />
+            )}
             <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[var(--intent-amber)] shadow-sm">
               <Camera size={14} className="text-white" />
             </div>
@@ -168,33 +275,35 @@ export default function EditProfilePage() {
         {/* Career */}
         <SectionHeader title="Career" />
         <div className="divide-y divide-[var(--intent-text-tertiary)] overflow-hidden rounded-2xl bg-white shadow-[var(--card-shadow)]">
-          <div className="flex min-h-[56px] items-center gap-3 px-4 py-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--muted)]">
-              <Briefcase
-                size={16}
+          {currentExp && (
+            <div className="flex min-h-[56px] items-center gap-3 px-4 py-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--muted)]">
+                <Briefcase
+                  size={16}
+                  strokeWidth={1.5}
+                  className="text-[var(--intent-text-secondary)]"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-medium text-[var(--intent-text-primary)]">
+                  {currentRole}
+                </p>
+                <p className="text-[12px] text-[var(--intent-text-secondary)]">
+                  {currentCompany} &middot; Current
+                </p>
+              </div>
+              <ChevronRight
+                size={18}
                 strokeWidth={1.5}
-                className="text-[var(--intent-text-secondary)]"
+                className="shrink-0 text-[var(--intent-text-secondary)]"
               />
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-medium text-[var(--intent-text-primary)]">
-                {user.currentRole}
-              </p>
-              <p className="text-[12px] text-[var(--intent-text-secondary)]">
-                {user.currentCompany} &middot; Current
-              </p>
-            </div>
-            <ChevronRight
-              size={18}
-              strokeWidth={1.5}
-              className="shrink-0 text-[var(--intent-text-secondary)]"
-            />
-          </div>
+          )}
           {user.experience
             .filter((exp) => !exp.isCurrent)
-            .map((exp, i) => (
+            .map((exp) => (
               <div
-                key={i}
+                key={exp.id}
                 className="flex min-h-[56px] items-center gap-3 px-4 py-3"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--muted)]">
@@ -206,10 +315,10 @@ export default function EditProfilePage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[14px] font-medium text-[var(--intent-text-primary)]">
-                    {exp.role}
+                    {exp.title}
                   </p>
                   <p className="text-[12px] text-[var(--intent-text-secondary)]">
-                    {exp.company} &middot; {exp.period}
+                    {exp.company?.name ?? exp.freeTextCompanyName ?? ""}
                   </p>
                 </div>
                 <ChevronRight
@@ -230,7 +339,10 @@ export default function EditProfilePage() {
         {/* Domain and niches */}
         <SectionHeader title="Domain and niches" />
         <div className="rounded-2xl bg-white p-4 shadow-[var(--card-shadow)]">
-          <EditRow label="Domain" value={user.domain} />
+          <EditRow
+            label="Domain"
+            value={user.profile?.domain?.displayName ?? ""}
+          />
           <div className="border-t border-[var(--intent-text-tertiary)] px-4 py-3">
             <p className="mb-2 text-[12px] font-medium uppercase tracking-wider text-[var(--intent-text-secondary)]">
               Niches
@@ -254,12 +366,9 @@ export default function EditProfilePage() {
         {/* Asks / Offers / Mutuals */}
         <SectionHeader title="Asks, Offers & Mutuals" />
         <div className="divide-y divide-[var(--intent-text-tertiary)] overflow-hidden rounded-2xl bg-white shadow-[var(--card-shadow)]">
-          <EditRow label="Asks" value={`${user.askSignals.length} active`} />
-          <EditRow
-            label="Offers"
-            value={`${user.offerSignals.length} active`}
-          />
-          <EditRow label="Mutuals" value="1 active" />
+          <EditRow label="Asks" value={`${askSignals.length} active`} />
+          <EditRow label="Offers" value={`${offerSignals.length} active`} />
+          <EditRow label="Mutuals" value={`${mutualSignals.length} active`} />
         </div>
 
         {/* Visibility */}
@@ -277,7 +386,10 @@ export default function EditProfilePage() {
         {/* City */}
         <SectionHeader title="City" />
         <div className="overflow-hidden rounded-2xl bg-white shadow-[var(--card-shadow)]">
-          <EditRow label="City" value={user.city} />
+          <EditRow
+            label="City"
+            value={user.profile?.currentCity ?? ""}
+          />
         </div>
       </div>
     </div>

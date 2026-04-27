@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { IntentWordmark } from "@/components/intent-wordmark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,19 +14,54 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [fullName, setFullName] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const isValid = email.trim() !== "" && phone.trim() !== "" && fullName.trim() !== "";
+  const isValid =
+    email.trim() !== "" &&
+    phone.trim() !== "" &&
+    fullName.trim() !== "" &&
+    password.length >= 8;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValid) return;
 
-    // Store in localStorage for MVP persistence
-    localStorage.setItem(
-      "intent_signup",
-      JSON.stringify({ email, phone: `+91${phone}`, fullName })
-    );
-    router.push("/signup/verify");
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          fullName,
+          phoneNumber: `+91${phone}`,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setError(json.error?.message ?? "Something went wrong. Please try again.");
+        return;
+      }
+
+      // Store credentials in sessionStorage for auto-login after consent
+      sessionStorage.setItem(
+        "intent_signup",
+        JSON.stringify({ email, password, phone: `+91${phone}`, fullName })
+      );
+
+      router.push("/signup/verify");
+    } catch {
+      setError("Network error. Please check your connection and try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,6 +88,12 @@ export default function SignUpPage() {
           <p className="mt-2 text-sm text-[#6B6B66]">
             We&apos;ll verify your ISB membership to get you in.
           </p>
+
+          {error && (
+            <div className="mt-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             {/* Email */}
@@ -109,6 +150,23 @@ export default function SignUpPage() {
               />
             </div>
 
+            {/* Password */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium text-[#1A1A1A]">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Min. 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-11 rounded-xl bg-white text-base"
+                minLength={8}
+                required
+              />
+            </div>
+
             {/* OTP caption */}
             <p className="text-xs text-[#6B6B66] leading-relaxed">
               We&apos;ll send a one-time code to verify your phone number.
@@ -117,10 +175,14 @@ export default function SignUpPage() {
             {/* Continue */}
             <Button
               type="submit"
-              disabled={!isValid}
+              disabled={!isValid || loading}
               className="w-full h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Continue
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                "Continue"
+              )}
             </Button>
           </form>
 

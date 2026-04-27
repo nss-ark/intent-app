@@ -17,7 +17,7 @@ export default function VerifyPage() {
 
   useEffect(() => {
     try {
-      const data = JSON.parse(localStorage.getItem("intent_signup") || "{}");
+      const data = JSON.parse(sessionStorage.getItem("intent_signup") || "{}");
       setPhone(data.phone || "+91 98765 43210");
     } catch {
       setPhone("+91 98765 43210");

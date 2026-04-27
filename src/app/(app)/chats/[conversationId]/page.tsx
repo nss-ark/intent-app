@@ -1,17 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   Calendar,
   Info,
+  Loader2,
   Paperclip,
   Send,
 } from "lucide-react";
 import { AvatarPlaceholder } from "@/components/avatar-placeholder";
-import { sampleConversations } from "@/data/sample-conversations";
-import { sampleMessages } from "@/data/sample-conversations";
+import { useConversation, useSendMessage } from "@/hooks/use-conversations";
+import { format, isToday, isYesterday } from "date-fns";
 
 /**
  * Screen 17: Conversation Detail
@@ -20,29 +22,82 @@ import { sampleMessages } from "@/data/sample-conversations";
  * The bottom tab bar is conditionally hidden by the (app) layout based on
  * the pathname matching /chats/[conversationId].
  */
+
+/** Format a date into a human-friendly group label */
+function formatDateLabel(dateStr: string): string {
+  const d = new Date(dateStr);
+  if (isToday(d)) return "Today";
+  if (isYesterday(d)) return "Yesterday";
+  return format(d, "MMM d");
+}
+
+/** Format a time for display next to a message bubble */
+function formatTime(dateStr: string): string {
+  return format(new Date(dateStr), "h:mm a");
+}
+
+interface MessageGroup {
+  date: string;
+  messages: { id: string; senderUserId: string; body: string; sentAt: string }[];
+}
+
 export default function ConversationDetailPage() {
-  const params = useParams();
+  const params = useParams<{ conversationId: string }>();
   const conversationId = params.conversationId as string;
 
-  // Find conversation metadata
-  const conversation = sampleConversations.find(
-    (c) => c.id === conversationId
-  );
-  const participantName = conversation?.participantName ?? "Rajesh Iyer";
-  const gradientFrom = conversation?.participantGradientFrom ?? "#6B6B66";
-  const gradientTo = conversation?.participantGradientTo ?? "#9B9B94";
-  const isOnline = conversation?.isOnline ?? true;
+  const { data: conversation, isLoading } = useConversation(conversationId);
+  const sendMessage = useSendMessage();
+
+  const [inputValue, setInputValue] = useState("");
+
+  // Derive the current user ID: whichever of userAId / userBId is NOT the otherUser
+  const currentUserId =
+    conversation && conversation.otherUser
+      ? conversation.userAId === conversation.otherUser.id
+        ? conversation.userBId
+        : conversation.userAId
+      : null;
+
+  const participantName = conversation?.otherUser?.fullName ?? "...";
 
   // Group messages by date for rendering date separators
-  const messagesByDate: { date: string; messages: typeof sampleMessages }[] =
-    [];
-  for (const msg of sampleMessages) {
-    const last = messagesByDate[messagesByDate.length - 1];
-    if (last && last.date === msg.displayDate) {
-      last.messages.push(msg);
-    } else {
-      messagesByDate.push({ date: msg.displayDate, messages: [msg] });
+  const messagesByDate: MessageGroup[] = [];
+  if (conversation?.messages?.items) {
+    for (const msg of conversation.messages.items) {
+      const dateLabel = formatDateLabel(msg.sentAt);
+      const last = messagesByDate[messagesByDate.length - 1];
+      if (last && last.date === dateLabel) {
+        last.messages.push(msg);
+      } else {
+        messagesByDate.push({ date: dateLabel, messages: [msg] });
+      }
     }
+  }
+
+  function handleSend() {
+    const body = inputValue.trim();
+    if (!body || !conversationId) return;
+    setInputValue("");
+    sendMessage.mutate({ conversationId, body });
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="mx-auto flex h-[100dvh] w-full max-w-[640px] items-center justify-center bg-[var(--intent-bg)]">
+        <Loader2
+          size={28}
+          className="animate-spin text-[var(--intent-amber)]"
+        />
+      </div>
+    );
   }
 
   return (
@@ -61,26 +116,13 @@ export default function ConversationDetailPage() {
           <div className="relative flex-shrink-0">
             <AvatarPlaceholder
               name={participantName}
-              gradientFrom={gradientFrom}
-              gradientTo={gradientTo}
               size={36}
             />
-            {isOnline && (
-              <span
-                className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500"
-                aria-label="Online"
-              />
-            )}
           </div>
           <div className="min-w-0">
             <p className="truncate text-[15px] font-semibold leading-tight text-[var(--intent-text-primary)]">
               {participantName}
             </p>
-            {isOnline && (
-              <p className="text-[12px] font-medium leading-tight text-emerald-600">
-                Online
-              </p>
-            )}
           </div>
         </div>
 
@@ -129,7 +171,7 @@ export default function ConversationDetailPage() {
 
             {/* Messages in this date group */}
             {group.messages.map((msg) => {
-              const isSent = msg.senderId === "arjun";
+              const isSent = msg.senderUserId === currentUserId;
               return (
                 <div
                   key={msg.id}
@@ -143,14 +185,14 @@ export default function ConversationDetailPage() {
                           : "rounded-bl-sm border border-[var(--intent-text-tertiary)] bg-white text-[var(--intent-text-primary)]"
                       }`}
                     >
-                      {msg.text}
+                      {msg.body}
                     </div>
                     <p
                       className={`mt-1 text-[11px] text-[var(--intent-text-secondary)] ${
                         isSent ? "text-right" : "text-left"
                       }`}
                     >
-                      {msg.displayTime}
+                      {formatTime(msg.sentAt)}
                     </p>
                   </div>
                 </div>
@@ -177,16 +219,25 @@ export default function ConversationDetailPage() {
           <div className="flex min-h-[40px] flex-1 items-center rounded-full border border-[var(--intent-text-tertiary)] bg-[var(--intent-bg)] px-4">
             <input
               type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder={`Reply to ${participantName.split(" ")[0]}...`}
               className="w-full bg-transparent py-2 text-[14px] text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)] focus:outline-none"
             />
           </div>
           <button
             type="button"
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--intent-amber)] shadow-sm transition-colors hover:bg-[var(--intent-amber-light)]"
+            onClick={handleSend}
+            disabled={sendMessage.isPending || !inputValue.trim()}
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--intent-amber)] shadow-sm transition-colors hover:bg-[var(--intent-amber-light)] disabled:opacity-50"
             aria-label="Send message"
           >
-            <Send size={18} strokeWidth={2} className="text-white" />
+            {sendMessage.isPending ? (
+              <Loader2 size={18} strokeWidth={2} className="animate-spin text-white" />
+            ) : (
+              <Send size={18} strokeWidth={2} className="text-white" />
+            )}
           </button>
         </div>
       </div>

@@ -7,12 +7,15 @@ import {
   Clock,
   ChevronRight,
   CalendarPlus,
+  Loader2,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { AvatarPlaceholder } from "@/components/avatar-placeholder";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/hooks/use-api";
 
 /* ------------------------------------------------------------------ */
-/* Event data                                                          */
+/* Event types                                                         */
 /* ------------------------------------------------------------------ */
 
 type EventType = "matched" | "admin";
@@ -38,71 +41,62 @@ interface EventItem {
   expanded?: boolean;
 }
 
-const events: EventItem[] = [
-  {
-    id: "1",
-    type: "matched",
-    title: "Career Fork dinner \u2014 Group A",
-    date: "Friday, Nov 15",
-    time: "7:30 pm",
-    location: "Olive Bistro, Banjara Hills, Hyderabad",
-    attendees: [
-      { name: "Ananya Reddy" },
-      { name: "Vikram Mehta" },
-      { name: "Priya Nair" },
-      { name: "Rohan Kapoor" },
-      { name: "Arjun Iyer" },
-    ],
-    confirmedCount: 5,
-    totalCount: 5,
-    tab: "upcoming",
-    expanded: true,
-  },
-  {
-    id: "2",
-    type: "admin",
-    title:
-      "Founders\u2019 Friday: Sumeet Kapoor on going from idea to Series B",
-    date: "Saturday, Nov 23",
-    time: "6:00 pm",
-    location: "ISB Campus, Gachibowli, Hyderabad",
-    goingCount: 37,
-    spotsLeft: 12,
-    tab: "upcoming",
-  },
-  {
-    id: "3",
-    type: "matched",
-    title: "Climate Operators dinner \u2014 Group B",
-    date: "Friday, Dec 6",
-    time: "7:30 pm",
-    location: "Farzi Cafe, Jubilee Hills, Hyderabad",
-    confirmedCount: 3,
-    totalCount: 5,
-    tab: "upcoming",
-  },
-  {
-    id: "4",
-    type: "admin",
-    title: "Alumni Homecoming 2024",
-    date: "Saturday, Oct 12",
-    time: "10:00 am",
-    location: "ISB Campus, Gachibowli, Hyderabad",
-    goingCount: 245,
-    tab: "past",
-  },
-  {
-    id: "5",
-    type: "matched",
-    title: "Values Alignment dinner \u2014 Group B",
-    date: "Friday, Sep 20",
-    time: "7:30 pm",
-    location: "Olive Bistro, Banjara Hills, Hyderabad",
-    confirmedCount: 4,
-    totalCount: 5,
-    tab: "past",
-  },
-];
+/* ------------------------------------------------------------------ */
+/* Data fetching                                                       */
+/* ------------------------------------------------------------------ */
+
+interface SurveyFromAPI {
+  id: string;
+  title: string;
+  status: string;
+  publishedAt: string | null;
+  closesAt: string | null;
+  hasResponded: boolean;
+  _count: { questions: number };
+}
+
+function useSurveyEvents() {
+  return useQuery<EventItem[]>({
+    queryKey: ["events-from-surveys"],
+    queryFn: async () => {
+      try {
+        const surveys: SurveyFromAPI[] = await apiFetch("/api/surveys");
+        // Map surveys into "matched meetup" event cards
+        const now = new Date();
+        return surveys.map((s) => {
+          const closesAt = s.closesAt ? new Date(s.closesAt) : null;
+          const isPast = closesAt ? closesAt < now : false;
+          return {
+            id: s.id,
+            type: "matched" as EventType,
+            title: s.title,
+            date: s.publishedAt
+              ? new Date(s.publishedAt).toLocaleDateString("en-IN", {
+                  weekday: "long",
+                  month: "short",
+                  day: "numeric",
+                })
+              : "TBD",
+            time: s.publishedAt
+              ? new Date(s.publishedAt).toLocaleTimeString("en-IN", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })
+              : "",
+            location: "Community survey",
+            confirmedCount: s.hasResponded ? 1 : 0,
+            totalCount: s._count.questions,
+            tab: isPast ? ("past" as EventTab) : ("upcoming" as EventTab),
+          };
+        });
+      } catch {
+        // Gracefully fall back to empty
+        return [];
+      }
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+}
 
 /* ------------------------------------------------------------------ */
 /* Type pill                                                           */
@@ -253,6 +247,7 @@ function CompactEventCard({ event }: { event: EventItem }) {
 
 export default function EventsPage() {
   const [activeTab, setActiveTab] = useState<EventTab>("upcoming");
+  const { data: events = [], isLoading } = useSurveyEvents();
 
   const filteredEvents = events.filter((e) => e.tab === activeTab);
 
@@ -298,7 +293,17 @@ export default function EventsPage() {
 
       {/* ── Event list ──────────────────────────────────────────── */}
       <div className="mx-auto max-w-[800px] px-4 py-4 space-y-3">
-        {filteredEvents.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2
+              size={32}
+              className="animate-spin text-[var(--intent-text-secondary)]"
+            />
+            <p className="mt-3 text-[14px] text-[var(--intent-text-secondary)]">
+              Loading events...
+            </p>
+          </div>
+        ) : filteredEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--muted)]">
               <Calendar

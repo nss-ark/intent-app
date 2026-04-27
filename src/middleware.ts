@@ -1,45 +1,73 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { apiRateLimit, authRateLimit } from "@/lib/rate-limit";
 
-// Routes that do not require authentication
-const publicPaths = ["/", "/login", "/signup"];
+const publicPaths = [
+  "/",
+  "/login",
+  "/signup",
+  "/signup/verify",
+  "/signup/consent",
+  "/onboarding",
+  "/onboarding/step1",
+  "/onboarding/step2",
+  "/onboarding/step3",
+  "/onboarding/step4",
+  "/onboarding/complete",
+  "/admin/login",
+];
 
-// Prefix patterns that are always public
 const publicPrefixes = ["/api/auth/", "/_next/", "/favicon.ico"];
+
+// Demo mode: set NEXT_PUBLIC_DEMO_MODE=true to allow browsing without auth
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public prefixes (auth API, static assets)
   if (publicPrefixes.some((prefix) => pathname.startsWith(prefix))) {
     return NextResponse.next();
   }
 
-  // Allow exact public paths
   if (publicPaths.includes(pathname)) {
     return NextResponse.next();
   }
 
-  // Get the JWT token
+  // Rate limiting for API routes
+  if (pathname.startsWith("/api/")) {
+    const limiter = pathname.startsWith("/api/auth/") ? authRateLimit : apiRateLimit;
+    const rateLimitResponse = await limiter(request);
+    if (rateLimitResponse) return rateLimitResponse;
+  }
+
+  // In demo mode, allow all routes without auth
+  if (isDemoMode) {
+    return NextResponse.next();
+  }
+
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET ?? "intent-dev-secret-change-in-production",
   });
 
-  // Not authenticated -> redirect to login
   if (!token) {
+    // API routes return 401 JSON instead of redirect
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
+        { status: 401 }
+      );
+    }
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Admin routes require an admin role
-  if (pathname.startsWith("/(admin)") || pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     const adminRoles = ["OWNER", "OPERATOR", "MODERATOR"];
     if (!adminRoles.includes(token.role)) {
-      // Non-admin user trying to access admin routes -> redirect to app home
-      return NextResponse.redirect(new URL("/discover", request.url));
+      return NextResponse.redirect(new URL("/home", request.url));
     }
   }
 
@@ -48,13 +76,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder assets
-     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Info } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { ArrowLeft, Info, Loader2 } from "lucide-react";
 import { IntentWordmark } from "@/components/intent-wordmark";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 
 interface ConsentRow {
   id: string;
+  consentType: string;
   label: string;
   description: string;
   required: boolean;
@@ -18,6 +20,7 @@ interface ConsentRow {
 const consentRows: ConsentRow[] = [
   {
     id: "terms",
+    consentType: "TERMS_OF_SERVICE",
     label: "Terms of Service",
     description:
       "I agree to Intent's Terms of Service governing use of the platform.",
@@ -26,6 +29,7 @@ const consentRows: ConsentRow[] = [
   },
   {
     id: "privacy",
+    consentType: "PRIVACY_POLICY",
     label: "Privacy Policy",
     description:
       "I acknowledge Intent's Privacy Policy and how my data is handled.",
@@ -34,6 +38,7 @@ const consentRows: ConsentRow[] = [
   },
   {
     id: "visibility",
+    consentType: "PROFILE_VISIBILITY",
     label: "Profile visibility",
     description:
       "Allow other verified ISB members to discover my profile in the community directory.",
@@ -49,6 +54,8 @@ export default function ConsentPage() {
     privacy: true,
     visibility: false,
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const canContinue = consents.terms && consents.privacy;
 
@@ -56,10 +63,63 @@ export default function ConsentPage() {
     setConsents((prev) => ({ ...prev, [id]: checked }));
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!canContinue) return;
-    localStorage.setItem("intent_consents", JSON.stringify(consents));
-    router.push("/onboarding/step1");
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Read signup credentials from sessionStorage
+      const signupRaw = sessionStorage.getItem("intent_signup");
+      if (!signupRaw) {
+        setError("Signup session expired. Please start over.");
+        setLoading(false);
+        return;
+      }
+
+      const { email, password } = JSON.parse(signupRaw);
+
+      // Auto-login first (consent API requires authentication)
+      const loginResult = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (!loginResult?.ok) {
+        setError(loginResult?.error ?? "Login failed. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Record each checked consent
+      const checkedConsents = consentRows.filter((row) => consents[row.id]);
+      for (const row of checkedConsents) {
+        const res = await fetch("/api/consents", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ consentType: row.consentType }),
+        });
+
+        if (!res.ok) {
+          const json = await res.json();
+          console.error("Consent recording failed:", json);
+          // Non-blocking: continue even if a consent fails to record
+        }
+      }
+
+      // Clear password from sessionStorage (keep email/fullName for onboarding)
+      const signupData = JSON.parse(signupRaw);
+      delete signupData.password;
+      sessionStorage.setItem("intent_signup", JSON.stringify(signupData));
+
+      router.push("/onboarding/step1");
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -86,6 +146,12 @@ export default function ConsentPage() {
           <p className="mt-2 text-sm text-[#6B6B66]">
             Please review and confirm the following to continue.
           </p>
+
+          {error && (
+            <div className="mt-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           {/* Consent rows */}
           <div className="mt-8 space-y-1">
@@ -133,10 +199,14 @@ export default function ConsentPage() {
           {/* Continue */}
           <Button
             onClick={handleContinue}
-            disabled={!canContinue}
+            disabled={!canContinue || loading}
             className="w-full h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors mt-8 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Continue
+            {loading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              "Continue"
+            )}
           </Button>
         </div>
       </div>

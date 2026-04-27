@@ -15,21 +15,53 @@ import {
   Shield,
   Building2,
   Send,
+  Loader2,
 } from "lucide-react";
-import { sampleMembers, currentUser } from "@/data/sample-members";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/hooks/use-api";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { HeroPlaceholder, AvatarPlaceholder } from "@/components/avatar-placeholder";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { SampleMember } from "@/data/sample-members";
 
 /* ------------------------------------------------------------------ */
-/* Helpers                                                             */
+/* Types                                                               */
 /* ------------------------------------------------------------------ */
 
-function getMemberById(id: string): SampleMember | undefined {
-  if (id === "6" || id === currentUser.id) return currentUser;
-  return sampleMembers.find((m) => m.id === id);
+interface UserProfile {
+  id: string;
+  fullName: string;
+  photoUrl: string | null;
+  graduationYear: number | null;
+  program: string | null;
+  profile: {
+    missionStatement: string | null;
+    currentCity: string | null;
+    currentCountry: string | null;
+    yearsOfExperienceCached: number | null;
+  } | null;
+  domain: { id: string; code: string; displayName: string } | null;
+  niches: { id: string; code: string; displayName: string; position: number }[];
+  experience: {
+    id: string;
+    title: string;
+    companyName: string;
+    isCurrent: boolean;
+  }[];
+  badges: {
+    id: string;
+    tenantBadgeId: string;
+    displayName: string;
+    isVisible: boolean;
+  }[];
+  openSignals: {
+    id: string;
+    displayName: string;
+    signalType: string;
+    icon: string | null;
+  }[];
+  isVerified: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -69,12 +101,10 @@ function SignalPill({
 function ExperienceItem({
   company,
   role,
-  period,
   isCurrent,
 }: {
   company: string;
   role: string;
-  period: string;
   isCurrent: boolean;
 }) {
   return (
@@ -87,14 +117,13 @@ function ExperienceItem({
         <p className="text-[13px] text-[var(--intent-text-secondary)]">
           {company}
         </p>
-        <p className="text-[12px] text-[var(--intent-text-secondary)]">
-          {period}
-          {isCurrent && (
-            <span className="ml-1.5 inline-flex items-center rounded-full bg-[var(--intent-green-subtle)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--intent-green)]">
+        {isCurrent && (
+          <p className="text-[12px] text-[var(--intent-text-secondary)]">
+            <span className="ml-0 inline-flex items-center rounded-full bg-[var(--intent-green-subtle)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--intent-green)]">
               Current
             </span>
-          )}
-        </p>
+          </p>
+        )}
       </div>
     </div>
   );
@@ -141,9 +170,27 @@ export default function ProfileDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const member = getMemberById(id);
 
-  if (!member) {
+  const { data: currentUser } = useCurrentUser();
+
+  const {
+    data: member,
+    isLoading,
+    isError,
+  } = useQuery<UserProfile>({
+    queryKey: ["user", id],
+    queryFn: () => apiFetch("/api/users/" + id),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--intent-bg)]">
+        <Loader2 className="size-8 animate-spin text-[var(--intent-amber)]" />
+      </div>
+    );
+  }
+
+  if (isError || !member) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--intent-bg)]">
         <p className="text-[var(--intent-text-secondary)]">Member not found</p>
@@ -158,7 +205,41 @@ export default function ProfileDetailPage({
     );
   }
 
-  const isOwnProfile = member.id === currentUser.id;
+  const isOwnProfile = currentUser?.id === member.id;
+
+  /* Derive display values */
+  const location = [member.profile?.currentCity, member.profile?.currentCountry]
+    .filter(Boolean)
+    .join(", ");
+
+  const yearsOfExperience = member.profile?.yearsOfExperienceCached ?? 0;
+  const domain = member.domain?.displayName ?? "—";
+  const missionStatement = member.profile?.missionStatement;
+
+  const currentExp = member.experience.find((e) => e.isCurrent);
+  const currentCompanyName = currentExp?.companyName ?? "—";
+  const currentRole = currentExp?.title ?? "—";
+
+  const previousExps = member.experience.filter((e) => !e.isCurrent);
+
+  const isFounder = member.badges.some(
+    (b) => b.displayName?.toLowerCase().includes("founder")
+  );
+  const isVerified = member.isVerified;
+
+  const askSignals = member.openSignals.filter(
+    (s) => s.signalType === "ASK"
+  );
+  const offerSignals = member.openSignals.filter(
+    (s) => s.signalType === "OFFER"
+  );
+
+  const educationLine = [
+    member.program,
+    member.graduationYear ? `Class of ${member.graduationYear}` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <div className="min-h-screen bg-[var(--intent-bg)]">
@@ -185,8 +266,6 @@ export default function ProfileDetailPage({
 
         <HeroPlaceholder
           name={member.fullName}
-          gradientFrom={member.gradientFrom}
-          gradientTo={member.gradientTo}
           minHeight={320}
           className="w-full"
         />
@@ -202,13 +281,13 @@ export default function ProfileDetailPage({
                 <h1 className="text-2xl font-bold text-[var(--intent-text-primary)]">
                   {member.fullName}
                 </h1>
-                {member.isVerified && (
+                {isVerified && (
                   <CheckCircle2
                     size={20}
                     className="shrink-0 fill-[var(--intent-green)] text-white"
                   />
                 )}
-                {member.isFounder && (
+                {isFounder && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-[var(--intent-green)] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-white">
                     <Shield size={11} />
                     Founder
@@ -216,75 +295,74 @@ export default function ProfileDetailPage({
                 )}
               </div>
               <p className="mt-1 text-[14px] text-[var(--intent-text-secondary)]">
-                {member.yearsOfExperience} years &middot; Class of{" "}
-                {member.classYear} &middot; {member.program}
+                {yearsOfExperience} years &middot;{" "}
+                {member.graduationYear
+                  ? `Class of ${member.graduationYear}`
+                  : ""}{" "}
+                &middot; {member.program}
               </p>
             </div>
           </div>
 
           {/* Company badges */}
           <div className="mt-4 flex items-center gap-2">
-            <AvatarPlaceholder
-              name={member.currentCompany}
-              size={28}
-              gradientFrom={member.gradientFrom}
-              gradientTo={member.gradientTo}
-            />
+            <AvatarPlaceholder name={currentCompanyName} size={28} />
             <span className="text-[14px] font-medium text-[var(--intent-text-primary)]">
-              {member.currentCompany}
+              {currentCompanyName}
             </span>
-            {member.previousCompanies.map((co) => (
-              <span key={co} className="flex items-center gap-1.5">
-                <span className="text-[var(--intent-text-secondary)]">
-                  &rarr;
+            {previousExps.map((exp) => {
+              const coName = exp.companyName || "—";
+              return (
+                <span key={exp.id} className="flex items-center gap-1.5">
+                  <span className="text-[var(--intent-text-secondary)]">
+                    &rarr;
+                  </span>
+                  <AvatarPlaceholder name={coName} size={24} />
+                  <span className="text-[13px] text-[var(--intent-text-secondary)]">
+                    {coName}
+                  </span>
                 </span>
-                <AvatarPlaceholder name={co} size={24} />
-                <span className="text-[13px] text-[var(--intent-text-secondary)]">
-                  {co}
-                </span>
-              </span>
-            ))}
+              );
+            })}
           </div>
 
           {/* Intent statement */}
-          <div className="mt-6 rounded-2xl bg-[var(--intent-amber-subtle)]/50 p-4">
-            <div className="flex items-start gap-2">
-              <span className="text-2xl leading-none text-[var(--intent-amber)]">
-                &ldquo;
-              </span>
-              <p className="flex-1 text-[15px] italic leading-relaxed text-[var(--intent-text-primary)]">
-                {member.intent}
-              </p>
-              <span className="self-end text-2xl leading-none text-[var(--intent-amber)]">
-                &rdquo;
-              </span>
+          {missionStatement && (
+            <div className="mt-6 rounded-2xl bg-[var(--intent-amber-subtle)]/50 p-4">
+              <div className="flex items-start gap-2">
+                <span className="text-2xl leading-none text-[var(--intent-amber)]">
+                  &ldquo;
+                </span>
+                <p className="flex-1 text-[15px] italic leading-relaxed text-[var(--intent-text-primary)]">
+                  {missionStatement}
+                </p>
+                <span className="self-end text-2xl leading-none text-[var(--intent-amber)]">
+                  &rdquo;
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
           <Separator className="my-6 bg-[var(--intent-text-tertiary)]" />
 
           {/* Metadata grid */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <MetadataRow
-              icon={MapPin}
-              label="Location"
-              value={member.city}
-            />
+            {location && (
+              <MetadataRow icon={MapPin} label="Location" value={location} />
+            )}
             <MetadataRow
               icon={Briefcase}
               label="Current Role"
-              value={`${member.currentRole} at ${member.currentCompany}`}
+              value={`${currentRole} at ${currentCompanyName}`}
             />
-            <MetadataRow
-              icon={GraduationCap}
-              label="Education"
-              value={member.education}
-            />
-            <MetadataRow
-              icon={Building2}
-              label="Domain"
-              value={member.domain}
-            />
+            {educationLine && (
+              <MetadataRow
+                icon={GraduationCap}
+                label="Education"
+                value={educationLine}
+              />
+            )}
+            <MetadataRow icon={Building2} label="Domain" value={domain} />
           </div>
 
           <Separator className="my-6 bg-[var(--intent-text-tertiary)]" />
@@ -295,27 +373,35 @@ export default function ProfileDetailPage({
               What {member.fullName.split(" ")[0]} is open to
             </h2>
 
-            {member.askSignals.length > 0 && (
+            {askSignals.length > 0 && (
               <div className="mt-4">
                 <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-[var(--intent-amber)]">
                   Asks
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {member.askSignals.map((signal) => (
-                    <SignalPill key={signal} label={signal} type="ask" />
+                  {askSignals.map((signal) => (
+                    <SignalPill
+                      key={signal.id}
+                      label={signal.displayName}
+                      type="ask"
+                    />
                   ))}
                 </div>
               </div>
             )}
 
-            {member.offerSignals.length > 0 && (
+            {offerSignals.length > 0 && (
               <div className="mt-4">
                 <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-[var(--intent-green)]">
                   Offers
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {member.offerSignals.map((signal) => (
-                    <SignalPill key={signal} label={signal} type="offer" />
+                  {offerSignals.map((signal) => (
+                    <SignalPill
+                      key={signal.id}
+                      label={signal.displayName}
+                      type="offer"
+                    />
                   ))}
                 </div>
               </div>
@@ -330,8 +416,13 @@ export default function ProfileDetailPage({
               Experience
             </h2>
             <div className="space-y-4">
-              {member.experience.map((exp, i) => (
-                <ExperienceItem key={i} {...exp} />
+              {member.experience.map((exp) => (
+                <ExperienceItem
+                  key={exp.id}
+                  company={exp.companyName || "—"}
+                  role={exp.title}
+                  isCurrent={exp.isCurrent}
+                />
               ))}
             </div>
           </div>
@@ -344,52 +435,55 @@ export default function ProfileDetailPage({
               Badges
             </h2>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {member.badges.map((badge) => (
-                <div
-                  key={badge}
-                  className="flex shrink-0 flex-col items-center gap-1.5"
-                >
+              {member.badges.map((badge) => {
+                const nameLower = badge.displayName?.toLowerCase() ?? "";
+                return (
                   <div
-                    className={cn(
-                      "flex h-14 w-14 items-center justify-center rounded-2xl",
-                      badge === "Founder"
-                        ? "bg-[var(--intent-green)]"
-                        : badge.includes("Verified")
-                        ? "bg-[var(--intent-green-subtle)]"
-                        : badge.includes("Mentor")
-                        ? "bg-[var(--intent-amber-subtle)]"
-                        : "bg-[var(--muted)]"
-                    )}
+                    key={badge.id}
+                    className="flex shrink-0 flex-col items-center gap-1.5"
                   >
-                    {badge === "Founder" ? (
-                      <Shield size={24} className="text-white" />
-                    ) : badge.includes("Verified") ? (
-                      <CheckCircle2
-                        size={24}
-                        className="text-[var(--intent-green)]"
-                      />
-                    ) : badge.includes("Mentor") ? (
-                      <GraduationCap
-                        size={24}
-                        className="text-[var(--intent-amber)]"
-                      />
-                    ) : badge.includes("Contributor") ? (
-                      <Send
-                        size={24}
-                        className="text-[var(--intent-text-secondary)]"
-                      />
-                    ) : (
-                      <GraduationCap
-                        size={24}
-                        className="text-[var(--intent-text-secondary)]"
-                      />
-                    )}
+                    <div
+                      className={cn(
+                        "flex h-14 w-14 items-center justify-center rounded-2xl",
+                        nameLower.includes("founder")
+                          ? "bg-[var(--intent-green)]"
+                          : nameLower.includes("verified") || nameLower.includes("alumni")
+                          ? "bg-[var(--intent-green-subtle)]"
+                          : nameLower.includes("mentor")
+                          ? "bg-[var(--intent-amber-subtle)]"
+                          : "bg-[var(--muted)]"
+                      )}
+                    >
+                      {nameLower.includes("founder") ? (
+                        <Shield size={24} className="text-white" />
+                      ) : nameLower.includes("verified") || nameLower.includes("alumni") ? (
+                        <CheckCircle2
+                          size={24}
+                          className="text-[var(--intent-green)]"
+                        />
+                      ) : nameLower.includes("mentor") ? (
+                        <GraduationCap
+                          size={24}
+                          className="text-[var(--intent-amber)]"
+                        />
+                      ) : nameLower.includes("contributor") ? (
+                        <Send
+                          size={24}
+                          className="text-[var(--intent-text-secondary)]"
+                        />
+                      ) : (
+                        <GraduationCap
+                          size={24}
+                          className="text-[var(--intent-text-secondary)]"
+                        />
+                      )}
+                    </div>
+                    <span className="max-w-[72px] text-center text-[11px] font-medium leading-tight text-[var(--intent-text-secondary)]">
+                      {badge.displayName}
+                    </span>
                   </div>
-                  <span className="max-w-[72px] text-center text-[11px] font-medium leading-tight text-[var(--intent-text-secondary)]">
-                    {badge}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

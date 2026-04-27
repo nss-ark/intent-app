@@ -1,53 +1,98 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/hooks/use-api";
+import { useSendNudge, useNudgeQuota } from "@/hooks/use-nudges";
 import { SignalPill, type SignalPillData } from "@/components/signal-pill";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
 
-// ── Sample data ────────────────────────────────────────────────────────
-
-const recipientData = {
-  id: "user-ananya-001",
-  fullName: "Ananya Krishnan",
-  photoUrl: null as string | null,
-  program: "MBA, Class of 2024",
-  currentCity: "Bengaluru",
-  currentRole: "Product Manager at Razorpay",
-};
-
-const matchingSignals: SignalPillData[] = [
-  {
-    id: "sig-001",
-    code: "cofounder_search",
-    displayName: "Looking for a co-founder",
-    signalType: "mutual",
-  },
-  {
-    id: "sig-002",
-    code: "coffee_chat",
-    displayName: "Open to coffee chat",
-    signalType: "mutual",
-  },
-  {
-    id: "sig-003",
-    code: "curious_company",
-    displayName: "Curious about Razorpay",
-    signalType: "ask",
-  },
-];
-
 const MAX_CHARS = 400;
+
+// ── API response type ─────────────────────────────────────────────────
+
+interface RecipientUser {
+  id: string;
+  fullName: string;
+  photoUrl: string | null;
+  program: string | null;
+  graduationYear: number | null;
+  profile: {
+    currentCity: string | null;
+  } | null;
+  experience: {
+    id: string;
+    title: string;
+    companyName: string;
+    isCurrent: boolean;
+  }[];
+  openSignals: {
+    id: string;
+    displayName: string;
+    signalType: string;
+    icon: string | null;
+  }[];
+}
 
 // ── Component ──────────────────────────────────────────────────────────
 
 export default function NudgeComposerPage() {
   const router = useRouter();
+  const params = useParams();
+  const userId = params.userId as string;
+
   const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [sendError, setSendError] = useState<string | null>(null);
 
-  const isReady = selectedSignal !== null && message.trim().length > 0;
+  // Fetch recipient user data
+  const {
+    data: recipient,
+    isLoading: recipientLoading,
+    error: recipientError,
+  } = useQuery<RecipientUser>({
+    queryKey: ["user", userId],
+    queryFn: () => apiFetch(`/api/users/${userId}`),
+    enabled: !!userId,
+  });
+
+  // Fetch nudge quota
+  const { data: quota } = useNudgeQuota();
+
+  // Send nudge mutation
+  const sendNudge = useSendNudge();
+
+  // Map open signals to SignalPillData format
+  const matchingSignals: SignalPillData[] = (recipient?.openSignals ?? [])
+    .map((s) => ({
+      id: s.id,
+      code: s.displayName.toLowerCase().replace(/\s+/g, "_"),
+      displayName: s.displayName,
+      signalType: s.signalType.toLowerCase() as
+        | "ask"
+        | "offer"
+        | "mutual",
+      icon: s.icon ?? undefined,
+    }));
+
+  // Build display strings
+  const currentExp = recipient?.experience.find((e) => e.isCurrent);
+  const currentRole = currentExp
+    ? currentExp.companyName
+      ? `${currentExp.title} at ${currentExp.companyName}`
+      : currentExp.title
+    : null;
+  const programLabel = [
+    recipient?.program,
+    recipient?.graduationYear ? `Class of ${recipient.graduationYear}` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const isReady =
+    selectedSignal !== null && message.trim().length > 0 && !sendNudge.isPending;
   const charCount = message.length;
 
   const handleSignalClick = (signal: SignalPillData) => {
@@ -55,10 +100,71 @@ export default function NudgeComposerPage() {
   };
 
   const handleSend = () => {
-    if (!isReady) return;
-    // In production: POST to API, then navigate
-    router.push("/inbox");
+    if (!isReady || !selectedSignal) return;
+    setSendError(null);
+    sendNudge.mutate(
+      { receiverUserId: userId, message, signalIds: [selectedSignal] },
+      {
+        onSuccess: () => {
+          router.push("/inbox");
+        },
+        onError: (err) => {
+          setSendError(
+            err instanceof Error ? err.message : "Failed to send nudge"
+          );
+        },
+      }
+    );
   };
+
+  const firstName = recipient?.fullName.split(" ")[0] ?? "";
+
+  // ── Loading state ───────────────────────────────────────────────────
+
+  if (recipientLoading) {
+    return (
+      <div className="bg-[#FAFAF6] flex flex-col min-h-screen items-center justify-center">
+        <div className="animate-pulse space-y-4 w-full max-w-[640px] px-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-[#E8E4DA]" />
+            <div className="space-y-2 flex-1">
+              <div className="h-4 bg-[#E8E4DA] rounded w-40" />
+              <div className="h-3 bg-[#E8E4DA] rounded w-56" />
+            </div>
+          </div>
+          <div className="h-px bg-[#E8E4DA]" />
+          <div className="h-4 bg-[#E8E4DA] rounded w-32" />
+          <div className="flex gap-2">
+            <div className="h-8 bg-[#E8E4DA] rounded-full w-36" />
+            <div className="h-8 bg-[#E8E4DA] rounded-full w-28" />
+          </div>
+          <div className="h-px bg-[#E8E4DA]" />
+          <div className="h-[200px] bg-[#E8E4DA] rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Error state ─────────────────────────────────────────────────────
+
+  if (recipientError || !recipient) {
+    return (
+      <div className="bg-[#FAFAF6] flex flex-col min-h-screen items-center justify-center px-4">
+        <p className="text-sm text-[#6B6B66]">
+          {recipientError instanceof Error
+            ? recipientError.message
+            : "Could not load this user."}
+        </p>
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="mt-4 text-sm font-medium text-[#B8762A] hover:text-[#D4A053] transition-colors"
+        >
+          Go back
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#FAFAF6] flex flex-col -mb-20">
@@ -84,7 +190,7 @@ export default function NudgeComposerPage() {
                 : "text-[#E8E4DA] cursor-not-allowed"
             )}
           >
-            Send
+            {sendNudge.isPending ? "Sending..." : "Send"}
           </button>
         </div>
       </header>
@@ -95,25 +201,30 @@ export default function NudgeComposerPage() {
           {/* Recipient row */}
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden bg-[#F2EFE8] shrink-0">
-              {recipientData.photoUrl ? (
+              {recipient.photoUrl ? (
                 <img
-                  src={recipientData.photoUrl}
-                  alt={recipientData.fullName}
+                  src={recipient.photoUrl}
+                  alt={recipient.fullName}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-sm font-medium text-[#6B6B66]">
-                  {getInitials(recipientData.fullName)}
+                  {getInitials(recipient.fullName)}
                 </div>
               )}
             </div>
             <div className="min-w-0">
               <p className="text-base font-semibold text-[#1A1A1A] truncate">
-                {recipientData.fullName}
+                {recipient.fullName}
               </p>
               <p className="text-sm text-[#6B6B66] truncate">
-                {recipientData.program} &middot; {recipientData.currentCity}
+                {[programLabel, recipient.profile?.currentCity]
+                  .filter(Boolean)
+                  .join(" \u00b7 ")}
               </p>
+              {currentRole && (
+                <p className="text-sm text-[#6B6B66] truncate">{currentRole}</p>
+              )}
             </div>
           </div>
 
@@ -125,23 +236,29 @@ export default function NudgeComposerPage() {
             <h2 className="text-sm font-semibold text-[#1A1A1A]">
               What&apos;s this about?
             </h2>
-            <div className="flex flex-wrap gap-2">
-              {matchingSignals.map((signal) => (
-                <SignalPill
-                  key={signal.id}
-                  signal={signal}
-                  isSelected={selectedSignal === signal.id}
-                  onClick={handleSignalClick}
-                />
-              ))}
-            </div>
-            <p className="text-xs text-[#6B6B66] leading-relaxed">
-              We only show signals that match what{" "}
-              <span className="font-medium text-[#1A1A1A]">
-                {recipientData.fullName.split(" ")[0]}
-              </span>{" "}
-              is open to right now.
-            </p>
+            {matchingSignals.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {matchingSignals.map((signal) => (
+                  <SignalPill
+                    key={signal.id}
+                    signal={signal}
+                    isSelected={selectedSignal === signal.id}
+                    onClick={handleSignalClick}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-[#6B6B66]">
+                No matching signals found.
+              </p>
+            )}
+            {matchingSignals.length > 0 && (
+              <p className="text-xs text-[#6B6B66] leading-relaxed">
+                We only show signals that match what{" "}
+                <span className="font-medium text-[#1A1A1A]">{firstName}</span>{" "}
+                is open to right now.
+              </p>
+            )}
           </div>
 
           {/* Divider */}
@@ -163,7 +280,7 @@ export default function NudgeComposerPage() {
                   setMessage(e.target.value);
                 }
               }}
-              placeholder={`Be specific. What's the ask? Why ${recipientData.fullName.split(" ")[0]} specifically?`}
+              placeholder={`Be specific. What's the ask? Why ${firstName} specifically?`}
               className={cn(
                 "w-full min-h-[200px] px-3.5 py-3 rounded-xl border border-[#E8E4DA] bg-white",
                 "text-base text-[#1A1A1A] placeholder:text-[#6B6B66]/60",
@@ -191,15 +308,20 @@ export default function NudgeComposerPage() {
             </div>
           </div>
 
+          {/* Send error */}
+          {sendError && (
+            <div className="rounded-xl bg-red-50 border border-red-200 p-4">
+              <p className="text-sm text-red-700">{sendError}</p>
+            </div>
+          )}
+
           {/* Cooldown info card */}
           <div className="rounded-xl bg-[#F5EDE0]/60 border-l-[3px] border-l-[#B8762A] p-4">
             <p className="text-sm text-[#6B6B66] leading-relaxed">
               If{" "}
-              <span className="font-medium text-[#1A1A1A]">
-                {recipientData.fullName.split(" ")[0]}
-              </span>{" "}
-              doesn&apos;t accept, you&apos;ll need to wait 30 days before
-              nudging again.
+              <span className="font-medium text-[#1A1A1A]">{firstName}</span>{" "}
+              declines, you&apos;ll need to wait 90 days. If they don&apos;t
+              respond, 30 days.
             </p>
           </div>
 
@@ -222,11 +344,24 @@ export default function NudgeComposerPage() {
                 : "bg-[#E8E4DA] text-[#6B6B66] cursor-not-allowed"
             )}
           >
-            Send nudge
+            {sendNudge.isPending ? "Sending..." : "Send nudge"}
           </button>
           <p className="text-center text-xs text-[#6B6B66]">
-            You have <span className="font-medium text-[#1A1A1A]">4</span> nudges
-            left this week.
+            {quota ? (
+              <>
+                You have{" "}
+                <span className="font-medium text-[#1A1A1A]">
+                  {quota.remaining}
+                </span>{" "}
+                of{" "}
+                <span className="font-medium text-[#1A1A1A]">
+                  {quota.limit}
+                </span>{" "}
+                nudges remaining this week.
+              </>
+            ) : (
+              "\u00a0"
+            )}
           </p>
         </div>
       </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   ArrowLeft,
   ChevronRight,
@@ -25,8 +26,11 @@ import {
   Shield,
   Info,
   LogOut,
+  Loader2,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { apiFetch } from "@/hooks/use-api";
 
 /* ------------------------------------------------------------------ */
 /* Section heading                                                      */
@@ -79,14 +83,18 @@ function ChevronRow({
   label,
   caption,
   destructive = false,
+  onClick,
+  loading = false,
 }: {
   icon: React.ElementType;
   label: string;
   caption?: string;
   destructive?: boolean;
+  onClick?: () => void;
+  loading?: boolean;
 }) {
-  return (
-    <div className="flex min-h-[56px] items-center gap-3 px-4 py-2">
+  const content = (
+    <>
       <Icon
         size={18}
         strokeWidth={1.5}
@@ -112,11 +120,38 @@ function ChevronRow({
           </p>
         )}
       </div>
-      <ChevronRight
-        size={18}
-        strokeWidth={1.5}
-        className="shrink-0 text-[var(--intent-text-secondary)]"
-      />
+      {loading ? (
+        <Loader2
+          size={18}
+          strokeWidth={1.5}
+          className="shrink-0 animate-spin text-[var(--intent-text-secondary)]"
+        />
+      ) : (
+        <ChevronRight
+          size={18}
+          strokeWidth={1.5}
+          className="shrink-0 text-[var(--intent-text-secondary)]"
+        />
+      )}
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={loading}
+        className="flex w-full min-h-[56px] items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-[var(--muted)] disabled:opacity-60"
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex min-h-[56px] items-center gap-3 px-4 py-2">
+      {content}
     </div>
   );
 }
@@ -127,6 +162,7 @@ function ChevronRow({
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { data: user } = useCurrentUser();
 
   // Notification toggles
   const [pushEnabled, setPushEnabled] = useState(true);
@@ -136,6 +172,92 @@ export default function SettingsPage() {
   const [discoveryVisible, setDiscoveryVisible] = useState(true);
   const [showCity, setShowCity] = useState(true);
   const [allowNudges, setAllowNudges] = useState(true);
+
+  // DPDPA loading states
+  const [downloadingData, setDownloadingData] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  // Sync privacy toggles from server data
+  useEffect(() => {
+    if (user?.profile) {
+      setDiscoveryVisible(user.profile.isVisibleInDiscovery);
+      setAllowNudges(user.profile.acceptingNewConversations);
+    }
+  }, [user?.profile]);
+
+  // Privacy toggle handlers — persist to server
+  const handleDiscoveryToggle = useCallback(async (checked: boolean) => {
+    setDiscoveryVisible(checked);
+    try {
+      await apiFetch("/api/users/me/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ isVisibleInDiscovery: checked }),
+      });
+    } catch {
+      // Revert on failure
+      setDiscoveryVisible(!checked);
+    }
+  }, []);
+
+  const handleAllowNudgesToggle = useCallback(async (checked: boolean) => {
+    setAllowNudges(checked);
+    try {
+      await apiFetch("/api/users/me/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ acceptingNewConversations: checked }),
+      });
+    } catch {
+      // Revert on failure
+      setAllowNudges(!checked);
+    }
+  }, []);
+
+  // Download my data handler
+  const handleDownloadData = useCallback(async () => {
+    setDownloadingData(true);
+    try {
+      const res = await fetch("/api/users/me/data-export", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Export failed");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =
+        res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] ??
+        "intent-data-export.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Data export error:", err);
+      alert("Failed to download your data. Please try again.");
+    } finally {
+      setDownloadingData(false);
+    }
+  }, []);
+
+  // Delete my account handler
+  const handleDeleteAccount = useCallback(async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone. All your personal data will be anonymized."
+    );
+    if (!confirmed) return;
+
+    setDeletingAccount(true);
+    try {
+      await apiFetch("/api/users/me/delete-account", { method: "POST" });
+      await signOut({ callbackUrl: "/" });
+    } catch (err) {
+      console.error("Account deletion error:", err);
+      alert("Failed to delete your account. Please try again.");
+      setDeletingAccount(false);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[var(--intent-bg)]">
@@ -186,7 +308,7 @@ export default function SettingsPage() {
             icon={Eye}
             label="Visible in discovery"
             checked={discoveryVisible}
-            onCheckedChange={setDiscoveryVisible}
+            onCheckedChange={handleDiscoveryToggle}
           />
           <ToggleRow
             icon={MapPin}
@@ -198,7 +320,7 @@ export default function SettingsPage() {
             icon={Users}
             label="Allow student nudges"
             checked={allowNudges}
-            onCheckedChange={setAllowNudges}
+            onCheckedChange={handleAllowNudgesToggle}
           />
         </div>
 
@@ -218,12 +340,16 @@ export default function SettingsPage() {
             icon={Download}
             label="Download my data"
             caption="Request an export of all your personal data"
+            onClick={handleDownloadData}
+            loading={downloadingData}
           />
           <ChevronRow icon={FileCheck} label="Manage consents" />
           <ChevronRow
             icon={Trash2}
             label="Delete my account"
             destructive
+            onClick={handleDeleteAccount}
+            loading={deletingAccount}
           />
         </div>
 
@@ -256,7 +382,10 @@ export default function SettingsPage() {
 
         {/* Sign out */}
         <div className="mt-10 flex justify-center">
-          <button className="text-[15px] font-semibold text-[var(--destructive)] hover:opacity-70">
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="text-[15px] font-semibold text-[var(--destructive)] hover:opacity-70"
+          >
             <span className="flex items-center gap-2">
               <LogOut size={18} strokeWidth={1.5} />
               Sign out

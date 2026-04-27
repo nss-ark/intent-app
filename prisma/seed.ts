@@ -409,7 +409,7 @@ async function main() {
       status: "PUBLISHED",
       publishedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
       closesAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      matchingStrategy: "COMPLEMENTARITY", matchGroupSizeMin: 3, matchGroupSizeMax: 4,
+      matchingStrategy: "COMPLEMENTARITY", matchGroupSizeMin: 4, matchGroupSizeMax: 6,
     },
   });
 

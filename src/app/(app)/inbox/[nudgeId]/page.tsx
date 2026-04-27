@@ -1,51 +1,76 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { useNudgeDetail, useRespondNudge } from "@/hooks/use-nudges";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
-
-// ── Sample data ────────────────────────────────────────────────────────
-
-const senderData = {
-  id: "user-vikram-001",
-  fullName: "Vikram Subramanian",
-  photoUrl: null as string | null,
-  badges: ["Founder", "ISB '22"],
-  program: "PGP, Class of 2022",
-  currentCity: "Mumbai",
-  currentRole: "CEO & Co-founder, FraudShield",
-};
-
-const nudgeData = {
-  id: "nudge-001",
-  signal: "Looking for a co-founder",
-  signalType: "mutual" as const,
-  message:
-    "Arjun, your background at Flipkart and your interest in fintech caught my eye. I'm building a fraud-detection layer for sub-prime lending in tier-2 markets and looking for a product co-founder who's worked at scale. Would love 30 minutes if you're open to a chat. \u2014 Vik",
-  sentAt: "2 hours ago",
-};
 
 // ── Component ──────────────────────────────────────────────────────────
 
 export default function NudgeDetailPage() {
   const router = useRouter();
+  const params = useParams();
+  const nudgeId = params.nudgeId as string;
+
   const [showMenu, setShowMenu] = useState(false);
 
+  const { data: nudge, isLoading, isError, refetch } = useNudgeDetail(nudgeId);
+  const respond = useRespondNudge();
+
+  const senderName = nudge?.sender.fullName ?? "";
+  const senderFirstName = senderName.split(" ")[0];
+  const senderPhotoUrl = nudge?.sender.photoUrl ?? null;
+  const signalLabel =
+    nudge?.signals[0]?.tenantSignal?.template?.displayNameDefault ?? "";
+  const missionStatement = nudge?.sender.profile?.missionStatement ?? null;
+
+  const isPending = nudge?.status === "SENT";
+
   const handleAccept = () => {
-    // In production: PATCH nudge status to accepted, create conversation
-    router.push("/inbox");
+    respond.mutate(
+      { id: nudgeId, status: "ACCEPTED" },
+      { onSuccess: () => router.push("/inbox") }
+    );
   };
 
   const handleDecline = () => {
-    // In production: PATCH nudge status to declined
-    router.push("/inbox");
+    respond.mutate(
+      { id: nudgeId, status: "DECLINED" },
+      { onSuccess: () => router.push("/inbox") }
+    );
   };
 
   const handleIgnore = () => {
-    // In production: no status change, just navigate back
     router.push("/inbox");
   };
+
+  // ── Loading state ──────────────────────────────────────────────────
+  if (isLoading) {
+    return (
+      <div className="bg-[#FAFAF6] flex flex-col items-center justify-center min-h-[calc(100dvh-5rem)]">
+        <Loader2 size={32} className="animate-spin text-[#B8762A]" />
+      </div>
+    );
+  }
+
+  // ── Error state ────────────────────────────────────────────────────
+  if (isError || !nudge) {
+    return (
+      <div className="bg-[#FAFAF6] flex flex-col items-center justify-center min-h-[calc(100dvh-5rem)] px-4">
+        <p className="text-sm text-[#D94141] mb-2">Failed to load nudge</p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="text-sm font-medium text-[#B8762A] hover:underline"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#FAFAF6] flex flex-col -mb-20">
@@ -108,7 +133,10 @@ export default function NudgeDetailPage() {
                   <button
                     type="button"
                     className="w-full text-left px-4 py-2.5 text-sm text-[#1A1A1A] hover:bg-[#F2EFE8] transition-colors"
-                    onClick={() => setShowMenu(false)}
+                    onClick={() => {
+                      setShowMenu(false);
+                      router.push(`/profile/${nudge.sender.id}`);
+                    }}
                   >
                     View profile
                   </button>
@@ -139,38 +167,27 @@ export default function NudgeDetailPage() {
           {/* Sender card */}
           <div className="flex items-start gap-4">
             <div className="w-16 h-16 rounded-full overflow-hidden bg-[#F2EFE8] shrink-0">
-              {senderData.photoUrl ? (
+              {senderPhotoUrl ? (
                 <img
-                  src={senderData.photoUrl}
-                  alt={senderData.fullName}
+                  src={senderPhotoUrl}
+                  alt={senderName}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-lg font-medium text-[#6B6B66]">
-                  {getInitials(senderData.fullName)}
+                  {getInitials(senderName)}
                 </div>
               )}
             </div>
             <div className="min-w-0 pt-0.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-semibold text-[#1A1A1A]">
-                  {senderData.fullName}
-                </h2>
-                {senderData.badges.map((badge) => (
-                  <span
-                    key={badge}
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#2D4A3A] text-white leading-none"
-                  >
-                    {badge}
-                  </span>
-                ))}
-              </div>
-              <p className="text-sm text-[#6B6B66] mt-0.5">
-                {senderData.program} &middot; {senderData.currentCity}
-              </p>
-              <p className="text-sm text-[#6B6B66] mt-0.5">
-                {senderData.currentRole}
-              </p>
+              <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                {senderName}
+              </h2>
+              {missionStatement && (
+                <p className="text-sm text-[#6B6B66] mt-0.5">
+                  {missionStatement}
+                </p>
+              )}
             </div>
           </div>
 
@@ -178,58 +195,106 @@ export default function NudgeDetailPage() {
           <div className="h-px bg-[#E8E4DA]" />
 
           {/* Signal indicator card */}
-          <div className="rounded-xl bg-[#F5EDE0]/60 p-4">
-            <p className="text-sm text-[#6B6B66] mb-1">
-              <span className="font-medium text-[#1A1A1A]">
-                {senderData.fullName.split(" ")[0]}
-              </span>{" "}
-              is asking
-            </p>
-            <div className="flex items-center gap-2">
-              <span className="text-[#B8762A]">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M17 1l4 4-4 4" />
-                  <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                  <path d="M7 23l-4-4 4-4" />
-                  <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                </svg>
-              </span>
-              <span className="text-base font-semibold text-[#1A1A1A]">
-                {nudgeData.signal}
-              </span>
+          {signalLabel && (
+            <div className="rounded-xl bg-[#F5EDE0]/60 p-4">
+              <p className="text-sm text-[#6B6B66] mb-1">
+                <span className="font-medium text-[#1A1A1A]">
+                  {senderFirstName}
+                </span>{" "}
+                is asking
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-[#B8762A]">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M17 1l4 4-4 4" />
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                    <path d="M7 23l-4-4 4-4" />
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                  </svg>
+                </span>
+                <span className="text-base font-semibold text-[#1A1A1A]">
+                  {signalLabel}
+                </span>
+              </div>
+
+              {/* Additional signals */}
+              {nudge.signals.length > 1 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {nudge.signals.slice(1).map((s) => (
+                    <span
+                      key={s.tenantSignal.id}
+                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#F2EFE8] text-[#6B6B66]"
+                    >
+                      {s.tenantSignal.template.displayNameDefault}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           {/* Full message body */}
           <div className="space-y-3">
-            <p className="text-base text-[#1A1A1A] leading-relaxed whitespace-pre-line">
-              {nudgeData.message}
-            </p>
+            {nudge.message && (
+              <p className="text-base text-[#1A1A1A] leading-relaxed whitespace-pre-line">
+                {nudge.message}
+              </p>
+            )}
             <p className="text-xs text-[#6B6B66]">
-              Sent {nudgeData.sentAt}
+              Sent{" "}
+              {formatDistanceToNow(new Date(nudge.sentAt), {
+                addSuffix: true,
+              })}
             </p>
           </div>
 
-          {/* Cooldown notice card */}
-          <div className="rounded-xl bg-[#F5EDE0]/60 border-l-[3px] border-l-[#B8762A] p-4">
-            <p className="text-sm text-[#6B6B66] leading-relaxed">
-              If you decline,{" "}
-              <span className="font-medium text-[#1A1A1A]">
-                {senderData.fullName.split(" ")[0]}
-              </span>{" "}
-              won&apos;t be able to nudge you again for 90 days. If you ignore,
-              the nudge expires in 14 days.
-            </p>
-          </div>
+          {/* Status badge for already-responded nudges */}
+          {!isPending && (
+            <div
+              className={cn(
+                "rounded-xl p-4 text-sm font-medium",
+                nudge.status === "ACCEPTED"
+                  ? "bg-green-50 text-green-700"
+                  : "bg-red-50 text-red-700"
+              )}
+            >
+              {nudge.status === "ACCEPTED"
+                ? "You accepted this nudge."
+                : "You declined this nudge."}
+              {nudge.respondedAt && (
+                <span className="ml-1 font-normal text-xs opacity-70">
+                  (
+                  {formatDistanceToNow(new Date(nudge.respondedAt), {
+                    addSuffix: true,
+                  })}
+                  )
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Cooldown notice card — only show for pending nudges */}
+          {isPending && (
+            <div className="rounded-xl bg-[#F5EDE0]/60 border-l-[3px] border-l-[#B8762A] p-4">
+              <p className="text-sm text-[#6B6B66] leading-relaxed">
+                If you decline,{" "}
+                <span className="font-medium text-[#1A1A1A]">
+                  {senderFirstName}
+                </span>{" "}
+                won&apos;t be able to nudge you again for 90 days. If you
+                ignore, the nudge expires in 14 days.
+              </p>
+            </div>
+          )}
 
           {/* Spacer for sticky bottom + tab bar */}
           <div className="h-44" />
@@ -237,53 +302,64 @@ export default function NudgeDetailPage() {
       </main>
 
       {/* ── Sticky bottom action bar (above tab bar) ──────────────── */}
-      <div className="fixed bottom-16 left-0 right-0 z-40 bg-[#FAFAF6]/95 backdrop-blur-sm border-t border-[#E8E4DA] safe-bottom">
-        <div className="max-w-[640px] mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
-            {/* Decline - 30% */}
-            <button
-              type="button"
-              onClick={handleDecline}
-              className={cn(
-                "h-12 rounded-xl text-sm font-semibold transition-all duration-150",
-                "border border-[#E8E4DA] bg-white text-[#1A1A1A]",
-                "hover:bg-[#F2EFE8] active:scale-[0.98]",
-                "w-[30%]"
-              )}
-            >
-              Decline
-            </button>
+      {isPending && (
+        <div className="fixed bottom-16 left-0 right-0 z-40 bg-[#FAFAF6]/95 backdrop-blur-sm border-t border-[#E8E4DA] safe-bottom">
+          <div className="max-w-[640px] mx-auto px-4 py-3">
+            <div className="flex items-center gap-3">
+              {/* Decline - 30% */}
+              <button
+                type="button"
+                onClick={handleDecline}
+                disabled={respond.isPending}
+                className={cn(
+                  "h-12 rounded-xl text-sm font-semibold transition-all duration-150",
+                  "border border-[#E8E4DA] bg-white text-[#1A1A1A]",
+                  "hover:bg-[#F2EFE8] active:scale-[0.98]",
+                  "disabled:opacity-50 disabled:pointer-events-none",
+                  "w-[30%]"
+                )}
+              >
+                Decline
+              </button>
 
-            {/* Ignore - 30% */}
-            <button
-              type="button"
-              onClick={handleIgnore}
-              className={cn(
-                "h-12 rounded-xl text-sm font-semibold transition-all duration-150",
-                "bg-transparent text-[#6B6B66]",
-                "hover:text-[#1A1A1A] hover:bg-[#F2EFE8]/50 active:scale-[0.98]",
-                "w-[30%]"
-              )}
-            >
-              Ignore
-            </button>
+              {/* Ignore - 30% */}
+              <button
+                type="button"
+                onClick={handleIgnore}
+                disabled={respond.isPending}
+                className={cn(
+                  "h-12 rounded-xl text-sm font-semibold transition-all duration-150",
+                  "bg-transparent text-[#6B6B66]",
+                  "hover:text-[#1A1A1A] hover:bg-[#F2EFE8]/50 active:scale-[0.98]",
+                  "disabled:opacity-50 disabled:pointer-events-none",
+                  "w-[30%]"
+                )}
+              >
+                Ignore
+              </button>
 
-            {/* Accept - 40% (slightly wider for primary action prominence) */}
-            <button
-              type="button"
-              onClick={handleAccept}
-              className={cn(
-                "h-12 rounded-xl text-sm font-semibold transition-all duration-150",
-                "bg-[#B8762A] text-white",
-                "hover:bg-[#D4A053] active:scale-[0.98]",
-                "flex-1"
-              )}
-            >
-              Accept
-            </button>
+              {/* Accept - 40% (slightly wider for primary action prominence) */}
+              <button
+                type="button"
+                onClick={handleAccept}
+                disabled={respond.isPending}
+                className={cn(
+                  "h-12 rounded-xl text-sm font-semibold transition-all duration-150",
+                  "bg-[#B8762A] text-white",
+                  "hover:bg-[#D4A053] active:scale-[0.98]",
+                  "disabled:opacity-50 disabled:pointer-events-none",
+                  "flex-1 flex items-center justify-center gap-2"
+                )}
+              >
+                {respond.isPending && (
+                  <Loader2 size={16} className="animate-spin" />
+                )}
+                Accept
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,28 @@
+// Intent — Postgres schema variant for production
+// To switch: copy this file to schema.prisma, update DATABASE_URL, run prisma migrate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NOTE: All models are identical to schema.prisma (SQLite version).
+// The key differences for Postgres:
+// 1. Native enum types can replace String fields
+// 2. schema-per-tenant via Postgres schemas (SET search_path)
+// 3. Full-text search with tsvector columns
+// 4. Case-insensitive text search with ILIKE
+// 5. UUID generation via gen_random_uuid()
+//
+// Migration steps:
+// 1. Provision Postgres (Neon recommended: neon.tech)
+// 2. Copy this file to prisma/schema.prisma
+// 3. Set DATABASE_URL in .env to the Postgres connection string
+// 4. Run: npx prisma migrate dev --name init
+// 5. Run: npx prisma db seed
+// 6. Update src/lib/db.ts: remove BetterSqlite3 adapter, use plain PrismaClient
+// 7. Deploy
