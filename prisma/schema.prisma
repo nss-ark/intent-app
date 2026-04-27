@@ -13,7 +13,7 @@ generator clientJs {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ─────────────────────────────────────────────
@@ -70,7 +70,8 @@ model User {
   institutionMemberStatus String? // CURRENT_STUDENT | RECENT_GRAD | ALUMNI
   graduationYear        Int?
   program               String?
-  hashedPassword        String
+  hashedPassword        String?
+  authProvider          String    @default("credentials") // credentials | google | microsoft
   tenantId              String
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt

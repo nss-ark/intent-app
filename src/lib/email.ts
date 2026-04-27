@@ -1,11 +1,11 @@
 /**
- * Email service with Resend integration.
+ * Email service with Gmail SMTP (nodemailer).
  *
- * Set EMAIL_PROVIDER="resend" and RESEND_API_KEY in env to enable.
+ * Set EMAIL_PROVIDER="gmail", GMAIL_USER, and GMAIL_APP_PASSWORD in env to enable.
  * Falls back to console logging when not configured.
  */
 
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 interface EmailOptions {
   to: string;
@@ -14,26 +14,32 @@ interface EmailOptions {
   from?: string;
 }
 
-const DEFAULT_FROM = "Intent <hello@intent.community>";
+const DEFAULT_FROM = `Intent <${process.env.GMAIL_USER ?? "noreply@intent.community"}>`;
 
-let resendClient: Resend | null = null;
-function getResend(): Resend {
-  if (!resendClient) {
-    resendClient = new Resend(process.env.RESEND_API_KEY);
+let transporter: nodemailer.Transporter | null = null;
+function getTransporter(): nodemailer.Transporter {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
   }
-  return resendClient;
+  return transporter;
 }
 
 /**
- * Send an email. Uses Resend when configured, otherwise logs to console.
+ * Send an email. Uses Gmail SMTP when configured, otherwise logs to console.
  */
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   const from = options.from ?? DEFAULT_FROM;
 
-  if (process.env.EMAIL_PROVIDER === "resend" && process.env.RESEND_API_KEY) {
+  if (process.env.EMAIL_PROVIDER === "gmail" && process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
     try {
-      const resend = getResend();
-      await resend.emails.send({
+      const transport = getTransporter();
+      await transport.sendMail({
         from,
         to: options.to,
         subject: options.subject,
@@ -41,7 +47,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       });
       return true;
     } catch (err) {
-      console.error("[email] Resend send failed:", err);
+      console.error("[email] Gmail SMTP send failed:", err);
       return false;
     }
   }

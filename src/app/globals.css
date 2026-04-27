@@ -253,6 +253,23 @@
     color: var(--intent-green);
   }
 
+  /* Skeleton shimmer for loading states */
+  .intent-skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--muted) 25%,
+      var(--intent-amber-subtle) 50%,
+      var(--muted) 75%
+    );
+    background-size: 200% 100%;
+    animation: intent-shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes intent-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
   /* Content container: max-width for desktop readability */
   .intent-container {
     width: 100%;
