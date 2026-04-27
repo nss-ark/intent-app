@@ -48,6 +48,11 @@ prisma/dev.db
 prisma/dev.db-journal
 src/generated/
 
+# firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
 # ide
 .idea/
 .vscode/

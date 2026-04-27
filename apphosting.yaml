@@ -1,0 +1,29 @@
+# Firebase App Hosting configuration for Intent
+# https://firebase.google.com/docs/app-hosting
+
+runConfig:
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 10
+
+env:
+  # Public env vars (available at build + runtime)
+  - variable: NEXT_PUBLIC_DEMO_MODE
+    value: "false"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Runtime env vars (set via Firebase App Hosting secrets)
+  - variable: DATABASE_URL
+    secret: database-url
+
+  - variable: NEXTAUTH_SECRET
+    secret: nextauth-secret
+
+  - variable: NEXTAUTH_URL
+    availability:
+      - BUILD
+      - RUNTIME
