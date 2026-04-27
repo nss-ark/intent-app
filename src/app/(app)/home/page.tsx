@@ -6,6 +6,7 @@ import { useDiscovery, useDiscoveryFilters } from "@/hooks/use-discovery";
 import { MemberCard } from "@/components/member-card";
 import { FilterPills } from "@/components/filter-pills";
 import { FilterDrawer } from "@/components/filter-drawer";
+import { FeatureRequestDialog } from "@/components/feature-request-dialog";
 
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
@@ -72,6 +73,7 @@ export default function HomePage() {
             intent
           </h1>
           <div className="flex items-center gap-2">
+            <FeatureRequestDialog />
             <button
               onClick={() => setSearchOpen(!searchOpen)}
               className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--intent-text-tertiary)] bg-white transition-colors hover:bg-[var(--muted)]"
