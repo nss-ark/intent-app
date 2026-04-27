@@ -45,6 +45,38 @@ Intent lowers the social cost of asking by giving people a sanctioned mechanism 
 
 Every member has an **Intent** — a 200-character statement of what they are working toward and what they are looking for. The product is named for it, the profile is built around it, and the entire experience is Intent-centric.
 
+## User Journey
+
+```mermaid
+flowchart LR
+    A[Signup] --> B[Verify Email]
+    B --> C[DPDPA Consent]
+    C --> D[Onboarding\n4 steps]
+    D --> E[Discovery\nBrowse Cards]
+
+    E --> F[Send Nudge\nwith Ask/Offer]
+    E --> G[Save for Later]
+    E --> H[Take Survey]
+
+    F --> I{Receiver\nResponse}
+    I -->|Accept| J[1:1 Chat]
+    I -->|Decline| K[90-day\nCooldown]
+    I -->|Ignore| L[30-day\nCooldown]
+
+    J --> M[Mentorship\nScaffold]
+    J --> N[Ongoing\nConversation]
+
+    H --> O[System Clusters\nGroups of 4-6]
+    O --> P[Meetup Proposed]
+    P --> Q[Attend Event]
+
+    Q --> R[Gamification\nPoints & Levels]
+    M --> R
+    N --> R
+```
+
+---
+
 ## Core Mechanics
 
 ### Cards and Discovery
@@ -53,11 +85,85 @@ Photography-forward member cards with verified claims. Browse by domain, niche, 
 ### Asks and Offers
 Every connection request is tagged with purpose. An **Ask** is something you're seeking (mentor, referral, career switch advice). An **Offer** is something you're giving (mentorship, referrals, domain expertise). A **Mutual** is symmetric (case prep partner, coffee chat, co-founder search). The system understands ask-offer pairing: someone looking for a mentor gets nudges from people who are open to mentoring, not from peers who are also looking.
 
+```mermaid
+graph LR
+    subgraph Asks["Asks (seeking)"]
+        A1["Looking for\na mentor"]
+        A2["Looking for\na referral"]
+        A3["Career switch\nadvice"]
+        A4["Curious about\nyour company"]
+    end
+
+    subgraph Offers["Offers (giving)"]
+        O1["Open to\nmentoring"]
+        O2["Open to giving\nreferrals"]
+        O3["Open to discussing\ncareer switches"]
+        O4["Open to discussing\nmy company"]
+    end
+
+    subgraph Mutuals["Mutuals (symmetric)"]
+        M1["Case prep\npartner"]
+        M2["Coffee\nchat"]
+        M3["Co-founder\nsearch"]
+    end
+
+    A1 <-..->|paired| O1
+    A2 <-..->|paired| O2
+    A3 <-..->|paired| O3
+    A4 <-..->|paired| O4
+
+    style Asks fill:#F5EDE0,stroke:#B8762A,color:#1A1A1A
+    style Offers fill:#E4EDE8,stroke:#2D4A3A,color:#1A1A1A
+    style Mutuals fill:#F2EFE8,stroke:#6B6B66,color:#1A1A1A
+```
+
 ### Nudges
 The only outbound action. A short message (400 chars) with an Ask or Offer attached. 5 per week at MVP. The receiver can Accept (opens 1:1 chat), Decline politely (templated, anonymous-feeling soft no), or Ignore (auto-expires after 14 days). Cooling-off rules prevent harassment: 90-day cooldown after decline, 30-day after ignore.
 
+```mermaid
+stateDiagram-v2
+    [*] --> Sent : Sender sends nudge\n(with Ask/Offer tag)
+
+    Sent --> Accepted : Receiver accepts
+    Sent --> Declined : Receiver declines\n(templated soft no)
+    Sent --> Ignored : No response
+    Sent --> Expired : 14 days elapsed
+
+    Accepted --> Chat : 1:1 conversation opens
+    Chat --> Mentorship : Optional scaffold\n(if mentorship signal)
+
+    Declined --> Cooldown90 : 90-day cooldown\nbefore re-nudge
+    Ignored --> Cooldown30 : 30-day cooldown\nbefore re-nudge
+    Expired --> Cooldown30 : 30-day cooldown
+
+    Cooldown90 --> [*]
+    Cooldown30 --> [*]
+    Mentorship --> [*]
+    Chat --> [*]
+```
+
 ### Survey-to-Meetup Loop
 The engagement engine. Admin publishes a short survey (5-10 questions, 60 seconds). System clusters responses into small groups of 4-6. Platform proposes an offline meetup. Users opt in. Admin confirms date and venue. Group meets. Post-event check-in feeds gamification. This is what makes the platform a habit and what produces shareable, real-world moments.
+
+```mermaid
+flowchart TD
+    A["Admin publishes\nthemed survey"] --> B["Users complete\n(60 seconds, 5-10 Qs)"]
+    B --> C["System clusters responses\n(Jaccard similarity +\ndiversity penalty)"]
+    C --> D["Small groups formed\n(4-6 members each)"]
+    D --> E["Platform proposes\noffline meetup"]
+    E --> F{"Members\nopt in?"}
+    F -->|Yes| G["Admin confirms\ndate & venue"]
+    F -->|No| H[No action]
+    G --> I["Group meets\nin person"]
+    I --> J["Post-event check-in"]
+    J --> K["Points & badges\nawarded"]
+    K --> L["Relationship data\nfeeds future matching"]
+    L -.->|"Bi-weekly\ncadence"| A
+
+    style A fill:#F5EDE0,stroke:#B8762A,color:#1A1A1A
+    style I fill:#E4EDE8,stroke:#2D4A3A,color:#1A1A1A
+    style K fill:#F5EDE0,stroke:#B8762A,color:#1A1A1A
+```
 
 ### Mentorship Scaffolding
 When a mentorship nudge is accepted, both users see an optional scaffold: shared goal, cadence (bi-weekly/monthly/ad-hoc), session scheduling, per-session reflections. Enables but does not enforce.
@@ -67,6 +173,27 @@ Points for community contribution (responding to nudges within 48h, completing m
 
 ### Verification
 Three tiers. Tier 1: email match against admin-uploaded member list + phone OTP (gates entry). Tier 2: LinkedIn URL manually reviewed by admin (validates profile claims). Tier 3: structured declaration with proof for special badges like Founder. The discipline: the card only shows what has been verified.
+
+```mermaid
+flowchart LR
+    subgraph "Tier 1: Basic Membership"
+        T1A[Email matches\nadmin CSV list] --> T1B[Phone OTP\nverified]
+        T1B --> T1C["Gates entry\nto tenant"]
+    end
+
+    subgraph "Tier 2: Profile Claims"
+        T2A[User submits\nLinkedIn URL] --> T2B[Admin manually\nreviews profile]
+        T2B --> T2C["Company, role,\nexperience verified"]
+    end
+
+    subgraph "Tier 3: Special Badges"
+        T3A[User submits\nstructured declaration] --> T3B[Admin reviews\nproof & evidence]
+        T3B --> T3C["Founder, Speaker,\nDomain Expert badges"]
+    end
+
+    T1C --> T2A
+    T2C --> T3A
+```
 
 ---
 
@@ -92,10 +219,75 @@ Three tiers. Tier 1: email match against admin-uploaded member list + phone OTP 
 
 ## Architecture
 
+```mermaid
+graph TB
+    subgraph Client["Client (PWA)"]
+        Browser["React 19\nServer Components\n+ Client Components"]
+        RQ["React Query\nClient-side cache"]
+        Browser <--> RQ
+    end
+
+    subgraph NextJS["Next.js 16 App Router"]
+        Middleware["Middleware\nAuth + Rate Limiting\n+ Role Checks"]
+        Pages["Pages & Layouts\n28 screens across\n3 layout groups"]
+        API["API Routes\n26 endpoints"]
+        Middleware --> Pages
+        Middleware --> API
+    end
+
+    subgraph Services["Server-side Services"]
+        Auth["NextAuth\nJWT Sessions"]
+        Gamification["Gamification\nEngine"]
+        Audit["Audit\nLogging"]
+        Email["Resend\nEmail Service"]
+        RateLimit["Rate\nLimiter"]
+        Consent["DPDPA\nConsent"]
+    end
+
+    subgraph Data["Data Layer"]
+        Prisma["Prisma ORM\n50+ models"]
+        DB[("PostgreSQL\nNeon Serverless\n(schema-per-tenant)")]
+        Prisma --> DB
+    end
+
+    subgraph Hosting["Firebase App Hosting"]
+        Deploy["Auto-deploy\non push to main"]
+        Secrets["Cloud Secret\nManager"]
+    end
+
+    Client <--> NextJS
+    API --> Services
+    Services --> Prisma
+    NextJS --> Hosting
+
+    style Client fill:#F5EDE0,stroke:#B8762A,color:#1A1A1A
+    style Data fill:#E4EDE8,stroke:#2D4A3A,color:#1A1A1A
+```
+
 - **App Router** with Server Components by default, `"use client"` only where interactivity requires it
 - **Multi-tenant** — each university is a hard-isolated tenant (schema-per-tenant in Postgres, no cross-university data leakage)
 - **API envelope** — all responses follow `{ success, data, error }` with consistent pagination `{ data, total, page, pageSize, hasMore }`
-- **Role-based access** — User, Owner, Operator, Moderator roles enforced in middleware
+- **Role-based access** — four roles enforced in middleware:
+
+```mermaid
+graph LR
+    subgraph Platform
+        SA["Super Admin\nTenant mgmt, billing,\nglobal templates"]
+    end
+
+    subgraph "Tenant (per university)"
+        Owner["Owner\nBilling, contracts,\nexistential decisions"]
+        Operator["Operator\nDay-to-day: members,\nbadges, events, surveys"]
+        Moderator["Moderator\nVerification queue,\nabuse, suspensions"]
+        Member["Member\nBrowse, nudge, chat,\nsurveys, events"]
+    end
+
+    SA -.->|manages| Owner
+    Owner --- Operator
+    Owner --- Moderator
+    Operator ~~~ Member
+    Moderator ~~~ Member
+```
 - **Soft delete** throughout — writes never destroy state without audit trail
 - **Rate limiting** — per-tenant, per-user, per-IP at the API layer
 - **DPDPA compliance** — consent logging, audit trail, data subject requests, tombstone-based erasure
@@ -358,6 +550,48 @@ intent-app/
 | **DPDPA** | PolicyVersion, UserConsent, DataSubjectRequest | Data protection compliance |
 | **Resources** | ResourceCategory, ResourceShelfItem | Metadata-only resource shelf |
 
+### Key Entity Relationships
+
+```mermaid
+erDiagram
+    Tenant ||--o{ User : "has members"
+    Tenant ||--o{ AdminUser : "has admins"
+
+    User ||--|| UserProfile : "has profile"
+    User ||--o{ UserNiche : "picks up to 3"
+    User ||--o{ UserEducation : "education history"
+    User ||--o{ UserExperience : "work history"
+    User ||--o{ UserOpenSignal : "open asks/offers"
+    User ||--o{ UserBadge : "earned badges"
+
+    User ||--o{ Nudge : "sends/receives"
+    Nudge ||--o{ NudgeSignal : "tagged with"
+    Nudge ||--o| Conversation : "opens on accept"
+    Conversation ||--o{ Message : "contains"
+    Conversation ||--o| Mentorship : "optional scaffold"
+    Mentorship ||--o{ MentorshipSession : "scheduled sessions"
+
+    User ||--o{ SurveyResponse : "completes"
+    Survey ||--o{ SurveyQuestion : "contains"
+    Survey ||--o{ MatchGroup : "produces"
+    MatchGroup ||--o{ MatchGroupMember : "groups users"
+    MatchGroup ||--o| Meetup : "proposes"
+    Meetup ||--o| Event : "becomes"
+    Event ||--o{ EventRsvp : "RSVPs"
+    Event ||--o{ EventAttendance : "check-ins"
+
+    User ||--|| UserGamificationState : "points & level"
+    User ||--o{ ContributionEvent : "earns points"
+
+    UserProfile }o--|| Domain : "primary domain"
+    UserNiche }o--|| Niche : "interest tag"
+
+    BadgeTemplate ||--o{ TenantBadge : "per-tenant instance"
+    SignalTemplate ||--o{ TenantSignal : "per-tenant instance"
+    TenantBadge ||--o{ UserBadge : "awarded to users"
+    TenantSignal ||--o{ UserOpenSignal : "toggled by users"
+```
+
 See `prisma/schema.prisma` for full definitions and `master-plan-intent.md` Section 12 for design rationale.
 
 ---
@@ -425,6 +659,21 @@ NEXT_PUBLIC_DEMO_MODE="true"
 ## Deploying to Production
 
 The app is configured for **Firebase App Hosting**, which has built-in GitHub integration and auto-deploys on push to `main`. No separate CI/CD pipeline needed.
+
+```mermaid
+flowchart LR
+    A["Developer\npushes to main"] --> B["GitHub\nrepository"]
+    B --> C["Firebase App Hosting\ndetects push"]
+    C --> D["npm install"]
+    D --> E["prisma generate\n+ next build"]
+    E --> F["Deploy to\nCloud Run"]
+    F --> G["Live at\n*.web.app"]
+
+    H["Cloud Secret\nManager"] -.->|"DATABASE_URL\nNEXTAUTH_SECRET"| F
+    I[("Neon\nPostgreSQL")] <-.->|"Prisma queries"| G
+
+    style G fill:#E4EDE8,stroke:#2D4A3A,color:#1A1A1A
+```
 
 ### Step 1: Create a Firebase Project
 
