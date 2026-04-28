@@ -135,24 +135,26 @@ export const GET = withAuth(async (request, _context, session) => {
           currentExp?.company?.name ?? currentExp?.freeTextCompanyName ?? null,
         companyLogoUrl: currentExp?.company?.logoUrl ?? null,
         openSignals: user.openSignals.map((os) => ({
-          id: os.tenantSignal.id,
+          id: os.tenantSignal?.id ?? os.tenantSignalId,
           displayName:
-            os.tenantSignal.displayName ??
-            os.tenantSignal.template.displayNameDefault,
-          signalType: os.tenantSignal.template.signalType,
-          icon: os.tenantSignal.template.icon,
+            os.tenantSignal?.displayName ??
+            os.tenantSignal?.template?.displayNameDefault ??
+            "Unknown Signal",
+          signalType: os.tenantSignal?.template?.signalType ?? "ASK",
+          icon: os.tenantSignal?.template?.icon ?? null,
         })),
         badges: user.badges.map((ub) => ({
           id: ub.id,
           tenantBadgeId: ub.tenantBadgeId,
           displayName:
-            ub.tenantBadge.displayName ??
-            ub.tenantBadge.template.displayNameDefault,
+            ub.tenantBadge?.displayName ??
+            ub.tenantBadge?.template?.displayNameDefault ??
+            "Badge",
           isVisible: ub.isVisible,
         })),
         graduationYear: user.graduationYear,
         isVerified: user.badges.some(
-          (b) => b.tenantBadge.template.category === "IDENTITY"
+          (b) => b.tenantBadge?.template?.category === "IDENTITY"
         ),
       };
     });

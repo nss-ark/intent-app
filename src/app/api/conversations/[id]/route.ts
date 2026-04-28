@@ -78,6 +78,8 @@ export const GET = withAuth(async (request, context, session) => {
 
     return apiSuccess({
       id: conversation.id,
+      userAId: conversation.userAId,
+      userBId: conversation.userBId,
       createdAt: conversation.createdAt,
       lastMessageAt: conversation.lastMessageAt,
       otherUser,

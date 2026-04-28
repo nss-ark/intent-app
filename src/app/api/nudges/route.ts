@@ -70,8 +70,21 @@ export const GET = withAuth(async (request, _context, session) => {
       db.nudge.count({ where }),
     ]);
 
+    const items = nudges.map((nudge) => ({
+      ...nudge,
+      signals: nudge.signals.map((ns) => ({
+        ...ns,
+        displayName:
+          ns.tenantSignal?.displayName ??
+          ns.tenantSignal?.template?.displayNameDefault ??
+          "Signal",
+        signalType: ns.tenantSignal?.template?.signalType ?? "ASK",
+        icon: ns.tenantSignal?.template?.icon ?? null,
+      })),
+    }));
+
     return apiSuccess({
-      items: nudges,
+      items,
       page,
       pageSize,
       total,
