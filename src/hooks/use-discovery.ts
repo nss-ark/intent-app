@@ -33,6 +33,8 @@ interface DiscoveryFilters {
   niche?: string;
   city?: string;
   classYear?: string;
+  hasAsks?: boolean;
+  hasOffers?: boolean;
   page?: number;
   pageSize?: number;
 }
@@ -44,6 +46,8 @@ export function useDiscovery(filters: DiscoveryFilters = {}) {
   if (filters.niche) params.set("niche", filters.niche);
   if (filters.city) params.set("city", filters.city);
   if (filters.classYear) params.set("classYear", filters.classYear);
+  if (filters.hasAsks) params.set("hasAsks", "true");
+  if (filters.hasOffers) params.set("hasOffers", "true");
   if (filters.page) params.set("page", String(filters.page));
   if (filters.pageSize) params.set("pageSize", String(filters.pageSize));
 

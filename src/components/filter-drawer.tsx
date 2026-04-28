@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Sheet,
   SheetTrigger,
@@ -12,101 +12,113 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDiscoveryFilters, useDiscovery } from "@/hooks/use-discovery";
 
 /* ------------------------------------------------------------------ */
-/* Filter option data                                                  */
+/* Filter state type                                                   */
 /* ------------------------------------------------------------------ */
 
-const domains = [
-  "Climate Investing",
-  "Fintech",
-  "Finance",
-  "VC/PE",
-  "Strategy & Consulting",
-  "Tech/Product",
-  "Healthcare",
-  "E-Commerce",
-];
+export interface DrawerFilterState {
+  domains: Set<string>;
+  niches: Set<string>;
+  cities: Set<string>;
+  classYears: Set<string>;
+  hasAsks: boolean;
+  hasOffers: boolean;
+}
 
-const niches = [
-  "Climate Tech",
-  "Venture Capital",
-  "Impact Investing",
-  "Fraud Detection",
-  "Lending",
-  "Investment Banking",
-  "SaaS",
-  "Product Management",
-];
+export const EMPTY_FILTERS: DrawerFilterState = {
+  domains: new Set(),
+  niches: new Set(),
+  cities: new Set(),
+  classYears: new Set(),
+  hasAsks: false,
+  hasOffers: false,
+};
 
-const cities = [
-  "Bangalore",
-  "Mumbai",
-  "Hyderabad",
-  "Delhi",
-  "Chennai",
-  "Pune",
-];
+export function countActiveFilters(f: DrawerFilterState): number {
+  return (
+    f.domains.size +
+    f.niches.size +
+    f.cities.size +
+    f.classYears.size +
+    (f.hasAsks ? 1 : 0) +
+    (f.hasOffers ? 1 : 0)
+  );
+}
 
-const classYears = [
-  "2010",
-  "2012",
-  "2014",
-  "2016",
-  "2018",
-  "2020",
-  "2022",
-  "2024",
-  "2026",
-];
+export function filtersToApiParams(f: DrawerFilterState): Record<string, string> {
+  const p: Record<string, string> = {};
+  if (f.domains.size) p.domain = Array.from(f.domains).join(",");
+  if (f.niches.size) p.niche = Array.from(f.niches).join(",");
+  if (f.cities.size) p.city = Array.from(f.cities).join(",");
+  if (f.classYears.size) p.classYear = Array.from(f.classYears).join(",");
+  if (f.hasAsks) p.hasAsks = "true";
+  if (f.hasOffers) p.hasOffers = "true";
+  return p;
+}
 
 /* ------------------------------------------------------------------ */
-/* Pill selector reusable component                                    */
+/* Pill selector                                                       */
 /* ------------------------------------------------------------------ */
+
+interface PillOption {
+  label: string;
+  value: string;
+}
 
 function PillGroup({
   label,
   options,
   selected,
   onToggle,
+  isLoading,
 }: {
   label: string;
-  options: string[];
+  options: PillOption[];
   selected: Set<string>;
   onToggle: (value: string) => void;
+  isLoading?: boolean;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       <h4 className="text-[13px] font-semibold uppercase tracking-wider text-[var(--intent-text-secondary)]">
         {label}
       </h4>
-      <div className="flex flex-wrap gap-2">
-        {options.map((opt) => {
-          const isActive = selected.has(opt);
-          return (
-            <button
-              key={opt}
-              onClick={() => onToggle(opt)}
-              className={cn(
-                "rounded-full px-3 py-1.5 text-[13px] font-medium transition-all",
-                isActive
-                  ? "bg-[var(--intent-amber)] text-white shadow-sm"
-                  : "bg-[var(--intent-amber-subtle)] text-[var(--intent-text-primary)] hover:bg-[var(--intent-amber-subtle)]/80"
-              )}
-            >
-              {opt}
-            </button>
-          );
-        })}
-      </div>
+      {isLoading ? (
+        <div className="flex items-center gap-2 py-2">
+          <Loader2 size={14} className="animate-spin text-[var(--intent-text-secondary)]" />
+          <span className="text-[13px] text-[var(--intent-text-secondary)]">Loading...</span>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {options.map((opt) => {
+            const isActive = selected.has(opt.value);
+            return (
+              <button
+                key={opt.value}
+                onClick={() => onToggle(opt.value)}
+                className={cn(
+                  "rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all",
+                  isActive
+                    ? "bg-[var(--intent-amber)] text-white shadow-sm"
+                    : "border border-[var(--intent-text-tertiary)] bg-white text-[var(--intent-text-primary)] hover:border-[var(--intent-amber)]/50 hover:bg-[var(--intent-amber-subtle)]/50"
+                )}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Toggle row for boolean filters                                      */
+/* Toggle row                                                          */
 /* ------------------------------------------------------------------ */
 
 function ToggleRow({
@@ -147,20 +159,8 @@ function ToggleRow({
         )}
       >
         {active && (
-          <svg
-            width="10"
-            height="8"
-            viewBox="0 0 10 8"
-            fill="none"
-            className="text-white"
-          >
-            <path
-              d="M1 4L3.5 6.5L9 1"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none" className="text-white">
+            <path d="M1 4L3.5 6.5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
       </div>
@@ -173,79 +173,105 @@ function ToggleRow({
 /* ------------------------------------------------------------------ */
 
 interface FilterDrawerProps {
-  /** Number of results matching current filters */
-  resultCount?: number;
-  children?: React.ReactNode;
+  filters: DrawerFilterState;
+  onApply: (filters: DrawerFilterState) => void;
+  onClear: () => void;
 }
 
-export function FilterDrawer({
-  resultCount = 5,
-  children,
-}: FilterDrawerProps) {
-  const [selectedDomains, setSelectedDomains] = useState<Set<string>>(
-    new Set()
-  );
-  const [selectedNiches, setSelectedNiches] = useState<Set<string>>(
-    new Set()
-  );
-  const [selectedCities, setSelectedCities] = useState<Set<string>>(
-    new Set()
-  );
-  const [selectedYears, setSelectedYears] = useState<Set<string>>(new Set());
-  const [asksOpen, setAsksOpen] = useState(false);
-  const [offersOpen, setOffersOpen] = useState(false);
+function toggleInSet(set: Set<string>, value: string): Set<string> {
+  const next = new Set(set);
+  if (next.has(value)) next.delete(value);
+  else next.add(value);
+  return next;
+}
 
-  const totalFilters =
-    selectedDomains.size +
-    selectedNiches.size +
-    selectedCities.size +
-    selectedYears.size +
-    (asksOpen ? 1 : 0) +
-    (offersOpen ? 1 : 0);
+export function FilterDrawer({ filters, onApply, onClear }: FilterDrawerProps) {
+  const [open, setOpen] = useState(false);
 
-  function toggleInSet(
-    set: Set<string>,
-    setter: React.Dispatch<React.SetStateAction<Set<string>>>,
-    value: string
-  ) {
-    setter((prev) => {
-      const next = new Set(prev);
-      if (next.has(value)) {
-        next.delete(value);
-      } else {
-        next.add(value);
-      }
-      return next;
-    });
-  }
+  // Local draft state — copied from props on open
+  const [draft, setDraft] = useState<DrawerFilterState>(filters);
 
-  function clearAll() {
-    setSelectedDomains(new Set());
-    setSelectedNiches(new Set());
-    setSelectedCities(new Set());
-    setSelectedYears(new Set());
-    setAsksOpen(false);
-    setOffersOpen(false);
-  }
+  // Sync draft from props when drawer opens
+  useEffect(() => {
+    if (open) {
+      setDraft({
+        domains: new Set(filters.domains),
+        niches: new Set(filters.niches),
+        cities: new Set(filters.cities),
+        classYears: new Set(filters.classYears),
+        hasAsks: filters.hasAsks,
+        hasOffers: filters.hasOffers,
+      });
+    }
+  }, [open, filters]);
+
+  // Load real filter options from API
+  const { data: filterOptions, isLoading: filtersLoading } = useDiscoveryFilters();
+
+  const domainOptions = useMemo<PillOption[]>(
+    () => filterOptions?.domains.map((d) => ({ label: d.displayName, value: d.code })) ?? [],
+    [filterOptions]
+  );
+  const nicheOptions = useMemo<PillOption[]>(
+    () => filterOptions?.niches.map((n) => ({ label: n.displayName, value: n.code })) ?? [],
+    [filterOptions]
+  );
+  const cityOptions = useMemo<PillOption[]>(
+    () => filterOptions?.cities.map((c) => ({ label: c, value: c })) ?? [],
+    [filterOptions]
+  );
+  const yearOptions = useMemo<PillOption[]>(
+    () => filterOptions?.classYears.map((y) => ({ label: `Class of ${y}`, value: String(y) })) ?? [],
+    [filterOptions]
+  );
+
+  // Live preview count
+  const previewApiParams = useMemo(() => ({
+    ...filtersToApiParams(draft),
+    pageSize: 1,
+  }), [draft]);
+
+  const { data: previewData, isFetching: previewFetching } = useDiscovery(
+    open ? previewApiParams : {}
+  );
+  const liveCount = open ? (previewData?.total ?? null) : null;
+
+  const draftCount = countActiveFilters(draft);
+
+  const handleApply = useCallback(() => {
+    onApply(draft);
+    setOpen(false);
+  }, [draft, onApply]);
+
+  const handleClear = useCallback(() => {
+    const empty = {
+      domains: new Set<string>(),
+      niches: new Set<string>(),
+      cities: new Set<string>(),
+      classYears: new Set<string>(),
+      hasAsks: false,
+      hasOffers: false,
+    };
+    setDraft(empty);
+    onClear();
+  }, [onClear]);
+
+  const activeCount = countActiveFilters(filters);
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
-          children ? undefined : (
-            <button className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--intent-text-tertiary)] bg-white transition-colors hover:bg-[var(--muted)]">
-              <SlidersHorizontal size={18} strokeWidth={1.5} />
-              {totalFilters > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--intent-amber)] text-[9px] font-bold text-white">
-                  {totalFilters}
-                </span>
-              )}
-            </button>
-          )
+          <button className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--intent-text-tertiary)] bg-white transition-colors hover:bg-[var(--muted)]">
+            <SlidersHorizontal size={18} strokeWidth={1.5} />
+            {activeCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--intent-amber)] text-[9px] font-bold text-white">
+                {activeCount}
+              </span>
+            )}
+          </button>
         }
-      >
-        {children}
-      </SheetTrigger>
+      />
 
       <SheetContent
         side="bottom"
@@ -262,9 +288,9 @@ export function FilterDrawer({
           <SheetDescription className="sr-only">
             Filter members in the discovery feed
           </SheetDescription>
-          {totalFilters > 0 && (
+          {draftCount > 0 && (
             <button
-              onClick={clearAll}
+              onClick={handleClear}
               className="text-[13px] font-medium text-[var(--intent-amber)] hover:underline"
             >
               Clear all
@@ -276,41 +302,37 @@ export function FilterDrawer({
         <div className="flex-1 space-y-6 overflow-y-auto px-4 pb-4">
           <PillGroup
             label="Domain"
-            options={domains}
-            selected={selectedDomains}
-            onToggle={(v) =>
-              toggleInSet(selectedDomains, setSelectedDomains, v)
-            }
+            options={domainOptions}
+            selected={draft.domains}
+            onToggle={(v) => setDraft((d) => ({ ...d, domains: toggleInSet(d.domains, v) }))}
+            isLoading={filtersLoading}
           />
 
           <PillGroup
             label="Niche"
-            options={niches}
-            selected={selectedNiches}
-            onToggle={(v) =>
-              toggleInSet(selectedNiches, setSelectedNiches, v)
-            }
+            options={nicheOptions}
+            selected={draft.niches}
+            onToggle={(v) => setDraft((d) => ({ ...d, niches: toggleInSet(d.niches, v) }))}
+            isLoading={filtersLoading}
           />
 
           <PillGroup
             label="Class Year"
-            options={classYears}
-            selected={selectedYears}
-            onToggle={(v) =>
-              toggleInSet(selectedYears, setSelectedYears, v)
-            }
+            options={yearOptions}
+            selected={draft.classYears}
+            onToggle={(v) => setDraft((d) => ({ ...d, classYears: toggleInSet(d.classYears, v) }))}
+            isLoading={filtersLoading}
           />
 
           <PillGroup
             label="City"
-            options={cities}
-            selected={selectedCities}
-            onToggle={(v) =>
-              toggleInSet(selectedCities, setSelectedCities, v)
-            }
+            options={cityOptions}
+            selected={draft.cities}
+            onToggle={(v) => setDraft((d) => ({ ...d, cities: toggleInSet(d.cities, v) }))}
+            isLoading={filtersLoading}
           />
 
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <h4 className="text-[13px] font-semibold uppercase tracking-wider text-[var(--intent-text-secondary)]">
               Signals
             </h4>
@@ -318,29 +340,41 @@ export function FilterDrawer({
               <ToggleRow
                 label="Has open Asks"
                 description="Show members who are looking for help"
-                active={asksOpen}
-                onToggle={() => setAsksOpen(!asksOpen)}
+                active={draft.hasAsks}
+                onToggle={() => setDraft((d) => ({ ...d, hasAsks: !d.hasAsks }))}
               />
               <ToggleRow
                 label="Has open Offers"
                 description="Show members who are offering help"
-                active={offersOpen}
-                onToggle={() => setOffersOpen(!offersOpen)}
+                active={draft.hasOffers}
+                onToggle={() => setDraft((d) => ({ ...d, hasOffers: !d.hasOffers }))}
               />
             </div>
           </div>
         </div>
 
         <SheetFooter className="border-t border-[var(--intent-text-tertiary)] bg-white px-4 py-4">
-          <SheetClose
-            render={
-              <Button
-                className="h-12 w-full rounded-xl bg-[var(--intent-amber)] text-[15px] font-semibold text-white hover:bg-[var(--intent-amber-light)]"
-              />
-            }
-          >
-            Show {resultCount} results
-          </SheetClose>
+          <div className="flex w-full gap-3">
+            <SheetClose
+              render={
+                <Button
+                  variant="outline"
+                  className="h-12 flex-1 rounded-xl border-[var(--intent-text-tertiary)] text-[15px] font-medium"
+                />
+              }
+            >
+              Cancel
+            </SheetClose>
+            <Button
+              onClick={handleApply}
+              className="h-12 flex-1 rounded-xl bg-[var(--intent-amber)] text-[15px] font-semibold text-white hover:bg-[var(--intent-amber-light)]"
+            >
+              {previewFetching ? (
+                <Loader2 size={16} className="mr-2 animate-spin" />
+              ) : null}
+              {liveCount !== null ? `Show ${liveCount} results` : "Apply filters"}
+            </Button>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

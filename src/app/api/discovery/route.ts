@@ -9,10 +9,14 @@ export const GET = withAuth(async (request, _context, session) => {
     const { page, pageSize, skip } = parsePagination(searchParams);
 
     const search = searchParams.get("search")?.trim() || undefined;
-    const domain = searchParams.get("domain")?.trim() || undefined;
-    const niche = searchParams.get("niche")?.trim() || undefined;
-    const city = searchParams.get("city")?.trim() || undefined;
-    const classYear = searchParams.get("classYear")?.trim() || undefined;
+    const hasAsks = searchParams.get("hasAsks") === "true";
+    const hasOffers = searchParams.get("hasOffers") === "true";
+
+    // Parse comma-separated multi-value filters
+    const domainCodes = searchParams.get("domain")?.split(",").map((s) => s.trim()).filter(Boolean) ?? [];
+    const nicheCodes = searchParams.get("niche")?.split(",").map((s) => s.trim()).filter(Boolean) ?? [];
+    const cities = searchParams.get("city")?.split(",").map((s) => s.trim()).filter(Boolean) ?? [];
+    const classYears = searchParams.get("classYear")?.split(",").map((s) => parseInt(s.trim(), 10)).filter((n) => !isNaN(n)) ?? [];
 
     // Build the where clause
     const where: Prisma.UserWhereInput = {
@@ -32,35 +36,46 @@ export const GET = withAuth(async (request, _context, session) => {
       ];
     }
 
-    // Domain filter
-    if (domain) {
+    // Domain filter (multi-select)
+    if (domainCodes.length > 0) {
       where.profile = {
         ...(where.profile as Prisma.UserProfileWhereInput),
-        domain: { code: domain },
+        domain: { code: domainCodes.length === 1 ? domainCodes[0] : { in: domainCodes } },
       };
     }
 
-    // Niche filter
-    if (niche) {
+    // Niche filter (multi-select)
+    if (nicheCodes.length > 0) {
       where.niches = {
-        some: { niche: { code: niche } },
+        some: { niche: { code: nicheCodes.length === 1 ? nicheCodes[0] : { in: nicheCodes } } },
       };
     }
 
-    // City filter — pills send exact DB values; use equals for precise matching
-    if (city) {
+    // City filter (multi-select)
+    if (cities.length > 0) {
       where.profile = {
         ...(where.profile as Prisma.UserProfileWhereInput),
-        currentCity: city,
+        currentCity: cities.length === 1 ? cities[0] : { in: cities },
       };
     }
 
-    // Class year filter
-    if (classYear) {
-      const year = parseInt(classYear, 10);
-      if (!isNaN(year)) {
-        where.graduationYear = year;
-      }
+    // Class year filter (multi-select)
+    if (classYears.length > 0) {
+      where.graduationYear = classYears.length === 1 ? classYears[0] : { in: classYears };
+    }
+
+    // Has open asks/offers filters
+    if (hasAsks) {
+      where.openSignals = {
+        ...where.openSignals as Prisma.UserOpenSignalListRelationFilter,
+        some: { isOpen: true, tenantSignal: { template: { signalType: "ASK" } } },
+      };
+    }
+    if (hasOffers) {
+      where.openSignals = {
+        ...where.openSignals as Prisma.UserOpenSignalListRelationFilter,
+        some: { isOpen: true, tenantSignal: { template: { signalType: "OFFER" } } },
+      };
     }
 
     const [users, total] = await Promise.all([

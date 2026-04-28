@@ -1,26 +1,27 @@
 "use client";
 
 import { useState, useMemo, useRef, useCallback } from "react";
-import { Search, Users, Loader2 } from "lucide-react";
+import { Search, Users, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useDiscovery, useDiscoveryFilters } from "@/hooks/use-discovery";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useSavedUsers, useSaveUser, useUnsaveUser } from "@/hooks/use-saved-users";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 import { MemberCard } from "@/components/member-card";
 import { FilterPills } from "@/components/filter-pills";
-import { FilterDrawer } from "@/components/filter-drawer";
+import {
+  FilterDrawer,
+  type DrawerFilterState,
+  EMPTY_FILTERS,
+  filtersToApiParams,
+  countActiveFilters,
+} from "@/components/filter-drawer";
+import { IntentWordmark } from "@/components/intent-wordmark";
 import { FeatureRequestDialog } from "@/components/feature-request-dialog";
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
 
 function AnimatedCard({ children, index }: { children: React.ReactNode; index: number }) {
   const { ref, isVisible } = useIntersectionObserver();
@@ -42,15 +43,22 @@ function AnimatedCard({ children, index }: { children: React.ReactNode; index: n
 function SkeletonCard() {
   return (
     <div className="intent-card overflow-hidden rounded-2xl">
-      <div className="intent-skeleton h-[180px]" />
+      <div className="intent-skeleton h-[240px]" />
       <div className="flex flex-col gap-2.5 p-4">
         <div className="intent-skeleton h-5 w-3/4 rounded-md" />
-        <div className="intent-skeleton h-10 w-full rounded-md" />
-        <div className="intent-skeleton h-4 w-2/3 rounded-md" />
-        <div className="flex gap-1">
-          <div className="intent-skeleton h-5 w-14 rounded-full" />
-          <div className="intent-skeleton h-5 w-14 rounded-full" />
+        <div className="intent-skeleton h-3 w-1/2 rounded-md" />
+        <div className="flex items-center gap-2">
+          <div className="intent-skeleton h-6 w-6 rounded-full" />
+          <div className="intent-skeleton h-3 w-32 rounded-md" />
         </div>
+        <div className="intent-skeleton h-3 w-24 rounded-md" />
+        <div className="flex gap-1.5">
+          <div className="intent-skeleton h-5 w-16 rounded-full" />
+          <div className="intent-skeleton h-5 w-16 rounded-full" />
+          <div className="intent-skeleton h-5 w-16 rounded-full" />
+        </div>
+        <div className="intent-skeleton h-10 w-full rounded-md" />
+        <div className="intent-skeleton mt-1 h-4 w-1/3 rounded-md" />
       </div>
     </div>
   );
@@ -61,7 +69,7 @@ function SkeletonCard() {
 /* ------------------------------------------------------------------ */
 
 export default function HomePage() {
-  const [activeFilter, setActiveFilter] = useState("all");
+  // Search state
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -73,18 +81,18 @@ export default function HomePage() {
     debounceRef.current = setTimeout(() => setDebouncedSearch(value), 300);
   }, []);
 
-  // Build API filter params from the active pill
-  const apiFilters = useMemo(() => {
-    const filters: Record<string, string> = {};
-    if (debouncedSearch) filters.search = debouncedSearch;
-    if (activeFilter.startsWith("year:")) filters.classYear = activeFilter.slice(5);
-    else if (activeFilter.startsWith("city:")) filters.city = activeFilter.slice(5);
-    else if (activeFilter.startsWith("domain:")) filters.domain = activeFilter.slice(7);
-    else if (activeFilter.startsWith("niche:")) filters.niche = activeFilter.slice(6);
-    return filters;
-  }, [activeFilter, debouncedSearch]);
+  // Unified filter state
+  const [filters, setFilters] = useState<DrawerFilterState>(EMPTY_FILTERS);
 
-  const { data, isLoading, error } = useDiscovery({ ...apiFilters, pageSize: 20 });
+  // Build API params from filter state + search
+  const apiFilters = useMemo(() => {
+    const params: Record<string, string> = {};
+    if (debouncedSearch) params.search = debouncedSearch;
+    Object.assign(params, filtersToApiParams(filters));
+    return { ...params, pageSize: 20 };
+  }, [filters, debouncedSearch]);
+
+  const { data, isLoading, error } = useDiscovery(apiFilters);
   const { data: filterData } = useDiscoveryFilters();
   const { data: currentUser } = useCurrentUser();
   const { data: savedData } = useSavedUsers();
@@ -100,38 +108,71 @@ export default function HomePage() {
 
   const handleToggleSave = useCallback(
     (userId: string) => {
-      if (savedUserIds.has(userId)) {
-        unsaveUser.mutate(userId);
-      } else {
-        saveUser.mutate(userId);
-      }
+      if (savedUserIds.has(userId)) unsaveUser.mutate(userId);
+      else saveUser.mutate(userId);
     },
     [savedUserIds, saveUser, unsaveUser]
   );
 
-  // Greeting
+  // Greeting for subtitle
   const firstName = currentUser?.fullName?.split(" ")[0];
-  const greeting = firstName ? `${getGreeting()}, ${firstName}` : "Discover";
 
-  // Build filter pills dynamically
-  const filterOptions = useMemo(() => {
-    const pills = [{ label: "All", value: "all" }];
+  // Quick-access pills: top cities + class years from API
+  const quickPills = useMemo(() => {
+    const pills: { label: string; value: string }[] = [];
     if (filterData) {
-      filterData.classYears.slice(0, 2).forEach((y) =>
+      filterData.classYears.slice(0, 3).forEach((y) =>
         pills.push({ label: `Class of ${y}`, value: `year:${y}` })
       );
       filterData.cities.slice(0, 3).forEach((c) =>
         pills.push({ label: c, value: `city:${c}` })
       );
-    } else {
-      pills.push(
-        { label: "Class of 2018", value: "year:2018" },
-        { label: "Bangalore", value: "city:Bangalore" },
-        { label: "Mumbai", value: "city:Mumbai" },
-      );
     }
     return pills;
   }, [filterData]);
+
+  // Map quick pill values into the filter state
+  const activePillValues = useMemo(() => {
+    const active = new Set<string>();
+    filters.classYears.forEach((y) => active.add(`year:${y}`));
+    filters.cities.forEach((c) => active.add(`city:${c}`));
+    return active;
+  }, [filters]);
+
+  // Count drawer-only filters (domains, niches, hasAsks, hasOffers) that aren't in quick pills
+  const extraFilterCount = filters.domains.size + filters.niches.size + (filters.hasAsks ? 1 : 0) + (filters.hasOffers ? 1 : 0);
+
+  const handlePillToggle = useCallback((value: string) => {
+    setFilters((prev) => {
+      const next = {
+        ...prev,
+        domains: new Set(prev.domains),
+        niches: new Set(prev.niches),
+        cities: new Set(prev.cities),
+        classYears: new Set(prev.classYears),
+      };
+
+      if (value.startsWith("year:")) {
+        const year = value.slice(5);
+        if (next.classYears.has(year)) next.classYears.delete(year);
+        else next.classYears.add(year);
+      } else if (value.startsWith("city:")) {
+        const city = value.slice(5);
+        if (next.cities.has(city)) next.cities.delete(city);
+        else next.cities.add(city);
+      }
+
+      return next;
+    });
+  }, []);
+
+  const handleClearAll = useCallback(() => {
+    setFilters(EMPTY_FILTERS);
+    setSearchQuery("");
+    setDebouncedSearch("");
+  }, []);
+
+  const totalActiveFilters = countActiveFilters(filters);
 
   return (
     <div className="min-h-screen bg-[var(--intent-bg)]">
@@ -142,29 +183,43 @@ export default function HomePage() {
       >
         <div className="mx-auto flex h-14 max-w-[1200px] items-center justify-between px-4">
           <div className="min-w-0">
-            <h1 className="truncate font-heading text-lg font-bold tracking-tight text-[var(--intent-text-primary)]">
-              {greeting}
-            </h1>
-            <p className="text-[11px] text-[var(--intent-text-secondary)]">
-              Find your next meaningful connection
-            </p>
+            <IntentWordmark size="sm" />
+            {firstName && (
+              <p className="text-[11px] text-[var(--intent-text-secondary)]">
+                Welcome back, {firstName}
+              </p>
+            )}
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <FeatureRequestDialog />
             <button
               onClick={() => setSearchOpen(!searchOpen)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--intent-text-tertiary)] bg-white transition-colors hover:bg-[var(--muted)]"
+              className={cn(
+                "flex h-9 w-9 items-center justify-center rounded-xl border transition-colors",
+                searchOpen
+                  ? "border-[var(--intent-amber)] bg-[var(--intent-amber-subtle)]"
+                  : "border-[var(--intent-text-tertiary)] bg-white hover:bg-[var(--muted)]"
+              )}
               aria-label="Search"
             >
-              <Search size={18} strokeWidth={1.5} />
+              {searchOpen ? (
+                <X size={18} strokeWidth={1.5} className="text-[var(--intent-amber)]" />
+              ) : (
+                <Search size={18} strokeWidth={1.5} />
+              )}
             </button>
-            <FilterDrawer resultCount={members.length} />
+            <FilterDrawer
+              filters={filters}
+              onApply={setFilters}
+              onClear={handleClearAll}
+            />
           </div>
         </div>
 
+        {/* Search bar */}
         {searchOpen && (
           <div className="mx-auto max-w-[1200px] px-4 pb-3">
-            <div className="flex items-center gap-2 rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 py-2 transition-all">
+            <div className="flex items-center gap-2 rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 py-2 transition-all focus-within:border-[var(--intent-amber)] focus-within:ring-2 focus-within:ring-[var(--intent-amber)]/20">
               <Search size={16} className="shrink-0 text-[var(--intent-text-secondary)]" />
               <input
                 type="text"
@@ -179,23 +234,39 @@ export default function HomePage() {
                   onClick={() => { setSearchQuery(""); setDebouncedSearch(""); }}
                   className="text-[var(--intent-text-secondary)] hover:text-[var(--intent-text-primary)]"
                 >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
+                  <X size={16} strokeWidth={1.5} />
                 </button>
               )}
             </div>
           </div>
         )}
 
+        {/* Filter pills */}
         <div className="mx-auto max-w-[1200px]">
           <FilterPills
-            pills={filterOptions}
-            activeValue={activeFilter}
-            onSelect={setActiveFilter}
+            pills={quickPills}
+            activeValues={activePillValues}
+            onToggle={handlePillToggle}
+            onClearAll={handleClearAll}
+            extraFilterCount={extraFilterCount}
           />
         </div>
       </header>
+
+      {/* ── Active filter summary ──────────────────────────────────── */}
+      {totalActiveFilters > 0 && (
+        <div className="mx-auto flex max-w-[1200px] items-center justify-between px-4 pt-3">
+          <p className="text-[13px] text-[var(--intent-text-secondary)]">
+            {data ? `${data.total} member${data.total === 1 ? "" : "s"} found` : "Filtering..."}
+          </p>
+          <button
+            onClick={handleClearAll}
+            className="text-[13px] font-medium text-[var(--intent-amber)] hover:underline"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
 
       {/* ── Card grid ──────────────────────────────────────────────── */}
       <div className="mx-auto max-w-[1200px] px-4 py-4 md:py-6">
@@ -222,12 +293,12 @@ export default function HomePage() {
             <p className="mt-1 max-w-xs text-[14px] text-[var(--intent-text-secondary)]">
               We couldn&apos;t find anyone matching those filters. Try broadening your search.
             </p>
-            {activeFilter !== "all" && (
+            {totalActiveFilters > 0 && (
               <button
-                onClick={() => { setActiveFilter("all"); setSearchQuery(""); setDebouncedSearch(""); }}
+                onClick={handleClearAll}
                 className="mt-4 rounded-full bg-[var(--intent-amber)] px-5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[var(--intent-amber-light)]"
               >
-                Clear filters
+                Clear all filters
               </button>
             )}
           </div>
