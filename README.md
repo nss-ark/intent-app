@@ -6,6 +6,8 @@ Intent is a B2B SaaS platform that gives university communities — students, re
 
 The first tenant is **ISB (Indian School of Business)**, India.
 
+**Live at:** https://intent-app-alpha.vercel.app
+
 ---
 
 ## Table of Contents
@@ -23,6 +25,7 @@ The first tenant is **ISB (Indian School of Business)**, India.
 - [Design System](#design-system)
 - [Getting Started (Local Development)](#getting-started-local-development)
 - [Deploying to Production](#deploying-to-production)
+- [Next Steps](#next-steps)
 - [Phasing Roadmap](#phasing-roadmap)
 - [Open Decisions](#open-decisions)
 - [Contributing](#contributing)
@@ -205,15 +208,15 @@ flowchart LR
 | Language | TypeScript 5 | Type safety throughout |
 | UI | React 19, Tailwind CSS 4, shadcn/ui | Component primitives, fast iteration |
 | State | React Query (TanStack) | Server state caching |
-| ORM | Prisma 7.8.0 | Type-safe database access, migrations |
-| Database | PostgreSQL (production), SQLite (local dev) | Schema-per-tenant isolation |
-| Auth | NextAuth 4 (Credentials + JWT) | Multi-tenant sessions |
+| ORM | Prisma 7.8.0 | Type-safe database access |
+| Database | PostgreSQL via Neon | Serverless PostgreSQL |
+| Auth | NextAuth 4 (Credentials + Google + Microsoft OAuth) | Multi-provider sessions |
 | Forms | react-hook-form + Zod | Validation |
-| Email | Resend | Transactional emails |
+| Email | Nodemailer (Gmail SMTP) | Transactional emails |
 | Icons | Lucide React | Consistent iconography |
 | Mobile | Progressive Web App | Install prompt, offline cache |
-| Hosting | Firebase App Hosting | Auto-deploy from GitHub |
-| Database Hosting | Neon (recommended) | Serverless PostgreSQL |
+| Hosting | Vercel | Auto-deploy via GitHub Actions CI/CD |
+| CI/CD | GitHub Actions | Push to `main` triggers production deploy |
 
 ---
 
@@ -236,23 +239,22 @@ graph TB
     end
 
     subgraph Services["Server-side Services"]
-        Auth["NextAuth\nJWT Sessions"]
+        Auth["NextAuth\nJWT Sessions\nGoogle + Microsoft OAuth"]
         Gamification["Gamification\nEngine"]
         Audit["Audit\nLogging"]
-        Email["Resend\nEmail Service"]
+        Email["Nodemailer\nGmail SMTP"]
         RateLimit["Rate\nLimiter"]
         Consent["DPDPA\nConsent"]
     end
 
     subgraph Data["Data Layer"]
         Prisma["Prisma ORM\n50+ models"]
-        DB[("PostgreSQL\nNeon Serverless\n(schema-per-tenant)")]
+        DB[("Neon\nPostgreSQL")]
         Prisma --> DB
     end
 
-    subgraph Hosting["Firebase App Hosting"]
-        Deploy["Auto-deploy\non push to main"]
-        Secrets["Cloud Secret\nManager"]
+    subgraph Hosting["Vercel + GitHub Actions"]
+        Deploy["Push to main\n→ auto-deploy"]
     end
 
     Client <--> NextJS
@@ -301,6 +303,7 @@ The MVP codebase is **feature-complete** across all planned screens and API rout
 
 ### Authentication and Onboarding (10 screens)
 - Login and signup with email/password
+- Social login with Google and Microsoft accounts
 - Email verification flow
 - DPDPA/privacy consent capture
 - 4-step onboarding: personal info, education & experience, interests & signals, final review
@@ -345,6 +348,7 @@ The MVP codebase is **feature-complete** across all planned screens and API rout
 - Rate limiting, audit logging, gamification engine, email service
 - PWA manifest and service worker
 - Security headers (HSTS, X-Frame-Options, CSP, etc.)
+- GitHub Actions CI/CD pipeline (auto-deploy on push to `main`)
 
 ---
 
@@ -381,11 +385,11 @@ intent-app/
 │   │   └── use-saved-users.ts
 │   │
 │   ├── lib/                          # Server-side utilities
-│   │   ├── auth.ts                   # NextAuth configuration
-│   │   ├── db.ts                     # Prisma client singleton
+│   │   ├── auth.ts                   # NextAuth config (Credentials + Google + Microsoft)
+│   │   ├── db.ts                     # Prisma client singleton (Neon PostgreSQL)
 │   │   ├── api-helpers.ts            # withAuth, withAdminAuth, response wrappers
 │   │   ├── gamification.ts           # Points, levels, contribution tracking
-│   │   ├── email.ts                  # Resend email templates
+│   │   ├── email.ts                  # Gmail SMTP via nodemailer
 │   │   ├── consent.ts                # DPDPA consent management
 │   │   ├── audit.ts                  # Audit logging
 │   │   ├── tenant.ts                 # Multi-tenant utilities
@@ -407,9 +411,9 @@ intent-app/
 │   ├── manifest.json                 # PWA manifest
 │   └── sw.js                         # Service worker
 │
-├── apphosting.yaml                   # Firebase App Hosting config
-├── firebase.json                     # Firebase project config
+├── .github/workflows/deploy.yml      # GitHub Actions → Vercel auto-deploy
 ├── next.config.ts                    # Security headers, image optimization
+├── vercel.json                       # Vercel project config
 ├── master-plan-intent.md             # Full product specification
 └── intent-screen-prompts.md          # 30 screen specifications
 ```
@@ -421,8 +425,8 @@ intent-app/
 ### Authentication `/(auth)/`
 | Route | Screen |
 |---|---|
-| `/login` | Login |
-| `/signup` | Registration |
+| `/login` | Login (email/password + Google + Microsoft) |
+| `/signup` | Registration (email/password + Google + Microsoft) |
 | `/signup/verify` | Email verification |
 | `/signup/consent` | DPDPA privacy consent |
 | `/onboarding` | Onboarding intro |
@@ -469,7 +473,7 @@ intent-app/
 ### Authentication
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/auth/[...nextauth]` | NextAuth handler |
+| POST | `/api/auth/[...nextauth]` | NextAuth handler (credentials + OAuth) |
 | POST | `/api/auth/signup` | User registration |
 
 ### Users
@@ -517,6 +521,7 @@ intent-app/
 | POST | `/api/saved-users` | Save/unsave user |
 | GET | `/api/match-groups` | List match groups |
 | POST | `/api/consents` | Accept policies |
+| POST | `/api/feature-requests` | Submit feature request (GitHub Issues) |
 
 ### Admin
 | Method | Endpoint | Description |
@@ -620,7 +625,7 @@ The visual identity: professional but warm, uncluttered, photography-forward, ge
 
 ### Prerequisites
 - Node.js 20+
-- npm or pnpm
+- npm
 
 ### Setup
 
@@ -632,11 +637,15 @@ cd intent-app
 # Install dependencies
 npm install
 
+# Copy environment template
+cp .env.example .env
+# Edit .env with your Neon database URL (see below)
+
 # Generate Prisma client
 npx prisma generate
 
-# Create and seed the local SQLite database
-npx prisma migrate dev
+# Push schema to database and seed
+npx prisma db push
 npm run db:seed
 
 # Start the dev server
@@ -647,132 +656,181 @@ The app runs at `http://localhost:3000`. Demo mode is enabled by default (`NEXT_
 
 ### Environment Variables (Local)
 
+Copy `.env.example` and fill in values:
+
 ```env
-DATABASE_URL="file:./dev.db"
-NEXTAUTH_SECRET="intent-dev-secret-change-in-production"
+# Database (Neon PostgreSQL — get a free DB at https://neon.tech)
+DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
+
+# NextAuth
+NEXTAUTH_SECRET=""           # Generate with: openssl rand -base64 32
 NEXTAUTH_URL="http://localhost:3000"
+
+# Demo mode — set to "true" for local dev browsing without auth
 NEXT_PUBLIC_DEMO_MODE="true"
+
+# Email (Gmail SMTP) — optional for local dev
+EMAIL_PROVIDER="gmail"
+GMAIL_USER=""                # your-app@gmail.com
+GMAIL_APP_PASSWORD=""        # 16-char app password from Google Account
+
+# OAuth Providers — optional for local dev
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+MICROSOFT_CLIENT_ID=""
+MICROSOFT_CLIENT_SECRET=""
+
+# GitHub token for feature request issues (needs repo scope)
+GITHUB_TOKEN=""
 ```
 
 ---
 
 ## Deploying to Production
 
-The app is configured for **Firebase App Hosting**, which has built-in GitHub integration and auto-deploys on push to `main`. No separate CI/CD pipeline needed.
+The app is deployed on **Vercel** with automatic deployments via GitHub Actions. Every push to `main` triggers a production deploy.
 
 ```mermaid
 flowchart LR
     A["Developer\npushes to main"] --> B["GitHub\nrepository"]
-    B --> C["Firebase App Hosting\ndetects push"]
-    C --> D["npm install"]
+    B --> C["GitHub Actions\ntriggers workflow"]
+    C --> D["Vercel CLI\nremote build"]
     D --> E["prisma generate\n+ next build"]
-    E --> F["Deploy to\nCloud Run"]
-    F --> G["Live at\n*.web.app"]
+    E --> F["Deploy to\nVercel Edge"]
+    F --> G["Live at\nintent-app-alpha.vercel.app"]
 
-    H["Cloud Secret\nManager"] -.->|"DATABASE_URL\nNEXTAUTH_SECRET"| F
+    H["Vercel\nEnv Vars"] -.->|"DATABASE_URL\nNEXTAUTH_SECRET\netc."| F
     I[("Neon\nPostgreSQL")] <-.->|"Prisma queries"| G
 
     style G fill:#E4EDE8,stroke:#2D4A3A,color:#1A1A1A
 ```
 
-### Step 1: Create a Firebase Project
+### Current Production Setup
 
-1. Go to [Firebase Console](https://console.firebase.google.com)
-2. Create a new project (e.g., `intent-app`)
-3. Enable the **Blaze plan** (pay-as-you-go; required for App Hosting, free tier is generous)
+| Service | Provider | Details |
+|---|---|---|
+| Hosting | Vercel (Hobby) | https://intent-app-alpha.vercel.app |
+| Database | Neon PostgreSQL | Serverless, free tier |
+| CI/CD | GitHub Actions | `.github/workflows/deploy.yml` |
+| Region | Vercel auto (iad1) | Washington, D.C. |
 
-### Step 2: Provision a PostgreSQL Database
+### Vercel Environment Variables (Production)
 
-The app uses SQLite locally but requires PostgreSQL in production.
+Set via `vercel env add <NAME> production`:
 
-1. Go to [neon.tech](https://neon.tech) (free tier, serverless Postgres)
-2. Create a project
-3. Copy the connection string: `postgresql://user:pass@host/intent?sslmode=require`
+| Variable | Status | Notes |
+|---|---|---|
+| `DATABASE_URL` | Set | Neon PostgreSQL connection string |
+| `NEXTAUTH_SECRET` | Set | Generated with `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | Set | `https://intent-app-alpha.vercel.app` |
+| `NEXT_PUBLIC_DEMO_MODE` | Set | `false` |
+| `GMAIL_USER` | **Not set** | Required for email delivery |
+| `GMAIL_APP_PASSWORD` | **Not set** | Required for email delivery |
+| `EMAIL_PROVIDER` | **Not set** | Set to `gmail` to enable email |
+| `GOOGLE_CLIENT_ID` | **Not set** | Required for Google social login |
+| `GOOGLE_CLIENT_SECRET` | **Not set** | Required for Google social login |
+| `MICROSOFT_CLIENT_ID` | **Not set** | Required for Microsoft social login |
+| `MICROSOFT_CLIENT_SECRET` | **Not set** | Required for Microsoft social login |
 
-### Step 3: Install Firebase CLI and Initialize App Hosting
+### GitHub Actions Secrets
 
-```bash
-npm install -g firebase-tools
-firebase login
-firebase init apphosting
-```
+Set at https://github.com/nss-ark/intent-app/settings/secrets/actions:
 
-When prompted:
-- Select your Firebase project
-- Connect your GitHub repository (`nss-ark/intent-app`)
-- Select `main` as the live branch
+| Secret | Purpose |
+|---|---|
+| `VERCEL_TOKEN` | Vercel deploy token |
+| `VERCEL_ORG_ID` | Vercel team/org ID |
+| `VERCEL_PROJECT_ID` | Vercel project ID |
 
-Firebase will set up auto-deploy: every push to `main` triggers a build and deploy automatically.
+---
 
-### Step 4: Set Secrets in Firebase
+## Next Steps
 
-```bash
-# Set the database connection string
-firebase apphosting:secrets:set database-url
-# Paste your Neon connection string when prompted
+### 1. Set Up Gmail SMTP (Email Delivery)
 
-# Set the NextAuth secret
-firebase apphosting:secrets:set nextauth-secret
-# Paste the output of: openssl rand -base64 32
-```
+Currently emails fall back to `console.log`. To enable real email delivery:
 
-### Step 5: Set the Production URL
+1. **Enable 2-Step Verification** on the Gmail account you want to send from:
+   - Go to https://myaccount.google.com/security
+   - Turn on 2-Step Verification
 
-After your first deploy, Firebase gives you a URL (e.g., `https://intent-app--main-abc123.web.app`). Set it as the NextAuth URL:
+2. **Create an App Password:**
+   - Go to https://myaccount.google.com/apppasswords
+   - Select "Mail" as the app, generate a 16-character password
 
-```bash
-firebase apphosting:config:set NEXTAUTH_URL=https://your-app-url.web.app
-```
+3. **Add env vars to Vercel:**
+   ```bash
+   vercel env add EMAIL_PROVIDER production    # value: gmail
+   vercel env add GMAIL_USER production        # value: your-email@gmail.com
+   vercel env add GMAIL_APP_PASSWORD production # value: the 16-char app password
+   ```
 
-Or, if you add a custom domain later (e.g., `isb.intent.community`), use that instead.
+4. **Redeploy** (push to main or run `vercel deploy --prod`)
 
-### Step 6: Run Initial Database Migration
+### 2. Set Up Google OAuth (Social Login)
 
-From your local machine, point at the production database:
+1. **Go to Google Cloud Console:** https://console.cloud.google.com
+2. **Create a new project** (or use an existing one)
+3. Go to **APIs & Services > Credentials**
+4. Click **Create Credentials > OAuth 2.0 Client ID**
+5. Set **Application type:** Web application
+6. Add **Authorized redirect URIs:**
+   - `https://intent-app-alpha.vercel.app/api/auth/callback/google`
+   - `http://localhost:3000/api/auth/callback/google` (for local dev)
+7. Copy the **Client ID** and **Client Secret**
+8. **Configure OAuth consent screen:**
+   - User type: External
+   - App name: Intent
+   - Add scopes: `email`, `profile`, `openid`
+9. **Add env vars to Vercel:**
+   ```bash
+   vercel env add GOOGLE_CLIENT_ID production     # value: your client ID
+   vercel env add GOOGLE_CLIENT_SECRET production  # value: your client secret
+   ```
+10. **Redeploy**
 
-```bash
-DATABASE_URL="your-neon-connection-string" npx prisma migrate deploy
-DATABASE_URL="your-neon-connection-string" npm run db:seed
-```
+### 3. Set Up Microsoft OAuth (Social Login)
 
-This creates all tables and seeds the ISB tenant with domains, niches, signals, badges, and sample data.
+1. **Go to Azure Portal:** https://portal.azure.com
+2. Go to **Azure Active Directory > App registrations > New registration**
+3. Set:
+   - Name: `Intent`
+   - Supported account types: **Accounts in any organizational directory and personal Microsoft accounts**
+   - Redirect URI: `https://intent-app-alpha.vercel.app/api/auth/callback/azure-ad`
+4. Copy the **Application (client) ID**
+5. Go to **Certificates & secrets > New client secret** — copy the value
+6. **Add env vars to Vercel:**
+   ```bash
+   vercel env add MICROSOFT_CLIENT_ID production     # value: application ID
+   vercel env add MICROSOFT_CLIENT_SECRET production  # value: client secret value
+   ```
+7. **Redeploy**
 
-### Step 7: Push to Main
+### 4. Custom Domain
 
-```bash
-git push origin main
-```
+1. Purchase a domain (e.g., `intent.community`)
+2. Add it in Vercel: `vercel domains add intent.community`
+3. Update DNS records as Vercel instructs
+4. Update `NEXTAUTH_URL` to match: `vercel env rm NEXTAUTH_URL production` then re-add with the new domain
 
-Firebase auto-deploys. Your app is live.
+### 5. First Real Users
 
-### Configuration Reference
+1. Create real admin accounts (replace seed demo users with actual ISB admin credentials)
+2. Import ISB alumni/student data via `POST /api/admin/members/upload` (CSV)
+3. Configure badge and signal templates for the first cohort
+4. Set `NEXT_PUBLIC_DEMO_MODE=false` (already done in production)
 
-The `apphosting.yaml` file configures Firebase App Hosting:
+### 6. Observability (Before Going Wide)
 
-```yaml
-runConfig:
-  concurrency: 80
-  cpu: 1
-  memoryMiB: 512
-  minInstances: 0
-  maxInstances: 10
-
-env:
-  - variable: NEXT_PUBLIC_DEMO_MODE
-    value: "false"
-  - variable: DATABASE_URL
-    secret: database-url
-  - variable: NEXTAUTH_SECRET
-    secret: nextauth-secret
-  - variable: NEXTAUTH_URL
-    availability: [BUILD, RUNTIME]
-```
+- **Error tracking:** Add Sentry DSN as env var
+- **Analytics:** Add PostHog or similar
+- **Rate limiter:** Currently in-memory — upgrade to Redis if scaling past single instance
 
 ---
 
 ## Phasing Roadmap
 
-### MVP (Current — ready for ISB WhatsApp drop)
+### MVP (Current — deployed on Vercel)
 - [x] Identity: Tier 1 (CSV upload + phone OTP) and Tier 2 (admin-manual LinkedIn check)
 - [x] Profile and card with all card fields
 - [x] Browse and filters
@@ -785,9 +843,13 @@ env:
 - [x] Gamification: contribution event logging and level display
 - [x] Mobile-friendly responsive web with PWA
 - [x] DPDPA consent log, audit log, soft-delete pattern
-- [ ] Production deployment (Firebase App Hosting + Neon Postgres)
+- [x] Production deployment (Vercel + Neon Postgres)
+- [x] Google and Microsoft social login (code ready, needs OAuth credentials)
+- [x] Gmail SMTP email (code ready, needs app password)
+- [x] CI/CD auto-deploy (GitHub Actions → Vercel)
 - [ ] Terms of service and privacy policy text
 - [ ] ISB tenant configuration and real member data
+- [ ] Email and OAuth credentials configured in production
 
 ### V1 (After first cohort feedback)
 - Tier 3 verification for Founder badge (structured declaration + proof)
@@ -805,7 +867,6 @@ env:
 - Cross-tenant federation (opt-in)
 - Student-side monetization (extra nudges, profile boosts)
 - Second tenant onboarded
-- SSO integration
 - Native mobile apps (if PWA telemetry warrants it)
 
 ---
