@@ -99,6 +99,35 @@ export function welcomeEmail(name: string, tenantName: string): EmailOptions & {
   };
 }
 
+export function otpEmail(name: string, code: string): Omit<EmailOptions, "to"> {
+  const firstName = name.split(" ")[0];
+  return {
+    subject: `${code} is your Intent verification code`,
+    html: `
+      <div style="font-family: Inter, system-ui, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #FAFAF6;">
+        <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+          <h1 style="color: #1A1A1A; font-size: 24px; margin: 0 0 16px;">Verify your email</h1>
+          <p style="color: #6B6B66; font-size: 16px; line-height: 1.6; margin: 0 0 12px;">
+            Hi ${firstName},
+          </p>
+          <p style="color: #6B6B66; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+            Use the code below to verify your email address and complete your Intent signup.
+          </p>
+          <div style="text-align: center; margin: 0 0 24px; padding: 20px; background: #FAFAF6; border-radius: 12px; border: 1px solid #E8E4DA;">
+            <span style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #1A1A1A;">${code}</span>
+          </div>
+          <p style="color: #6B6B66; font-size: 14px; line-height: 1.6; margin: 0;">
+            This code expires in 10 minutes. If you didn&rsquo;t request this, you can safely ignore this email.
+          </p>
+        </div>
+        <p style="color: #6B6B66; font-size: 12px; margin-top: 24px; text-align: center;">
+          Intent &middot; Community networking for universities
+        </p>
+      </div>
+    `,
+  };
+}
+
 export function nudgeNotificationEmail(
   receiverName: string,
   senderName: string,

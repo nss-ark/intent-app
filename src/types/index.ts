@@ -45,8 +45,8 @@ export interface User extends Timestamped, SoftDeletable {
   email: string;
   fullName: string;
   phoneNumber: string | null;
-  phoneVerified: boolean;
-  phoneVerifiedAt: ISODateTime | null;
+  emailVerified: boolean;
+  emailVerifiedAt: ISODateTime | null;
   photoUrl: string | null;
   dateOfBirth: ISODate | null;
   institutionMemberStatus: InstitutionMemberStatus;

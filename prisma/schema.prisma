@@ -66,8 +66,8 @@ model User {
   email                 String    @unique
   fullName              String
   phoneNumber           String?
-  phoneVerified         Boolean   @default(false)
-  phoneVerifiedAt       DateTime?
+  emailVerified         Boolean   @default(false)
+  emailVerifiedAt       DateTime?
   photoUrl              String?
   dateOfBirth           DateTime?
   institutionMemberStatus String? // CURRENT_STUDENT | RECENT_GRAD | ALUMNI
@@ -991,6 +991,22 @@ model DataSubjectRequest {
   @@index([userId])
   @@index([status])
   @@map("data_subject_requests")
+}
+
+// ─────────────────────────────────────────────
+// EMAIL OTP
+// ─────────────────────────────────────────────
+
+model EmailOtp {
+  id        String   @id @default(uuid())
+  email     String
+  code      String   // 6-digit numeric
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("email_otps")
 }
 
 // ─────────────────────────────────────────────

@@ -21,7 +21,6 @@ export default function SignUpPage() {
 
   const isValid =
     email.trim() !== "" &&
-    phone.trim() !== "" &&
     fullName.trim() !== "" &&
     password.length >= 8;
 
@@ -40,7 +39,7 @@ export default function SignUpPage() {
           email,
           password,
           fullName,
-          phoneNumber: `+91${phone}`,
+          ...(phone.trim() ? { phoneNumber: `+91${phone}` } : {}),
         }),
       });
 
@@ -54,7 +53,7 @@ export default function SignUpPage() {
       // Store credentials in sessionStorage for auto-login after consent
       sessionStorage.setItem(
         "intent_signup",
-        JSON.stringify({ email, password, phone: `+91${phone}`, fullName })
+        JSON.stringify({ email, password, fullName, ...(phone.trim() ? { phone: `+91${phone}` } : {}) })
       );
 
       router.push("/signup/verify");
@@ -139,7 +138,7 @@ export default function SignUpPage() {
             {/* Phone */}
             <div className="space-y-2">
               <Label htmlFor="phone" className="text-sm font-medium text-[#1A1A1A]">
-                Phone number
+                Phone number <span className="text-[#6B6B66] font-normal">(optional)</span>
               </Label>
               <div className="flex items-center gap-2">
                 <div className="h-11 px-3 flex items-center rounded-xl border border-[#E8E4DA] bg-[#F2EFE8] text-sm text-[#6B6B66] font-medium shrink-0">
@@ -153,7 +152,6 @@ export default function SignUpPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                   className="h-11 rounded-xl bg-white text-base flex-1"
-                  required
                 />
               </div>
             </div>
@@ -193,7 +191,7 @@ export default function SignUpPage() {
 
             {/* OTP caption */}
             <p className="text-xs text-[#6B6B66] leading-relaxed">
-              We&apos;ll send a one-time code to verify your phone number.
+              We&apos;ll send a verification code to your email address.
             </p>
 
             {/* Continue */}

@@ -13,14 +13,16 @@ export default function VerifyPage() {
   const router = useRouter();
   const [otp, setOtp] = useState("");
   const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     try {
       const data = JSON.parse(sessionStorage.getItem("intent_signup") || "{}");
-      setPhone(data.phone || "+91 98765 43210");
+      setEmail(data.email || "");
     } catch {
-      setPhone("+91 98765 43210");
+      setEmail("");
     }
   }, []);
 
@@ -32,16 +34,49 @@ export default function VerifyPage() {
     return () => clearInterval(timer);
   }, [countdown]);
 
-  const handleResend = useCallback(() => {
-    if (countdown > 0) return;
+  const handleResend = useCallback(async () => {
+    if (countdown > 0 || !email) return;
     setCountdown(RESEND_COOLDOWN);
     setOtp("");
-  }, [countdown]);
+    setError("");
 
-  const handleVerify = () => {
-    // MVP: any 6-digit code works
-    if (otp.length === 6) {
+    try {
+      await fetch("/api/auth/signup/resend-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+    } catch {
+      // Silent fail — UI already shows countdown
+    }
+  }, [countdown, email]);
+
+  const handleVerify = async () => {
+    if (otp.length !== 6 || !email) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/signup/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: otp }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setError(json.error?.message ?? "Invalid code. Please try again.");
+        setLoading(false);
+        return;
+      }
+
       router.push("/signup/consent");
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,12 +99,18 @@ export default function VerifyPage() {
 
         <div className="w-full max-w-[440px] mt-8 md:mt-10 text-center">
           <h1 className="text-xl md:text-2xl font-heading font-semibold text-[#1A1A1A] tracking-tight">
-            Verify your phone
+            Verify your email
           </h1>
           <p className="mt-2 text-sm text-[#6B6B66]">
             Enter the 6-digit code sent to{" "}
-            <span className="font-medium text-[#1A1A1A]">{phone}</span>
+            <span className="font-medium text-[#1A1A1A]">{email}</span>
           </p>
+
+          {error && (
+            <div className="mt-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           {/* OTP Input */}
           <div className="mt-8">
@@ -98,17 +139,17 @@ export default function VerifyPage() {
               onClick={() => router.push("/signup")}
               className="text-sm text-[#6B6B66] hover:text-[#1A1A1A] transition-colors"
             >
-              Change number
+              Change email
             </button>
           </div>
 
           {/* Verify Button */}
           <Button
             onClick={handleVerify}
-            disabled={otp.length !== 6}
+            disabled={otp.length !== 6 || loading}
             className="w-full h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors mt-8 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Verify and continue
+            {loading ? "Verifying..." : "Verify and continue"}
           </Button>
         </div>
       </div>

@@ -5,7 +5,7 @@ import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
 import { apiSuccess, apiError, parseBody } from "@/lib/api-helpers";
 import { logAudit, AuditActions, requestMeta } from "@/lib/audit";
-import { sendEmailAsync, welcomeEmail } from "@/lib/email";
+import { sendEmailAsync, otpEmail } from "@/lib/email";
 
 const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -80,9 +80,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       ...requestMeta(request),
     });
 
-    // Send welcome email (fire-and-forget)
-    const emailTemplate = welcomeEmail(fullName, defaultTenant.displayName);
-    sendEmailAsync({ ...emailTemplate, to: normalizedEmail });
+    // Generate 6-digit OTP and send via email
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    await db.emailOtp.deleteMany({ where: { email: normalizedEmail } });
+    await db.emailOtp.create({
+      data: {
+        email: normalizedEmail,
+        code: otpCode,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      },
+    });
+
+    const otpTemplate = otpEmail(fullName, otpCode);
+    sendEmailAsync({ ...otpTemplate, to: normalizedEmail });
 
     return apiSuccess({ userId: user.id, email: user.email }, 201);
   } catch (error) {
