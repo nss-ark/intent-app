@@ -44,7 +44,6 @@ interface MatchItem {
 }
 
 interface GroupMatchMember {
-  id: string;
   userId: string;
   status: string;
   user: MatchUser;
@@ -214,7 +213,7 @@ function GroupMatchCard({
         <div className="flex -space-x-2">
           {displayMembers.map((m) => (
             <AvatarPlaceholder
-              key={m.id}
+              key={m.userId}
               name={m.user.fullName}
               size={32}
               className="ring-2 ring-white"
