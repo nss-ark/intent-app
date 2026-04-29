@@ -92,19 +92,6 @@ function LoginContent() {
               </svg>
               Continue with Google
             </button>
-            <button
-              type="button"
-              onClick={() => signIn("azure-ad", { callbackUrl })}
-              className="w-full h-12 flex items-center justify-center gap-3 rounded-xl border border-[#E8E4DA] bg-white text-sm font-medium text-[#1A1A1A] hover:bg-[#FAFAF6] transition-colors"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 23 23">
-                <path fill="#f35325" d="M1 1h10v10H1z"/>
-                <path fill="#81bc06" d="M12 1h10v10H12z"/>
-                <path fill="#05a6f0" d="M1 12h10v10H1z"/>
-                <path fill="#ffba08" d="M12 12h10v10H12z"/>
-              </svg>
-              Continue with Microsoft
-            </button>
           </div>
 
           <div className="mt-6 flex items-center gap-3">

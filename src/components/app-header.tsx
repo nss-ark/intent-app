@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageCircle, Bell, Handshake, MessageSquareText, Calendar, User } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { signOut } from "next-auth/react";
+import { MessageCircle, Bell, Handshake, MessageSquareText, Calendar, User, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/hooks/use-api";
@@ -95,20 +97,70 @@ export function AppHeader() {
             )}
           </Link>
 
-          {/* Desktop-only profile link */}
-          <Link
-            href="/my-profile"
-            className={cn(
-              "hidden md:flex items-center justify-center rounded-lg p-2 transition-colors",
-              pathname?.startsWith("/my-profile")
-                ? "text-[var(--intent-amber)]"
-                : "text-[var(--intent-text-secondary)] hover:text-[var(--intent-text-primary)]"
-            )}
-          >
-            <User size={20} strokeWidth={1.5} />
-          </Link>
+          {/* Desktop-only profile dropdown */}
+          <ProfileDropdown pathname={pathname} />
         </div>
       </div>
     </header>
+  );
+}
+
+function ProfileDropdown({ pathname }: { pathname: string | null }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const isActive = pathname?.startsWith("/my-profile") || pathname?.startsWith("/settings");
+
+  return (
+    <div ref={ref} className="relative hidden md:block">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "flex items-center justify-center rounded-lg p-2 transition-colors",
+          isActive
+            ? "text-[var(--intent-amber)]"
+            : "text-[var(--intent-text-secondary)] hover:text-[var(--intent-text-primary)]"
+        )}
+      >
+        <User size={20} strokeWidth={1.5} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-1 w-44 rounded-xl border border-[#E8E4DA] bg-white py-1 shadow-lg">
+          <Link
+            href="/my-profile"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--intent-text-primary)] hover:bg-[var(--intent-amber-subtle)]/60 transition-colors"
+          >
+            <User size={16} strokeWidth={1.5} />
+            My Profile
+          </Link>
+          <Link
+            href="/settings"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--intent-text-primary)] hover:bg-[var(--intent-amber-subtle)]/60 transition-colors"
+          >
+            <Settings size={16} strokeWidth={1.5} />
+            Settings
+          </Link>
+          <div className="my-1 h-px bg-[#E8E4DA]" />
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <LogOut size={16} strokeWidth={1.5} />
+            Log out
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
