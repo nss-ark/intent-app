@@ -74,7 +74,7 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   REUNION: "bg-pink-50 text-pink-700",
   DINNER: "bg-orange-50 text-orange-700",
   TALK: "bg-teal-50 text-teal-700",
-  MEETUP: "bg-[var(--intent-amber-subtle)] text-[var(--intent-amber)]",
+  MEETUP: "bg-[var(--intent-navy-subtle)] text-[var(--intent-navy)]",
   OTHER: "bg-[var(--muted)] text-[var(--intent-text-secondary)]",
 };
 
@@ -184,7 +184,7 @@ function EventCard({
           {event.niches.map((n) => (
             <span
               key={n.id}
-              className="rounded-full bg-[var(--intent-amber-subtle)] px-2 py-0.5 text-[10px] font-medium text-[var(--intent-amber)]"
+              className="rounded-full bg-[var(--intent-navy-subtle)] px-2 py-0.5 text-[10px] font-medium text-[var(--intent-navy)]"
             >
               {n.displayName}
             </span>
@@ -207,7 +207,7 @@ function EventCard({
           <button
             onClick={() => onUnRsvp(event.id)}
             disabled={isRsvping}
-            className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--intent-amber-subtle)] text-[13px] font-semibold text-[var(--intent-amber)] transition-colors disabled:opacity-50"
+            className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--intent-navy-subtle)] text-[13px] font-semibold text-[var(--intent-navy)] transition-colors disabled:opacity-50"
           >
             Waitlisted
           </button>
@@ -215,7 +215,7 @@ function EventCard({
           <button
             onClick={() => onRsvp(event.id)}
             disabled={isRsvping}
-            className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--intent-amber)] text-[13px] font-semibold text-white transition-colors hover:bg-[var(--intent-amber-light)] disabled:opacity-50"
+            className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--intent-navy)] text-[13px] font-semibold text-white transition-colors hover:bg-[var(--intent-navy-light)] disabled:opacity-50"
           >
             Join
           </button>
@@ -316,7 +316,7 @@ export default function ActivitiesPage() {
           </h1>
           <Link
             href="/activities/create"
-            className="flex h-10 items-center gap-1.5 rounded-xl bg-[var(--intent-amber)] px-4 text-[14px] font-semibold text-white transition-colors hover:bg-[var(--intent-amber-light)]"
+            className="flex h-10 items-center gap-1.5 rounded-xl bg-[var(--intent-navy)] px-4 text-[14px] font-semibold text-white transition-colors hover:bg-[var(--intent-navy-light)]"
           >
             <Plus size={18} strokeWidth={2} />
             Create
@@ -352,8 +352,8 @@ export default function ActivitiesPage() {
               className={cn(
                 "rounded-full px-3 py-1 text-[12px] font-medium transition-colors",
                 selectedNicheId === null
-                  ? "bg-[var(--intent-amber)] text-white"
-                  : "bg-[var(--muted)] text-[var(--intent-text-secondary)] hover:bg-[var(--intent-amber-subtle)]"
+                  ? "bg-[var(--intent-navy)] text-white"
+                  : "bg-[var(--muted)] text-[var(--intent-text-secondary)] hover:bg-[var(--intent-navy-subtle)]"
               )}
             >
               All niches
@@ -365,8 +365,8 @@ export default function ActivitiesPage() {
                 className={cn(
                   "rounded-full px-3 py-1 text-[12px] font-medium transition-colors",
                   selectedNicheId === niche.id
-                    ? "bg-[var(--intent-amber)] text-white"
-                    : "bg-[var(--muted)] text-[var(--intent-text-secondary)] hover:bg-[var(--intent-amber-subtle)]"
+                    ? "bg-[var(--intent-navy)] text-white"
+                    : "bg-[var(--muted)] text-[var(--intent-text-secondary)] hover:bg-[var(--intent-navy-subtle)]"
                 )}
               >
                 {niche.displayName}
@@ -401,7 +401,7 @@ export default function ActivitiesPage() {
             </p>
             <Link
               href="/activities/create"
-              className="mt-4 rounded-xl bg-[var(--intent-amber)] px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[var(--intent-amber-light)]"
+              className="mt-4 rounded-xl bg-[var(--intent-navy)] px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[var(--intent-navy-light)]"
             >
               Create Activity
             </Link>
@@ -424,7 +424,7 @@ export default function ActivitiesPage() {
       {/* ── Mobile FAB ──────────────────────────────────────────── */}
       <Link
         href="/activities/create"
-        className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--intent-amber)] text-white shadow-lg transition-transform hover:scale-105 md:hidden"
+        className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--intent-navy)] text-white shadow-lg transition-transform hover:scale-105 md:hidden"
         aria-label="Create activity"
       >
         <Plus size={24} strokeWidth={2.5} />

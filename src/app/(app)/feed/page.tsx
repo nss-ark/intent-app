@@ -171,7 +171,7 @@ function PostCard({
       <div className="mt-3 flex items-center gap-4 border-t border-[var(--intent-text-tertiary)] pt-3">
         <Link
           href={`/feed/${post.id}`}
-          className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--intent-text-secondary)] transition-colors hover:text-[var(--intent-amber)]"
+          className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--intent-text-secondary)] transition-colors hover:text-[var(--intent-navy)]"
         >
           <MessageCircle size={16} strokeWidth={1.5} />
           {post._count.replies > 0
@@ -255,7 +255,7 @@ function ComposeDialog({
             onChange={(e) => setBody(e.target.value.slice(0, maxLength))}
             placeholder="What's on your mind?"
             rows={5}
-            className="w-full resize-none rounded-lg border border-[var(--intent-text-tertiary)] bg-[var(--intent-bg)] px-3 py-2.5 text-[14px] text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)] focus:border-[var(--intent-amber)] focus:outline-none focus:ring-2 focus:ring-[var(--intent-amber)]/20"
+            className="w-full resize-none rounded-lg border border-[var(--intent-text-tertiary)] bg-[var(--intent-bg)] px-3 py-2.5 text-[14px] text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)] focus:border-[var(--intent-navy)] focus:outline-none focus:ring-2 focus:ring-[var(--intent-navy)]/20"
           />
           <span className="absolute right-3 bottom-2.5 text-[11px] text-[var(--intent-text-secondary)]">
             {body.length}/{maxLength}
@@ -272,7 +272,7 @@ function ComposeDialog({
             type="button"
             onClick={handleSubmit}
             disabled={isPending || !body.trim()}
-            className="flex items-center gap-1.5 rounded-lg bg-[var(--intent-amber)] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[var(--intent-amber-light)] disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg bg-[var(--intent-navy)] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[var(--intent-navy-light)] disabled:opacity-50"
           >
             {isPending ? (
               <Loader2 size={14} className="animate-spin" />
@@ -345,7 +345,7 @@ function ReportDialog({
                 className={cn(
                   "flex w-full items-center rounded-lg border px-3 py-2 text-left text-[13px] transition-colors",
                   reason === r.value
-                    ? "border-[var(--intent-amber)] bg-[var(--intent-amber-subtle)] text-[var(--intent-text-primary)]"
+                    ? "border-[var(--intent-navy)] bg-[var(--intent-navy-subtle)] text-[var(--intent-text-primary)]"
                     : "border-[var(--intent-text-tertiary)] text-[var(--intent-text-secondary)] hover:bg-[var(--muted)]"
                 )}
               >
@@ -365,7 +365,7 @@ function ReportDialog({
             onChange={(e) => setDescription(e.target.value.slice(0, 1000))}
             placeholder="Tell us more..."
             rows={3}
-            className="w-full resize-none rounded-lg border border-[var(--intent-text-tertiary)] bg-[var(--intent-bg)] px-3 py-2 text-[13px] text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)] focus:border-[var(--intent-amber)] focus:outline-none focus:ring-2 focus:ring-[var(--intent-amber)]/20"
+            className="w-full resize-none rounded-lg border border-[var(--intent-text-tertiary)] bg-[var(--intent-bg)] px-3 py-2 text-[13px] text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)] focus:border-[var(--intent-navy)] focus:outline-none focus:ring-2 focus:ring-[var(--intent-navy)]/20"
           />
         </div>
 
@@ -567,7 +567,7 @@ export default function FeedPage() {
             <button
               type="button"
               onClick={() => setComposeOpen(true)}
-              className="mt-4 rounded-xl bg-[var(--intent-amber)] px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[var(--intent-amber-light)]"
+              className="mt-4 rounded-xl bg-[var(--intent-navy)] px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[var(--intent-navy-light)]"
             >
               Create a post
             </button>
@@ -607,7 +607,7 @@ export default function FeedPage() {
       <button
         type="button"
         onClick={() => setComposeOpen(true)}
-        className="fixed right-4 bottom-24 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--intent-amber)] shadow-lg transition-transform hover:scale-105 active:scale-95 md:bottom-8"
+        className="fixed right-4 bottom-24 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--intent-navy)] shadow-lg transition-transform hover:scale-105 active:scale-95 md:bottom-8"
         aria-label="New post"
       >
         <Plus size={24} strokeWidth={2} className="text-white" />

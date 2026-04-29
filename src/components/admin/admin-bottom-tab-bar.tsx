@@ -39,7 +39,7 @@ export function AdminBottomTabBar() {
               className={cn(
                 "flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-medium transition-colors",
                 isActive
-                  ? "text-[var(--intent-amber)]"
+                  ? "text-[var(--intent-navy)]"
                   : "text-[var(--intent-text-secondary)]"
               )}
             >

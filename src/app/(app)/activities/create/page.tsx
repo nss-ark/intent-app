@@ -138,7 +138,7 @@ export default function CreateActivityPage() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Coffee & Careers Chat"
             className={cn(
-              "mt-1 h-11 w-full rounded-xl border bg-white px-3 text-[14px] outline-none transition-colors focus:border-[var(--intent-amber)]",
+              "mt-1 h-11 w-full rounded-xl border bg-white px-3 text-[14px] outline-none transition-colors focus:border-[var(--intent-navy)]",
               errors.title
                 ? "border-[var(--intent-destructive)]"
                 : "border-[var(--intent-text-tertiary)]"
@@ -161,7 +161,7 @@ export default function CreateActivityPage() {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="What's this activity about?"
             rows={4}
-            className="mt-1 w-full rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 py-2.5 text-[14px] outline-none transition-colors focus:border-[var(--intent-amber)] resize-none"
+            className="mt-1 w-full rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 py-2.5 text-[14px] outline-none transition-colors focus:border-[var(--intent-navy)] resize-none"
           />
         </div>
 
@@ -173,7 +173,7 @@ export default function CreateActivityPage() {
           <select
             value={eventType}
             onChange={(e) => setEventType(e.target.value)}
-            className="mt-1 h-11 w-full rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 text-[14px] outline-none transition-colors focus:border-[var(--intent-amber)]"
+            className="mt-1 h-11 w-full rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 text-[14px] outline-none transition-colors focus:border-[var(--intent-navy)]"
           >
             <option value="">Select type (optional)</option>
             {EVENT_TYPES.map((t) => (
@@ -195,7 +195,7 @@ export default function CreateActivityPage() {
               value={startsAt}
               onChange={(e) => setStartsAt(e.target.value)}
               className={cn(
-                "mt-1 h-11 w-full rounded-xl border bg-white px-3 text-[14px] outline-none transition-colors focus:border-[var(--intent-amber)]",
+                "mt-1 h-11 w-full rounded-xl border bg-white px-3 text-[14px] outline-none transition-colors focus:border-[var(--intent-navy)]",
                 errors.startsAt
                   ? "border-[var(--intent-destructive)]"
                   : "border-[var(--intent-text-tertiary)]"
@@ -215,7 +215,7 @@ export default function CreateActivityPage() {
               type="datetime-local"
               value={endsAt}
               onChange={(e) => setEndsAt(e.target.value)}
-              className="mt-1 h-11 w-full rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 text-[14px] outline-none transition-colors focus:border-[var(--intent-amber)]"
+              className="mt-1 h-11 w-full rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 text-[14px] outline-none transition-colors focus:border-[var(--intent-navy)]"
             />
           </div>
         </div>
@@ -230,7 +230,7 @@ export default function CreateActivityPage() {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. ISB Hyderabad, Room 204"
-            className="mt-1 h-11 w-full rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 text-[14px] outline-none transition-colors focus:border-[var(--intent-amber)]"
+            className="mt-1 h-11 w-full rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 text-[14px] outline-none transition-colors focus:border-[var(--intent-navy)]"
           />
         </div>
 
@@ -245,7 +245,7 @@ export default function CreateActivityPage() {
             onChange={(e) => setCapacity(e.target.value)}
             placeholder="Leave empty for unlimited"
             min={1}
-            className="mt-1 h-11 w-full rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 text-[14px] outline-none transition-colors focus:border-[var(--intent-amber)]"
+            className="mt-1 h-11 w-full rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3 text-[14px] outline-none transition-colors focus:border-[var(--intent-navy)]"
           />
         </div>
 
@@ -293,8 +293,8 @@ export default function CreateActivityPage() {
                   className={cn(
                     "rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors",
                     selectedNicheIds.includes(niche.id)
-                      ? "bg-[var(--intent-amber)] text-white"
-                      : "bg-[var(--muted)] text-[var(--intent-text-secondary)] hover:bg-[var(--intent-amber-subtle)]"
+                      ? "bg-[var(--intent-navy)] text-white"
+                      : "bg-[var(--muted)] text-[var(--intent-text-secondary)] hover:bg-[var(--intent-navy-subtle)]"
                   )}
                 >
                   {niche.displayName}
@@ -316,7 +316,7 @@ export default function CreateActivityPage() {
         <button
           type="submit"
           disabled={createMutation.isPending}
-          className="mt-6 flex h-12 w-full items-center justify-center rounded-xl bg-[var(--intent-amber)] text-[15px] font-semibold text-white transition-colors hover:bg-[var(--intent-amber-light)] disabled:opacity-50"
+          className="mt-6 flex h-12 w-full items-center justify-center rounded-xl bg-[var(--intent-navy)] text-[15px] font-semibold text-white transition-colors hover:bg-[var(--intent-navy-light)] disabled:opacity-50"
         >
           {createMutation.isPending ? (
             <Loader2 size={20} className="animate-spin" />

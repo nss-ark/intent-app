@@ -69,8 +69,8 @@ interface MentorshipCount {
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; text: string; label: string }> = {
     ACTIVE: { bg: "bg-[var(--intent-green-subtle)]", text: "text-[var(--intent-green)]", label: "Active" },
-    PENDING: { bg: "bg-[var(--intent-amber-subtle)]", text: "text-[var(--intent-amber)]", label: "Pending" },
-    NOTIFIED: { bg: "bg-[var(--intent-amber-subtle)]", text: "text-[var(--intent-amber)]", label: "Pending" },
+    PENDING: { bg: "bg-[var(--intent-navy-subtle)]", text: "text-[var(--intent-navy)]", label: "Pending" },
+    NOTIFIED: { bg: "bg-[var(--intent-navy-subtle)]", text: "text-[var(--intent-navy)]", label: "Pending" },
     COMPLETED: { bg: "bg-[var(--muted)]", text: "text-[var(--intent-text-secondary)]", label: "Completed" },
     CANCELLED: { bg: "bg-[var(--muted)]", text: "text-[var(--intent-text-secondary)]", label: "Cancelled" },
     DECLINED: { bg: "bg-red-50", text: "text-[var(--intent-destructive)]", label: "Declined" },
@@ -94,7 +94,7 @@ function TypeBadge({ type }: { type: "ONE_TO_ONE" | "MENTORSHIP" }) {
         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
         type === "MENTORSHIP"
           ? "bg-purple-50 text-purple-700"
-          : "bg-[var(--intent-amber-subtle)] text-[var(--intent-amber)]"
+          : "bg-[var(--intent-navy-subtle)] text-[var(--intent-navy)]"
       )}
     >
       {type === "MENTORSHIP" ? <GraduationCap size={11} /> : <Handshake size={11} />}
@@ -158,7 +158,7 @@ function MatchCard({
           <button
             onClick={() => onAccept(match.id)}
             disabled={isActioning}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[var(--intent-amber)] text-[13px] font-semibold text-white transition-colors hover:bg-[var(--intent-amber-light)] disabled:opacity-50"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[var(--intent-navy)] text-[13px] font-semibold text-white transition-colors hover:bg-[var(--intent-navy-light)] disabled:opacity-50"
           >
             <Check size={14} />
             Accept
@@ -243,7 +243,7 @@ function GroupMatchCard({
           <button
             onClick={() => onAccept(group.id)}
             disabled={isActioning}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[var(--intent-amber)] text-[13px] font-semibold text-white transition-colors hover:bg-[var(--intent-amber-light)] disabled:opacity-50"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[var(--intent-navy)] text-[13px] font-semibold text-white transition-colors hover:bg-[var(--intent-navy-light)] disabled:opacity-50"
           >
             <Check size={14} />
             Accept
@@ -439,7 +439,7 @@ export default function MatchingPage() {
             {tab === "active" && (
               <Link
                 href="/matching/directory"
-                className="mt-4 rounded-xl bg-[var(--intent-amber)] px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[var(--intent-amber-light)]"
+                className="mt-4 rounded-xl bg-[var(--intent-navy)] px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[var(--intent-navy-light)]"
               >
                 Browse directory
               </Link>

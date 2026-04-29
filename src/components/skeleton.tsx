@@ -5,7 +5,7 @@ export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "animate-pulse rounded-lg bg-[#E8E4DA]/60",
+        "animate-pulse rounded-lg bg-[#D8DCE5]/60",
         className
       )}
     />
@@ -28,7 +28,7 @@ export function MemberCardSkeleton() {
         </div>
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-12 w-full" />
-        <div className="h-px bg-[#E8E4DA]" />
+        <div className="h-px bg-[#D8DCE5]" />
         <div className="flex gap-4">
           <Skeleton className="h-4 w-16" />
           <Skeleton className="h-4 w-20" />

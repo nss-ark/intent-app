@@ -74,7 +74,7 @@ export function MemberCard({ member, isSaved, onToggleSave, className }: MemberC
             aria-label={isSaved ? "Unsave" : "Save for later"}
           >
             {isSaved ? (
-              <BookmarkCheck size={15} className="text-[var(--intent-amber)] fill-[var(--intent-amber)]" />
+              <BookmarkCheck size={15} className="text-[var(--intent-navy)] fill-[var(--intent-navy)]" />
             ) : (
               <Bookmark size={15} className="text-white" />
             )}
@@ -122,7 +122,7 @@ export function MemberCard({ member, isSaved, onToggleSave, className }: MemberC
 
         {/* Domain tag in amber small-caps */}
         {member.domain && (
-          <span className="text-[12px] font-semibold uppercase tracking-[0.5px] text-[var(--intent-amber)]">
+          <span className="text-[12px] font-semibold uppercase tracking-[0.5px] text-[var(--intent-navy)]">
             {member.domain.displayName}
           </span>
         )}
@@ -156,7 +156,7 @@ export function MemberCard({ member, isSaved, onToggleSave, className }: MemberC
 
         {/* Intent statement — lead element of identity */}
         {member.missionStatement && (
-          <p className="line-clamp-2 border-l-2 border-[var(--intent-amber)]/40 pl-2.5 text-[14px] italic leading-relaxed text-[var(--intent-text-primary)]">
+          <p className="line-clamp-2 border-l-2 border-[var(--intent-navy)]/40 pl-2.5 text-[14px] italic leading-relaxed text-[var(--intent-text-primary)]">
             {member.missionStatement}
           </p>
         )}
@@ -165,7 +165,7 @@ export function MemberCard({ member, isSaved, onToggleSave, className }: MemberC
         {(askCount > 0 || offerCount > 0 || mutualCount > 0) && (
           <div className="mt-0.5 flex items-center gap-3 border-t border-[var(--intent-text-tertiary)] pt-2.5 text-[13px] font-medium">
             {askCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-[var(--intent-amber)]">
+              <span className="inline-flex items-center gap-1 text-[var(--intent-navy)]">
                 <ArrowDown size={13} strokeWidth={2} />
                 {askCount} {askCount === 1 ? "Ask" : "Asks"}
               </span>

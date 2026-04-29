@@ -26,7 +26,7 @@ function ProgressSegments({
           className={cn(
             "h-1.5 flex-1 rounded-full transition-colors",
             i < filled
-              ? "bg-[var(--intent-amber)]"
+              ? "bg-[var(--intent-navy)]"
               : "bg-[var(--intent-text-tertiary)]"
           )}
         />
@@ -69,7 +69,7 @@ function RadioOption({
           className={cn(
             "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all",
             selected
-              ? "border-[var(--intent-amber)] bg-[var(--intent-amber)]"
+              ? "border-[var(--intent-navy)] bg-[var(--intent-navy)]"
               : "border-[var(--intent-text-tertiary)] bg-transparent"
           )}
         >
@@ -118,7 +118,7 @@ export default function ActiveSurveyPage() {
       <div className="flex min-h-screen items-center justify-center bg-[var(--intent-bg)]">
         <Loader2
           size={28}
-          className="animate-spin text-[var(--intent-amber)]"
+          className="animate-spin text-[var(--intent-navy)]"
         />
       </div>
     );
@@ -177,7 +177,7 @@ export default function ActiveSurveyPage() {
           </p>
           <button
             onClick={() => router.push("/surveys")}
-            className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-[var(--intent-amber)] px-6 text-[15px] font-semibold text-white transition-colors hover:bg-[var(--intent-amber-light)]"
+            className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-[var(--intent-navy)] px-6 text-[15px] font-semibold text-white transition-colors hover:bg-[var(--intent-navy-light)]"
           >
             Back to surveys
           </button>
@@ -271,7 +271,7 @@ export default function ActiveSurveyPage() {
         <div className="mt-4 intent-card rounded-3xl p-6">
           {/* Category label */}
           {survey.matchingStrategy && (
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--intent-amber)]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--intent-navy)]">
               {survey.matchingStrategy}
             </span>
           )}
@@ -298,11 +298,11 @@ export default function ActiveSurveyPage() {
         </div>
 
         {/* Info note */}
-        <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-[var(--intent-amber-subtle)]/50 px-4 py-3">
+        <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-[var(--intent-navy-subtle)]/50 px-4 py-3">
           <Info
             size={16}
             strokeWidth={1.5}
-            className="mt-0.5 shrink-0 text-[var(--intent-amber)]"
+            className="mt-0.5 shrink-0 text-[var(--intent-navy)]"
           />
           <p className="text-[13px] leading-relaxed text-[var(--intent-text-secondary)]">
             {survey.description ??
@@ -327,7 +327,7 @@ export default function ActiveSurveyPage() {
           <button
             onClick={handleNext}
             disabled={!selectedOptionId || submitSurvey.isPending}
-            className="inline-flex h-11 items-center gap-2 rounded-xl bg-[var(--intent-amber)] px-6 text-[15px] font-semibold text-white transition-colors hover:bg-[var(--intent-amber-light)] disabled:opacity-50"
+            className="inline-flex h-11 items-center gap-2 rounded-xl bg-[var(--intent-navy)] px-6 text-[15px] font-semibold text-white transition-colors hover:bg-[var(--intent-navy-light)] disabled:opacity-50"
           >
             {submitSurvey.isPending ? (
               <Loader2 size={18} className="animate-spin" />

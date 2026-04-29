@@ -164,7 +164,7 @@ export default function NudgeComposerPage({
         <button
           type="button"
           onClick={() => router.back()}
-          className="mt-4 text-sm font-medium text-[var(--intent-amber)] transition-colors hover:text-[var(--intent-amber-light)]"
+          className="mt-4 text-sm font-medium text-[var(--intent-navy)] transition-colors hover:text-[var(--intent-navy-light)]"
         >
           Go back
         </button>
@@ -194,7 +194,7 @@ export default function NudgeComposerPage({
             className={cn(
               "text-sm font-semibold transition-colors",
               isReady
-                ? "text-[var(--intent-amber)] hover:text-[var(--intent-amber-light)]"
+                ? "text-[var(--intent-navy)] hover:text-[var(--intent-navy-light)]"
                 : "cursor-not-allowed text-[var(--intent-text-tertiary)]"
             )}
           >
@@ -297,13 +297,13 @@ export default function NudgeComposerPage({
                 "w-full min-h-[200px] rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-3.5 py-3",
                 "text-base text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)]/60",
                 "resize-none outline-none transition-colors",
-                "focus:border-[var(--intent-amber)] focus:ring-2 focus:ring-[var(--intent-amber)]/20"
+                "focus:border-[var(--intent-navy)] focus:ring-2 focus:ring-[var(--intent-navy)]/20"
               )}
             />
             <div className="flex items-center justify-between">
               <button
                 type="button"
-                className="text-xs font-medium text-[var(--intent-amber)] transition-colors hover:text-[var(--intent-amber-light)]"
+                className="text-xs font-medium text-[var(--intent-navy)] transition-colors hover:text-[var(--intent-navy-light)]"
               >
                 See examples
               </button>
@@ -328,7 +328,7 @@ export default function NudgeComposerPage({
           )}
 
           {/* Cooldown info card */}
-          <div className="rounded-xl border-l-[3px] border-l-[var(--intent-amber)] bg-[var(--intent-amber-subtle)]/60 p-4">
+          <div className="rounded-xl border-l-[3px] border-l-[var(--intent-navy)] bg-[var(--intent-navy-subtle)]/60 p-4">
             <p className="text-sm leading-relaxed text-[var(--intent-text-secondary)]">
               If{" "}
               <span className="font-medium text-[var(--intent-text-primary)]">
@@ -354,7 +354,7 @@ export default function NudgeComposerPage({
             className={cn(
               "h-12 w-full rounded-xl text-base font-semibold transition-all duration-150",
               isReady
-                ? "bg-[var(--intent-amber)] text-white hover:bg-[var(--intent-amber-light)] active:scale-[0.98]"
+                ? "bg-[var(--intent-navy)] text-white hover:bg-[var(--intent-navy-light)] active:scale-[0.98]"
                 : "cursor-not-allowed bg-[var(--intent-text-tertiary)] text-[var(--intent-text-secondary)]"
             )}
           >

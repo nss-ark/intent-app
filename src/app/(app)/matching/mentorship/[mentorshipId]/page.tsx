@@ -63,7 +63,7 @@ interface MentorshipDetail {
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; text: string; label: string }> = {
     ACTIVE: { bg: "bg-[var(--intent-green-subtle)]", text: "text-[var(--intent-green)]", label: "Active" },
-    PAUSED: { bg: "bg-[var(--intent-amber-subtle)]", text: "text-[var(--intent-amber)]", label: "Paused" },
+    PAUSED: { bg: "bg-[var(--intent-navy-subtle)]", text: "text-[var(--intent-navy)]", label: "Paused" },
     COMPLETED: { bg: "bg-[var(--muted)]", text: "text-[var(--intent-text-secondary)]", label: "Completed" },
     CANCELLED: { bg: "bg-[var(--muted)]", text: "text-[var(--intent-text-secondary)]", label: "Cancelled" },
   };
@@ -103,7 +103,7 @@ export default function MentorshipDetailPage({
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--intent-bg)]">
-        <Loader2 className="size-8 animate-spin text-[var(--intent-amber)]" />
+        <Loader2 className="size-8 animate-spin text-[var(--intent-navy)]" />
       </div>
     );
   }
@@ -162,7 +162,7 @@ export default function MentorshipDetailPage({
 
           {mentorship.goal && (
             <div className="mt-4 flex items-start gap-2">
-              <Target size={16} strokeWidth={1.5} className="mt-0.5 shrink-0 text-[var(--intent-amber)]" />
+              <Target size={16} strokeWidth={1.5} className="mt-0.5 shrink-0 text-[var(--intent-navy)]" />
               <div>
                 <p className="text-[12px] font-medium uppercase tracking-wider text-[var(--intent-text-secondary)]">
                   Goal
@@ -249,7 +249,7 @@ export default function MentorshipDetailPage({
           <div className="mx-auto max-w-[640px] px-4 py-3">
             <Button
               onClick={() => router.push(`/chats/${mentorship.conversationId}`)}
-              className="h-12 w-full rounded-xl bg-[var(--intent-amber)] text-[15px] font-semibold text-white hover:bg-[var(--intent-amber-light)]"
+              className="h-12 w-full rounded-xl bg-[var(--intent-navy)] text-[15px] font-semibold text-white hover:bg-[var(--intent-navy-light)]"
             >
               <MessageCircle size={18} className="mr-2" />
               Open Chat

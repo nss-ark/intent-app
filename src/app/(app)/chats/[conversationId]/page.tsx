@@ -94,7 +94,7 @@ export default function ConversationDetailPage() {
       <div className="mx-auto flex h-[100dvh] w-full max-w-[640px] items-center justify-center bg-[var(--intent-bg)]">
         <Loader2
           size={28}
-          className="animate-spin text-[var(--intent-amber)]"
+          className="animate-spin text-[var(--intent-navy)]"
         />
       </div>
     );
@@ -106,7 +106,7 @@ export default function ConversationDetailPage() {
       <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--intent-text-tertiary)] bg-white/95 px-3 py-2.5 backdrop-blur-md">
         <Link
           href="/chats"
-          className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-amber-subtle)]"
+          className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-navy-subtle)]"
           aria-label="Back to chats"
         >
           <ArrowLeft size={20} strokeWidth={1.5} className="text-[var(--intent-text-primary)]" />
@@ -129,14 +129,14 @@ export default function ConversationDetailPage() {
         <div className="flex items-center gap-1">
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-amber-subtle)]"
+            className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-navy-subtle)]"
             aria-label="Schedule meeting"
           >
             <Calendar size={18} strokeWidth={1.5} className="text-[var(--intent-text-secondary)]" />
           </button>
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-amber-subtle)]"
+            className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-navy-subtle)]"
             aria-label="Conversation info"
           >
             <Info size={18} strokeWidth={1.5} className="text-[var(--intent-text-secondary)]" />
@@ -146,13 +146,13 @@ export default function ConversationDetailPage() {
 
       {/* ── Context banner ────────────────────────────────────────── */}
       {conversation?.matchId ? (
-        <div className="flex items-center justify-center gap-1.5 border-b border-[var(--intent-text-tertiary)] bg-[var(--intent-amber-subtle)]/60 px-4 py-2">
+        <div className="flex items-center justify-center gap-1.5 border-b border-[var(--intent-text-tertiary)] bg-[var(--intent-navy-subtle)]/60 px-4 py-2">
           <span className="text-[13px] text-[var(--intent-text-secondary)]">
             Connected via match
           </span>
         </div>
       ) : conversation?.originatedFromNudgeId ? (
-        <div className="flex items-center justify-center gap-1.5 border-b border-[var(--intent-text-tertiary)] bg-[var(--intent-amber-subtle)]/60 px-4 py-2">
+        <div className="flex items-center justify-center gap-1.5 border-b border-[var(--intent-text-tertiary)] bg-[var(--intent-navy-subtle)]/60 px-4 py-2">
           <span className="text-[13px] text-[var(--intent-text-secondary)]">
             Connected via nudge
           </span>
@@ -208,7 +208,7 @@ export default function ConversationDetailPage() {
         <div className="flex items-end gap-2">
           <button
             type="button"
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-amber-subtle)]"
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-navy-subtle)]"
             aria-label="Attach file"
           >
             <Paperclip
@@ -231,7 +231,7 @@ export default function ConversationDetailPage() {
             type="button"
             onClick={handleSend}
             disabled={sendMessage.isPending || !inputValue.trim()}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--intent-amber)] shadow-sm transition-colors hover:bg-[var(--intent-amber-light)] disabled:opacity-50"
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--intent-navy)] shadow-sm transition-colors hover:bg-[var(--intent-navy-light)] disabled:opacity-50"
             aria-label="Send message"
           >
             {sendMessage.isPending ? (

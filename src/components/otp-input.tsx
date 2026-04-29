@@ -93,10 +93,10 @@ export function OtpInput({ length = 6, value, onChange, className }: OtpInputPro
           className={cn(
             "w-11 h-13 md:w-12 md:h-14 text-center text-xl font-semibold rounded-xl border-2 bg-white transition-all duration-150 outline-none",
             focusedIndex === i && !digits[i]
-              ? "border-[#B8762A] ring-3 ring-[#B8762A]/20"
+              ? "border-[#1B3A5F] ring-3 ring-[#1B3A5F]/20"
               : digits[i]
-              ? "border-[#B8762A] bg-[#F5EDE0]/50"
-              : "border-[#E8E4DA]"
+              ? "border-[#1B3A5F] bg-[#E8EFF7]/50"
+              : "border-[#D8DCE5]"
           )}
           aria-label={`Digit ${i + 1}`}
         />

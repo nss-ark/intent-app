@@ -143,7 +143,7 @@ function ReportDialog({
                 className={cn(
                   "flex w-full items-center rounded-lg border px-3 py-2 text-left text-[13px] transition-colors",
                   reason === r.value
-                    ? "border-[var(--intent-amber)] bg-[var(--intent-amber-subtle)] text-[var(--intent-text-primary)]"
+                    ? "border-[var(--intent-navy)] bg-[var(--intent-navy-subtle)] text-[var(--intent-text-primary)]"
                     : "border-[var(--intent-text-tertiary)] text-[var(--intent-text-secondary)] hover:bg-[var(--muted)]"
                 )}
               >
@@ -162,7 +162,7 @@ function ReportDialog({
             onChange={(e) => setDescription(e.target.value.slice(0, 1000))}
             placeholder="Tell us more..."
             rows={3}
-            className="w-full resize-none rounded-lg border border-[var(--intent-text-tertiary)] bg-[var(--intent-bg)] px-3 py-2 text-[13px] text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)] focus:border-[var(--intent-amber)] focus:outline-none focus:ring-2 focus:ring-[var(--intent-amber)]/20"
+            className="w-full resize-none rounded-lg border border-[var(--intent-text-tertiary)] bg-[var(--intent-bg)] px-3 py-2 text-[13px] text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)] focus:border-[var(--intent-navy)] focus:outline-none focus:ring-2 focus:ring-[var(--intent-navy)]/20"
           />
         </div>
 
@@ -318,7 +318,7 @@ export default function PostDetailPage() {
       <div className="mx-auto flex min-h-screen w-full max-w-[640px] items-center justify-center bg-[var(--intent-bg)]">
         <Loader2
           size={28}
-          className="animate-spin text-[var(--intent-amber)]"
+          className="animate-spin text-[var(--intent-navy)]"
         />
       </div>
     );
@@ -333,7 +333,7 @@ export default function PostDetailPage() {
         </p>
         <Link
           href="/feed"
-          className="mt-3 text-[14px] font-medium text-[var(--intent-amber)] hover:underline"
+          className="mt-3 text-[14px] font-medium text-[var(--intent-navy)] hover:underline"
         >
           Back to feed
         </Link>
@@ -347,7 +347,7 @@ export default function PostDetailPage() {
       <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--intent-text-tertiary)] bg-white/95 px-3 py-2.5 backdrop-blur-md">
         <Link
           href="/feed"
-          className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-amber-subtle)]"
+          className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-navy-subtle)]"
           aria-label="Back to feed"
         >
           <ArrowLeft
@@ -431,7 +431,7 @@ export default function PostDetailPage() {
           <div className="flex items-center justify-center py-8">
             <Loader2
               size={20}
-              className="animate-spin text-[var(--intent-amber)]"
+              className="animate-spin text-[var(--intent-navy)]"
             />
           </div>
         ) : replies.length === 0 ? (
@@ -469,7 +469,7 @@ export default function PostDetailPage() {
             type="button"
             onClick={handleSendReply}
             disabled={createReply.isPending || !replyText.trim()}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--intent-amber)] shadow-sm transition-colors hover:bg-[var(--intent-amber-light)] disabled:opacity-50"
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--intent-navy)] shadow-sm transition-colors hover:bg-[var(--intent-navy-light)] disabled:opacity-50"
             aria-label="Send reply"
           >
             {createReply.isPending ? (

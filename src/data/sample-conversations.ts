@@ -36,8 +36,8 @@ export const sampleConversations: Conversation[] = [
   {
     id: "conv-ananya",
     participantName: "Ananya Krishnan",
-    participantGradientFrom: "#B8762A",
-    participantGradientTo: "#D4A053",
+    participantGradientFrom: "#1B3A5F",
+    participantGradientTo: "#2E6399",
     isOnline: false,
     lastMessage:
       "Thanks for sharing your deck. Quick question on slide 3...",

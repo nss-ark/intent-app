@@ -100,7 +100,7 @@ export default function SignUpPage() {
             <button
               type="button"
               onClick={() => signIn("google", { callbackUrl: "/onboarding" })}
-              className="w-full h-12 flex items-center justify-center gap-3 rounded-xl border border-[#E8E4DA] bg-white text-sm font-medium text-[#1A1A1A] hover:bg-[#FAFAF6] transition-colors"
+              className="w-full h-12 flex items-center justify-center gap-3 rounded-xl border border-[#D8DCE5] bg-white text-sm font-medium text-[#1A1A1A] hover:bg-[#F7F8FB] transition-colors"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -113,9 +113,9 @@ export default function SignUpPage() {
           </div>
 
           <div className="mt-6 flex items-center gap-3">
-            <div className="flex-1 h-px bg-[#E8E4DA]" />
+            <div className="flex-1 h-px bg-[#D8DCE5]" />
             <span className="text-xs text-[#6B6B66] font-medium">or sign up with email</span>
-            <div className="flex-1 h-px bg-[#E8E4DA]" />
+            <div className="flex-1 h-px bg-[#D8DCE5]" />
           </div>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-5">
@@ -141,7 +141,7 @@ export default function SignUpPage() {
                 Phone number <span className="text-[#6B6B66] font-normal">(optional)</span>
               </Label>
               <div className="flex items-center gap-2">
-                <div className="h-11 px-3 flex items-center rounded-xl border border-[#E8E4DA] bg-[#F2EFE8] text-sm text-[#6B6B66] font-medium shrink-0">
+                <div className="h-11 px-3 flex items-center rounded-xl border border-[#D8DCE5] bg-[#EDF0F5] text-sm text-[#6B6B66] font-medium shrink-0">
                   +91
                 </div>
                 <Input
@@ -198,7 +198,7 @@ export default function SignUpPage() {
             <Button
               type="submit"
               disabled={!isValid || loading}
-              className="w-full h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full h-12 text-base font-medium rounded-xl bg-[#1B3A5F] text-white hover:bg-[#2E6399] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -211,11 +211,11 @@ export default function SignUpPage() {
           {/* Terms */}
           <p className="mt-6 text-xs text-[#6B6B66] text-center leading-relaxed">
             By continuing, you agree to Intent&apos;s{" "}
-            <Link href="#" className="text-[#B8762A] hover:underline font-medium">
+            <Link href="#" className="text-[#1B3A5F] hover:underline font-medium">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="#" className="text-[#B8762A] hover:underline font-medium">
+            <Link href="#" className="text-[#1B3A5F] hover:underline font-medium">
               Privacy Policy
             </Link>
             .

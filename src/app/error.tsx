@@ -32,7 +32,7 @@ export default function GlobalError({
       )}
       <button
         onClick={reset}
-        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#B8762A] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#D4A053]"
+        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#1B3A5F] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2E6399]"
       >
         <RefreshCw size={16} />
         Try again

@@ -4,7 +4,7 @@ import { Home } from "lucide-react";
 export default function NotFound() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
-      <h1 className="text-6xl font-bold text-[#E8E4DA]">404</h1>
+      <h1 className="text-6xl font-bold text-[#D8DCE5]">404</h1>
       <h2 className="mt-4 text-lg font-semibold text-[#1A1A1A]">
         Page not found
       </h2>
@@ -13,7 +13,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/home"
-        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#B8762A] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#D4A053]"
+        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#1B3A5F] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2E6399]"
       >
         <Home size={16} />
         Go to discovery

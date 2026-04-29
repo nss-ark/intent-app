@@ -180,10 +180,10 @@ export default function OnboardingStep2() {
 
             {pastExperiences.map((exp, index) => (
               <div key={index} className="mt-4 relative">
-                <div className="rounded-xl border border-[#E8E4DA] bg-white p-4 space-y-3">
+                <div className="rounded-xl border border-[#D8DCE5] bg-white p-4 space-y-3">
                   <button
                     onClick={() => removePastExperience(index)}
-                    className="absolute top-3 right-3 p-1 rounded-lg hover:bg-[#F2EFE8] transition-colors"
+                    className="absolute top-3 right-3 p-1 rounded-lg hover:bg-[#EDF0F5] transition-colors"
                     type="button"
                   >
                     <X className="w-4 h-4 text-[#6B6B66]" />
@@ -194,7 +194,7 @@ export default function OnboardingStep2() {
                     onChange={(e) =>
                       updatePastExperience(index, "company", e.target.value)
                     }
-                    className="h-10 rounded-lg bg-[#FAFAF6] text-sm"
+                    className="h-10 rounded-lg bg-[#F7F8FB] text-sm"
                   />
                   <Input
                     placeholder="Title"
@@ -202,7 +202,7 @@ export default function OnboardingStep2() {
                     onChange={(e) =>
                       updatePastExperience(index, "title", e.target.value)
                     }
-                    className="h-10 rounded-lg bg-[#FAFAF6] text-sm"
+                    className="h-10 rounded-lg bg-[#F7F8FB] text-sm"
                   />
                 </div>
               </div>
@@ -211,7 +211,7 @@ export default function OnboardingStep2() {
             <button
               onClick={addPastExperience}
               type="button"
-              className="mt-3 flex items-center gap-1.5 text-sm font-medium text-[#B8762A] hover:text-[#D4A053] transition-colors"
+              className="mt-3 flex items-center gap-1.5 text-sm font-medium text-[#1B3A5F] hover:text-[#2E6399] transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add past experience
@@ -274,13 +274,13 @@ export default function OnboardingStep2() {
             <Button
               onClick={() => router.back()}
               variant="outline"
-              className="flex-1 h-12 text-base font-medium rounded-xl border-[#E8E4DA] text-[#1A1A1A] hover:bg-[#F2EFE8]"
+              className="flex-1 h-12 text-base font-medium rounded-xl border-[#D8DCE5] text-[#1A1A1A] hover:bg-[#EDF0F5]"
             >
               Back
             </Button>
             <Button
               onClick={handleContinue}
-              className="flex-1 h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors"
+              className="flex-1 h-12 text-base font-medium rounded-xl bg-[#1B3A5F] text-white hover:bg-[#2E6399] transition-colors"
             >
               Continue
             </Button>

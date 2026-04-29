@@ -38,7 +38,7 @@ export function AdminSidebar({ className }: { className?: string }) {
         <span className="font-heading text-lg font-semibold tracking-tight text-[var(--intent-text-primary)]">
           intent
         </span>
-        <span className="rounded-full border border-[var(--intent-amber)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--intent-amber)]">
+        <span className="rounded-full border border-[var(--intent-navy)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--intent-navy)]">
           Admin
         </span>
       </div>
@@ -59,8 +59,8 @@ export function AdminSidebar({ className }: { className?: string }) {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-[var(--intent-amber-subtle)] text-[var(--intent-amber)]"
-                  : "text-[var(--intent-text-secondary)] hover:bg-[var(--intent-amber-subtle)]/50 hover:text-[var(--intent-text-primary)]"
+                  ? "bg-[var(--intent-navy-subtle)] text-[var(--intent-navy)]"
+                  : "text-[var(--intent-text-secondary)] hover:bg-[var(--intent-navy-subtle)]/50 hover:text-[var(--intent-text-primary)]"
               )}
             >
               <Icon className="size-[18px]" strokeWidth={1.5} />

@@ -89,7 +89,7 @@ export default function SurveyCreatePage() {
         <h1 className="font-heading text-base font-semibold text-[var(--intent-text-primary)]">
           New survey
         </h1>
-        <button className="text-sm font-medium text-[var(--intent-amber)] hover:underline">
+        <button className="text-sm font-medium text-[var(--intent-navy)] hover:underline">
           Save draft
         </button>
       </div>
@@ -122,7 +122,7 @@ export default function SurveyCreatePage() {
                 id="theme"
                 value={theme}
                 onChange={(e) => setTheme(e.target.value)}
-                className="h-10 w-full appearance-none rounded-lg border border-[var(--intent-text-tertiary)] bg-white px-3 pr-8 text-sm text-[var(--intent-text-primary)] outline-none focus:border-[var(--intent-amber)] focus:ring-2 focus:ring-[var(--intent-amber)]/20"
+                className="h-10 w-full appearance-none rounded-lg border border-[var(--intent-text-tertiary)] bg-white px-3 pr-8 text-sm text-[var(--intent-text-primary)] outline-none focus:border-[var(--intent-navy)] focus:ring-2 focus:ring-[var(--intent-navy)]/20"
               >
                 <option value="">Select a theme</option>
                 {themes.map((t) => (
@@ -206,7 +206,7 @@ export default function SurveyCreatePage() {
                       {q.type}
                     </p>
                   </div>
-                  <button className="shrink-0 rounded-lg p-1.5 text-[var(--intent-amber)] hover:bg-[var(--intent-amber-subtle)] transition-colors">
+                  <button className="shrink-0 rounded-lg p-1.5 text-[var(--intent-navy)] hover:bg-[var(--intent-navy-subtle)] transition-colors">
                     <Pencil className="size-3.5" strokeWidth={1.5} />
                   </button>
                 </div>
@@ -214,7 +214,7 @@ export default function SurveyCreatePage() {
             </div>
           ))}
         </div>
-        <button className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--intent-amber)] hover:underline">
+        <button className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--intent-navy)] hover:underline">
           <Plus className="size-3.5" />
           Add question
         </button>
@@ -269,7 +269,7 @@ export default function SurveyCreatePage() {
                   id="group-size"
                   value={groupSize}
                   onChange={(e) => setGroupSize(e.target.value)}
-                  className="h-10 w-full appearance-none rounded-lg border border-[var(--intent-text-tertiary)] bg-white px-3 pr-8 text-sm text-[var(--intent-text-primary)] outline-none focus:border-[var(--intent-amber)] focus:ring-2 focus:ring-[var(--intent-amber)]/20"
+                  className="h-10 w-full appearance-none rounded-lg border border-[var(--intent-text-tertiary)] bg-white px-3 pr-8 text-sm text-[var(--intent-text-primary)] outline-none focus:border-[var(--intent-navy)] focus:ring-2 focus:ring-[var(--intent-navy)]/20"
                 >
                   {[3, 4, 5, 6, 7, 8].map((n) => (
                     <option key={n} value={String(n)}>
@@ -293,7 +293,7 @@ export default function SurveyCreatePage() {
                   id="match-cap"
                   value={matchCap}
                   onChange={(e) => setMatchCap(e.target.value)}
-                  className="h-10 w-full appearance-none rounded-lg border border-[var(--intent-text-tertiary)] bg-white px-3 pr-8 text-sm text-[var(--intent-text-primary)] outline-none focus:border-[var(--intent-amber)] focus:ring-2 focus:ring-[var(--intent-amber)]/20"
+                  className="h-10 w-full appearance-none rounded-lg border border-[var(--intent-text-tertiary)] bg-white px-3 pr-8 text-sm text-[var(--intent-text-primary)] outline-none focus:border-[var(--intent-navy)] focus:ring-2 focus:ring-[var(--intent-navy)]/20"
                 >
                   {[1, 2, 3, 4, 5].map((n) => (
                     <option key={n} value={String(n)}>
@@ -344,7 +344,7 @@ export default function SurveyCreatePage() {
                 id="close-after"
                 value={closeAfter}
                 onChange={(e) => setCloseAfter(e.target.value)}
-                className="h-10 w-full appearance-none rounded-lg border border-[var(--intent-text-tertiary)] bg-white px-3 pr-8 text-sm text-[var(--intent-text-primary)] outline-none focus:border-[var(--intent-amber)] focus:ring-2 focus:ring-[var(--intent-amber)]/20"
+                className="h-10 w-full appearance-none rounded-lg border border-[var(--intent-text-tertiary)] bg-white px-3 pr-8 text-sm text-[var(--intent-text-primary)] outline-none focus:border-[var(--intent-navy)] focus:ring-2 focus:ring-[var(--intent-navy)]/20"
               >
                 {[3, 5, 7, 10, 14, 21, 30].map((n) => (
                   <option key={n} value={String(n)}>
@@ -367,7 +367,7 @@ export default function SurveyCreatePage() {
           >
             Save and preview
           </Button>
-          <Button className="h-10 flex-1 rounded-lg bg-[var(--intent-amber)] text-sm font-medium text-white hover:bg-[var(--intent-amber-light)]">
+          <Button className="h-10 flex-1 rounded-lg bg-[var(--intent-navy)] text-sm font-medium text-white hover:bg-[var(--intent-navy-light)]">
             Publish
           </Button>
         </div>

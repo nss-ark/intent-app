@@ -95,10 +95,10 @@ export default function CSVUploadPage() {
         onDrop={handleDrop}
         className={`relative flex h-[240px] flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors ${
           isDragging
-            ? "border-[var(--intent-amber)] bg-[var(--intent-amber-subtle)]"
+            ? "border-[var(--intent-navy)] bg-[var(--intent-navy-subtle)]"
             : file
             ? "border-[var(--intent-green)] bg-[var(--intent-green-subtle)]"
-            : "border-[var(--intent-text-tertiary)] bg-[var(--intent-amber-subtle)]/30"
+            : "border-[var(--intent-text-tertiary)] bg-[var(--intent-navy-subtle)]/30"
         }`}
       >
         {file ? (
@@ -112,7 +112,7 @@ export default function CSVUploadPage() {
             </p>
             <button
               onClick={() => setFile(null)}
-              className="mt-2 text-xs font-medium text-[var(--intent-amber)] hover:underline"
+              className="mt-2 text-xs font-medium text-[var(--intent-navy)] hover:underline"
             >
               Remove and choose another
             </button>
@@ -181,7 +181,7 @@ export default function CSVUploadPage() {
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     {col.required && (
-                      <span className="text-xs font-medium text-[var(--intent-amber)]">
+                      <span className="text-xs font-medium text-[var(--intent-navy)]">
                         Required
                       </span>
                     )}
@@ -192,7 +192,7 @@ export default function CSVUploadPage() {
           </table>
         </div>
 
-        <button className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--intent-amber)] hover:underline">
+        <button className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--intent-navy)] hover:underline">
           <Download className="size-3.5" />
           Download template
         </button>
@@ -241,7 +241,7 @@ export default function CSVUploadPage() {
       <div className="mt-8">
         <Button
           disabled={!file}
-          className="h-10 w-full rounded-lg bg-[var(--intent-amber)] text-sm font-medium text-white hover:bg-[var(--intent-amber-light)] disabled:opacity-40"
+          className="h-10 w-full rounded-lg bg-[var(--intent-navy)] text-sm font-medium text-white hover:bg-[var(--intent-navy-light)] disabled:opacity-40"
         >
           Upload
         </Button>

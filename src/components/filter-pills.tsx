@@ -44,8 +44,8 @@ export function FilterPills({
         className={cn(
           "inline-flex shrink-0 items-center rounded-full px-4 py-1.5 text-[13px] font-medium transition-all",
           !hasAnyActive
-            ? "bg-[var(--intent-amber)] text-white shadow-sm"
-            : "border border-[var(--intent-text-tertiary)] bg-white text-[var(--intent-text-primary)] hover:border-[var(--intent-amber)]/50"
+            ? "bg-[var(--intent-navy)] text-white shadow-sm"
+            : "border border-[var(--intent-text-tertiary)] bg-white text-[var(--intent-text-primary)] hover:border-[var(--intent-navy)]/50"
         )}
       >
         All
@@ -60,8 +60,8 @@ export function FilterPills({
             className={cn(
               "inline-flex shrink-0 items-center gap-1 rounded-full px-4 py-1.5 text-[13px] font-medium transition-all",
               isActive
-                ? "bg-[var(--intent-amber)] text-white shadow-sm"
-                : "border border-[var(--intent-text-tertiary)] bg-white text-[var(--intent-text-primary)] hover:border-[var(--intent-amber)]/50"
+                ? "bg-[var(--intent-navy)] text-white shadow-sm"
+                : "border border-[var(--intent-text-tertiary)] bg-white text-[var(--intent-text-primary)] hover:border-[var(--intent-navy)]/50"
             )}
           >
             {pill.label}
@@ -72,7 +72,7 @@ export function FilterPills({
 
       {/* Extra filter indicator */}
       {extraFilterCount > 0 && (
-        <span className="inline-flex shrink-0 items-center rounded-full bg-[var(--intent-amber-subtle)] px-3 py-1.5 text-[12px] font-medium text-[var(--intent-amber)]">
+        <span className="inline-flex shrink-0 items-center rounded-full bg-[var(--intent-navy-subtle)] px-3 py-1.5 text-[12px] font-medium text-[var(--intent-navy)]">
           +{extraFilterCount} more
         </span>
       )}

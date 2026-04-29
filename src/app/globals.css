@@ -3,7 +3,7 @@
 @import "shadcn/tailwind.css";
 
 /* ── Intent Design System ────────────────────────────────────────────────
-   Brand: warm, professional, photography-forward
+   Brand: professional, navy-blue-forward
    Mobile baseline: 390px (iPhone 14 reference)
    Spacing: 8pt grid
    Typography: Inter (body) / Inter Display (headings)
@@ -68,14 +68,14 @@
 /* ── CSS custom properties: Intent brand palette ─────────────────────── */
 :root {
   /* Brand primitives */
-  --intent-bg: #FAFAF6;
+  --intent-bg: #F7F8FB;
   --intent-surface: #FFFFFF;
   --intent-text-primary: #1A1A1A;
   --intent-text-secondary: #6B6B66;
-  --intent-text-tertiary: #E8E4DA;
-  --intent-amber: #B8762A;
-  --intent-amber-light: #D4A053;
-  --intent-amber-subtle: #F5EDE0;
+  --intent-text-tertiary: #D8DCE5;
+  --intent-navy: #1B3A5F;
+  --intent-navy-light: #2E6399;
+  --intent-navy-subtle: #E8EFF7;
   --intent-green: #2D4A3A;
   --intent-green-light: #3D6B52;
   --intent-green-subtle: #E4EDE8;
@@ -98,7 +98,7 @@
   --card-radius: 1rem;  /* 16px */
 
   /* shadcn overrides → Intent brand */
-  --background: #FAFAF6;
+  --background: #F7F8FB;
   --foreground: #1A1A1A;
 
   --card: #FFFFFF;
@@ -107,87 +107,87 @@
   --popover: #FFFFFF;
   --popover-foreground: #1A1A1A;
 
-  --primary: #B8762A;
+  --primary: #1B3A5F;
   --primary-foreground: #FFFFFF;
 
   --secondary: #2D4A3A;
   --secondary-foreground: #FFFFFF;
 
-  --muted: #F2EFE8;
+  --muted: #EDF0F5;
   --muted-foreground: #6B6B66;
 
-  --accent: #F5EDE0;
+  --accent: #E8EFF7;
   --accent-foreground: #1A1A1A;
 
   --destructive: #D94141;
 
-  --border: #E8E4DA;
-  --input: #E8E4DA;
-  --ring: #B8762A;
+  --border: #D8DCE5;
+  --input: #D8DCE5;
+  --ring: #1B3A5F;
 
-  /* Chart palette – warm progression */
-  --chart-1: #B8762A;
+  /* Chart palette – navy progression */
+  --chart-1: #1B3A5F;
   --chart-2: #2D4A3A;
-  --chart-3: #D4A053;
+  --chart-3: #2E6399;
   --chart-4: #6B6B66;
-  --chart-5: #E8E4DA;
+  --chart-5: #D8DCE5;
 
   --radius: 0.75rem;
 
   /* Sidebar */
   --sidebar: #FFFFFF;
   --sidebar-foreground: #1A1A1A;
-  --sidebar-primary: #B8762A;
+  --sidebar-primary: #1B3A5F;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F5EDE0;
+  --sidebar-accent: #E8EFF7;
   --sidebar-accent-foreground: #1A1A1A;
-  --sidebar-border: #E8E4DA;
-  --sidebar-ring: #B8762A;
+  --sidebar-border: #D8DCE5;
+  --sidebar-ring: #1B3A5F;
 }
 
 /* ── Dark mode (Intent stays light-first, but we define it for completeness) */
 .dark {
-  --background: #171714;
-  --foreground: #F2EFE8;
+  --background: #141720;
+  --foreground: #EDF0F5;
 
-  --card: #1E1E1A;
-  --card-foreground: #F2EFE8;
+  --card: #1A1E2A;
+  --card-foreground: #EDF0F5;
 
-  --popover: #1E1E1A;
-  --popover-foreground: #F2EFE8;
+  --popover: #1A1E2A;
+  --popover-foreground: #EDF0F5;
 
-  --primary: #D4A053;
-  --primary-foreground: #171714;
+  --primary: #5B9BD5;
+  --primary-foreground: #141720;
 
   --secondary: #3D6B52;
-  --secondary-foreground: #F2EFE8;
+  --secondary-foreground: #EDF0F5;
 
-  --muted: #2A2A26;
-  --muted-foreground: #9B9B94;
+  --muted: #232838;
+  --muted-foreground: #9B9BA4;
 
-  --accent: #2A2A26;
-  --accent-foreground: #F2EFE8;
+  --accent: #232838;
+  --accent-foreground: #EDF0F5;
 
   --destructive: #E85858;
 
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.12);
-  --ring: #D4A053;
+  --ring: #5B9BD5;
 
-  --chart-1: #D4A053;
+  --chart-1: #5B9BD5;
   --chart-2: #3D6B52;
-  --chart-3: #B8762A;
-  --chart-4: #9B9B94;
-  --chart-5: #2A2A26;
+  --chart-3: #1B3A5F;
+  --chart-4: #9B9BA4;
+  --chart-5: #232838;
 
-  --sidebar: #1E1E1A;
-  --sidebar-foreground: #F2EFE8;
-  --sidebar-primary: #D4A053;
-  --sidebar-primary-foreground: #171714;
-  --sidebar-accent: #2A2A26;
-  --sidebar-accent-foreground: #F2EFE8;
+  --sidebar: #1A1E2A;
+  --sidebar-foreground: #EDF0F5;
+  --sidebar-primary: #5B9BD5;
+  --sidebar-primary-foreground: #141720;
+  --sidebar-accent: #232838;
+  --sidebar-accent-foreground: #EDF0F5;
   --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #D4A053;
+  --sidebar-ring: #5B9BD5;
 }
 
 /* ── Base layer ──────────────────────────────────────────────────────── */
@@ -235,9 +235,9 @@
     box-shadow: var(--card-shadow-hover);
   }
 
-  /* Amber accent button */
+  /* Navy accent button */
   .intent-btn-primary {
-    background: var(--intent-amber);
+    background: var(--intent-navy);
     color: white;
     border-radius: var(--radius);
     font-weight: 500;
@@ -245,7 +245,7 @@
   }
 
   .intent-btn-primary:hover {
-    background: var(--intent-amber-light);
+    background: var(--intent-navy-light);
   }
 
   /* Green verification glyph */
@@ -258,7 +258,7 @@
     background: linear-gradient(
       90deg,
       var(--muted) 25%,
-      var(--intent-amber-subtle) 50%,
+      var(--intent-navy-subtle) 50%,
       var(--muted) 75%
     );
     background-size: 200% 100%;

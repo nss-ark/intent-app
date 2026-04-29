@@ -34,7 +34,7 @@ function SurveyCard({ survey }: { survey: SurveyListItem }) {
           <div
             className={cn(
               "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
-              isActive && "bg-[var(--intent-amber-subtle)]",
+              isActive && "bg-[var(--intent-navy-subtle)]",
               isCompleted && "bg-[var(--intent-green-subtle)]",
               isUpcoming && "bg-[var(--muted)]"
             )}
@@ -51,7 +51,7 @@ function SurveyCard({ survey }: { survey: SurveyListItem }) {
                 strokeWidth={1.5}
                 className={cn(
                   isActive
-                    ? "text-[var(--intent-amber)]"
+                    ? "text-[var(--intent-navy)]"
                     : "text-[var(--intent-text-secondary)]"
                 )}
               />
@@ -85,7 +85,7 @@ function SurveyCard({ survey }: { survey: SurveyListItem }) {
           {isActive && (
             <Link
               href={`/surveys/${survey.id}`}
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[var(--intent-amber)] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[var(--intent-amber-light)]"
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[var(--intent-navy)] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[var(--intent-navy-light)]"
             >
               Take survey
               <ArrowRight size={14} strokeWidth={2} />
@@ -139,7 +139,7 @@ export default function SurveysPage() {
         <div className="flex items-center justify-center py-20">
           <Loader2
             size={28}
-            className="animate-spin text-[var(--intent-amber)]"
+            className="animate-spin text-[var(--intent-navy)]"
           />
         </div>
       )}

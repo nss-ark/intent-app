@@ -47,12 +47,12 @@ const BADGE_ICON_MAP: Record<string, React.ElementType> = {
 };
 
 const BADGE_GRADIENT_MAP: Record<string, { from: string; to: string }> = {
-  CLASS_BADGE: { from: "#B8762A", to: "#D4A053" },
+  CLASS_BADGE: { from: "#1B3A5F", to: "#2E6399" },
   FIRST_CONNECTION: { from: "#2D4A3A", to: "#3D6B52" },
-  FIRST_SURVEY: { from: "#B8762A", to: "#D4A053" },
-  TOP_MENTOR: { from: "#B8762A", to: "#D4A053" },
+  FIRST_SURVEY: { from: "#1B3A5F", to: "#2E6399" },
+  TOP_MENTOR: { from: "#1B3A5F", to: "#2E6399" },
   CONNECTOR: { from: "#2D4A3A", to: "#3D6B52" },
-  PILLAR: { from: "#B8762A", to: "#D4A053" },
+  PILLAR: { from: "#1B3A5F", to: "#2E6399" },
 };
 
 /* ------------------------------------------------------------------ */
@@ -64,8 +64,8 @@ const FALLBACK_BADGES = [
     label: "Class of 2026",
     icon: GraduationCap,
     active: false,
-    gradientFrom: "#B8762A",
-    gradientTo: "#D4A053",
+    gradientFrom: "#1B3A5F",
+    gradientTo: "#2E6399",
   },
   {
     label: "First Connection",
@@ -78,8 +78,8 @@ const FALLBACK_BADGES = [
     label: "First Survey",
     icon: ClipboardCheck,
     active: false,
-    gradientFrom: "#B8762A",
-    gradientTo: "#D4A053",
+    gradientFrom: "#1B3A5F",
+    gradientTo: "#2E6399",
   },
   {
     label: "Top Mentor",
@@ -140,7 +140,7 @@ function SegmentedProgressBar({
               className="absolute inset-y-0 left-0 rounded-full"
               style={{
                 width: `${fill * 100}%`,
-                backgroundColor: "#B8762A",
+                backgroundColor: "#1B3A5F",
               }}
             />
           )}
@@ -171,7 +171,7 @@ function BadgeCard({
                 background: `linear-gradient(135deg, ${badge.gradientFrom}, ${badge.gradientTo})`,
               }
             : {
-                backgroundColor: "#E8E4DA",
+                backgroundColor: "#D8DCE5",
               }
         }
       >
@@ -318,12 +318,12 @@ export default function ContributionsPage() {
         <div
           className="mt-4 rounded-[20px] p-6"
           style={{
-            background: "linear-gradient(135deg, #FFE9CB 0%, #FAFAF6 100%)",
+            background: "linear-gradient(135deg, #D4E4F7 0%, #F7F8FB 100%)",
           }}
         >
           <p
             className="text-[11px] font-semibold uppercase tracking-wider"
-            style={{ color: "#B8762A" }}
+            style={{ color: "#1B3A5F" }}
           >
             Level {currentLevel}
           </p>
@@ -383,14 +383,14 @@ export default function ContributionsPage() {
               </p>
               <span
                 className="ml-3 shrink-0 text-[13px] font-semibold"
-                style={{ color: "#B8762A" }}
+                style={{ color: "#1B3A5F" }}
               >
                 {currentStreakWeeks} {currentStreakWeeks === 1 ? "week" : "weeks"}
               </span>
             </div>
             <div
               className="mx-4 h-px"
-              style={{ backgroundColor: "#E8E4DA" }}
+              style={{ backgroundColor: "#D8DCE5" }}
             />
             <div className="flex items-center justify-between px-4 py-3.5">
               <p className="flex-1 text-[14px] text-[var(--intent-text-primary)]">
@@ -398,14 +398,14 @@ export default function ContributionsPage() {
               </p>
               <span
                 className="ml-3 shrink-0 text-[13px] font-semibold"
-                style={{ color: "#B8762A" }}
+                style={{ color: "#1B3A5F" }}
               >
                 {nudgesSentLifetime}
               </span>
             </div>
             <div
               className="mx-4 h-px"
-              style={{ backgroundColor: "#E8E4DA" }}
+              style={{ backgroundColor: "#D8DCE5" }}
             />
             <div className="flex items-center justify-between px-4 py-3.5">
               <p className="flex-1 text-[14px] text-[var(--intent-text-primary)]">
@@ -413,7 +413,7 @@ export default function ContributionsPage() {
               </p>
               <span
                 className="ml-3 shrink-0 text-[13px] font-semibold"
-                style={{ color: "#B8762A" }}
+                style={{ color: "#1B3A5F" }}
               >
                 {nudgesAcceptedLifetime}
               </span>
@@ -431,7 +431,7 @@ export default function ContributionsPage() {
               <div
                 key={stat.label}
                 className="rounded-2xl px-4 py-4"
-                style={{ backgroundColor: "#F2EFE8" }}
+                style={{ backgroundColor: "#EDF0F5" }}
               >
                 <p
                   className="text-[22px] font-semibold leading-tight"

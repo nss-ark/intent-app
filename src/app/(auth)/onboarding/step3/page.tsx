@@ -67,7 +67,7 @@ export default function OnboardingStep3() {
             <h1 className="text-3xl md:text-4xl font-heading font-semibold text-[#1A1A1A] tracking-tight leading-tight text-balance">
               What&apos;s your
               <br />
-              <span className="text-[#B8762A]">Intent</span>?
+              <span className="text-[#1B3A5F]">Intent</span>?
             </h1>
             <p className="mt-3 text-base text-[#6B6B66] leading-relaxed max-w-[420px]">
               In one or two sentences, tell the community what you&apos;re working on,
@@ -85,7 +85,7 @@ export default function OnboardingStep3() {
                 }
               }}
               placeholder="e.g. Looking to transition from consulting to building my own D2C brand..."
-              className="min-h-[140px] md:min-h-[160px] rounded-2xl bg-white text-base leading-relaxed p-4 resize-none border-[#E8E4DA] focus-visible:border-[#B8762A] focus-visible:ring-[#B8762A]/20"
+              className="min-h-[140px] md:min-h-[160px] rounded-2xl bg-white text-base leading-relaxed p-4 resize-none border-[#D8DCE5] focus-visible:border-[#1B3A5F] focus-visible:ring-[#1B3A5F]/20"
               maxLength={MAX_CHARS}
             />
             {/* Character counter */}
@@ -95,7 +95,7 @@ export default function OnboardingStep3() {
                   charCount >= MAX_CHARS
                     ? "text-red-500"
                     : charCount >= MAX_CHARS * 0.8
-                    ? "text-[#B8762A]"
+                    ? "text-[#1B3A5F]"
                     : "text-[#6B6B66]/50"
                 }`}
               >
@@ -105,10 +105,10 @@ export default function OnboardingStep3() {
           </div>
 
           {/* Example card */}
-          <div className="mt-6 rounded-2xl bg-[#F5EDE0]/50 border border-[#E8E4DA] p-5">
+          <div className="mt-6 rounded-2xl bg-[#E8EFF7]/50 border border-[#D8DCE5] p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Lightbulb className="w-4 h-4 text-[#B8762A]" />
-              <span className="text-xs font-semibold text-[#B8762A] uppercase tracking-wider">
+              <Lightbulb className="w-4 h-4 text-[#1B3A5F]" />
+              <span className="text-xs font-semibold text-[#1B3A5F] uppercase tracking-wider">
                 Examples
               </span>
             </div>
@@ -131,14 +131,14 @@ export default function OnboardingStep3() {
             <Button
               onClick={() => router.back()}
               variant="outline"
-              className="flex-1 h-12 text-base font-medium rounded-xl border-[#E8E4DA] text-[#1A1A1A] hover:bg-[#F2EFE8]"
+              className="flex-1 h-12 text-base font-medium rounded-xl border-[#D8DCE5] text-[#1A1A1A] hover:bg-[#EDF0F5]"
             >
               Back
             </Button>
             <Button
               onClick={handleContinue}
               disabled={!isValid}
-              className="flex-1 h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 h-12 text-base font-medium rounded-xl bg-[#1B3A5F] text-white hover:bg-[#2E6399] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue
             </Button>

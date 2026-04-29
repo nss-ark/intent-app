@@ -85,7 +85,7 @@ export default function OnboardingStep4() {
 
           {/* Your Asks */}
           <div className="mt-8">
-            <div className="rounded-2xl bg-white border border-[#E8E4DA] shadow-[0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="rounded-2xl bg-white border border-[#D8DCE5] shadow-[0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
               <div className="px-5 pt-5 pb-2">
                 <h2 className="text-sm font-semibold text-[#1A1A1A] uppercase tracking-wider">
                   Your Asks
@@ -94,7 +94,7 @@ export default function OnboardingStep4() {
                   What you&apos;re looking for from the community
                 </p>
               </div>
-              <div className="px-5 pb-3 divide-y divide-[#E8E4DA]/60">
+              <div className="px-5 pb-3 divide-y divide-[#D8DCE5]/60">
                 {asks.map((signal) => (
                   <SignalToggle
                     key={signal.code}
@@ -110,7 +110,7 @@ export default function OnboardingStep4() {
 
           {/* Your Offers */}
           <div className="mt-4">
-            <div className="rounded-2xl bg-white border border-[#E8E4DA] shadow-[0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="rounded-2xl bg-white border border-[#D8DCE5] shadow-[0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
               <div className="px-5 pt-5 pb-2">
                 <h2 className="text-sm font-semibold text-[#1A1A1A] uppercase tracking-wider">
                   Your Offers
@@ -119,7 +119,7 @@ export default function OnboardingStep4() {
                   What you&apos;re willing to help with
                 </p>
               </div>
-              <div className="px-5 pb-3 divide-y divide-[#E8E4DA]/60">
+              <div className="px-5 pb-3 divide-y divide-[#D8DCE5]/60">
                 {offers.map((signal) => (
                   <SignalToggle
                     key={signal.code}
@@ -135,7 +135,7 @@ export default function OnboardingStep4() {
 
           {/* Mutuals */}
           <div className="mt-4">
-            <div className="rounded-2xl bg-white border border-[#E8E4DA] shadow-[0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="rounded-2xl bg-white border border-[#D8DCE5] shadow-[0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
               <div className="px-5 pt-5 pb-2">
                 <h2 className="text-sm font-semibold text-[#1A1A1A] uppercase tracking-wider">
                   Mutuals
@@ -144,7 +144,7 @@ export default function OnboardingStep4() {
                   Peer-to-peer connections
                 </p>
               </div>
-              <div className="px-5 pb-3 divide-y divide-[#E8E4DA]/60">
+              <div className="px-5 pb-3 divide-y divide-[#D8DCE5]/60">
                 {mutuals.map((signal) => (
                   <SignalToggle
                     key={signal.code}
@@ -163,13 +163,13 @@ export default function OnboardingStep4() {
             <Button
               onClick={() => router.back()}
               variant="outline"
-              className="flex-1 h-12 text-base font-medium rounded-xl border-[#E8E4DA] text-[#1A1A1A] hover:bg-[#F2EFE8]"
+              className="flex-1 h-12 text-base font-medium rounded-xl border-[#D8DCE5] text-[#1A1A1A] hover:bg-[#EDF0F5]"
             >
               Back
             </Button>
             <Button
               onClick={handleFinish}
-              className="flex-1 h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors"
+              className="flex-1 h-12 text-base font-medium rounded-xl bg-[#1B3A5F] text-white hover:bg-[#2E6399] transition-colors"
             >
               Save and finish
             </Button>

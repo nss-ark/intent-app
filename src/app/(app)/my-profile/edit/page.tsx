@@ -210,7 +210,7 @@ export default function EditProfilePage() {
         <button
           onClick={handleSave}
           disabled={saveMutation.isPending}
-          className="text-[14px] font-semibold text-[var(--intent-amber)] hover:opacity-70 disabled:opacity-50"
+          className="text-[14px] font-semibold text-[var(--intent-navy)] hover:opacity-70 disabled:opacity-50"
         >
           {saveMutation.isPending ? "Saving..." : "Save"}
         </button>
@@ -244,11 +244,11 @@ export default function EditProfilePage() {
                 size={96}
               />
             )}
-            <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[var(--intent-amber)] shadow-sm">
+            <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[var(--intent-navy)] shadow-sm">
               <Camera size={14} className="text-white" />
             </div>
           </div>
-          <button className="mt-3 text-[14px] font-medium text-[var(--intent-amber)] hover:underline">
+          <button className="mt-3 text-[14px] font-medium text-[var(--intent-navy)] hover:underline">
             Change photo
           </button>
         </div>
@@ -329,7 +329,7 @@ export default function EditProfilePage() {
               </div>
             ))}
           <div className="flex min-h-[48px] items-center justify-center px-4 py-3">
-            <button className="flex items-center gap-2 text-[14px] font-medium text-[var(--intent-amber)] hover:underline">
+            <button className="flex items-center gap-2 text-[14px] font-medium text-[var(--intent-navy)] hover:underline">
               <Plus size={16} strokeWidth={2} />
               Add experience
             </button>
@@ -355,7 +355,7 @@ export default function EditProfilePage() {
                   onRemove={() => handleRemoveNiche(niche)}
                 />
               ))}
-              <button className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--intent-text-tertiary)] px-3 py-1.5 text-[12px] font-medium text-[var(--intent-amber)] transition-colors hover:border-[var(--intent-amber)] hover:bg-[var(--intent-amber-subtle)]">
+              <button className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--intent-text-tertiary)] px-3 py-1.5 text-[12px] font-medium text-[var(--intent-navy)] transition-colors hover:border-[var(--intent-navy)] hover:bg-[var(--intent-navy-subtle)]">
                 <Plus size={12} strokeWidth={2} />
                 Add niche
               </button>

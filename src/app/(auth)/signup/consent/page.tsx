@@ -158,7 +158,7 @@ export default function ConsentPage() {
             {consentRows.map((row) => (
               <label
                 key={row.id}
-                className="flex items-start gap-3.5 rounded-xl p-4 cursor-pointer hover:bg-[#F5EDE0]/30 transition-colors"
+                className="flex items-start gap-3.5 rounded-xl p-4 cursor-pointer hover:bg-[#E8EFF7]/30 transition-colors"
               >
                 <Checkbox
                   checked={consents[row.id]}
@@ -173,7 +173,7 @@ export default function ConsentPage() {
                       {row.label}
                     </span>
                     {row.required && (
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-[#B8762A]">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-[#1B3A5F]">
                         Required
                       </span>
                     )}
@@ -187,8 +187,8 @@ export default function ConsentPage() {
           </div>
 
           {/* Info notice */}
-          <div className="mt-6 flex items-start gap-3 rounded-xl bg-[#F5EDE0]/50 border border-[#E8E4DA] p-4">
-            <Info className="w-4 h-4 text-[#B8762A] shrink-0 mt-0.5" />
+          <div className="mt-6 flex items-start gap-3 rounded-xl bg-[#E8EFF7]/50 border border-[#D8DCE5] p-4">
+            <Info className="w-4 h-4 text-[#1B3A5F] shrink-0 mt-0.5" />
             <p className="text-xs text-[#6B6B66] leading-relaxed">
               You can withdraw your consent at any time from your profile
               settings. Withdrawing consent for required items will deactivate
@@ -200,7 +200,7 @@ export default function ConsentPage() {
           <Button
             onClick={handleContinue}
             disabled={!canContinue || loading}
-            className="w-full h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors mt-8 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full h-12 text-base font-medium rounded-xl bg-[#1B3A5F] text-white hover:bg-[#2E6399] transition-colors mt-8 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

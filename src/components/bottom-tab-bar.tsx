@@ -33,7 +33,7 @@ export function BottomTabBar() {
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-1.5 text-[10px] font-medium transition-colors",
                 isActive
-                  ? "text-[var(--intent-amber)]"
+                  ? "text-[var(--intent-navy)]"
                   : "text-[var(--intent-text-secondary)] hover:text-[var(--intent-text-primary)]"
               )}
             >
@@ -43,7 +43,7 @@ export function BottomTabBar() {
                 className={cn(
                   "transition-colors",
                   isActive
-                    ? "text-[var(--intent-amber)]"
+                    ? "text-[var(--intent-navy)]"
                     : "text-[var(--intent-text-secondary)]"
                 )}
               />

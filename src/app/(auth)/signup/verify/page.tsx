@@ -129,7 +129,7 @@ export default function VerifyPage() {
             ) : (
               <button
                 onClick={handleResend}
-                className="text-sm font-medium text-[#B8762A] hover:underline"
+                className="text-sm font-medium text-[#1B3A5F] hover:underline"
               >
                 Resend code
               </button>
@@ -147,7 +147,7 @@ export default function VerifyPage() {
           <Button
             onClick={handleVerify}
             disabled={otp.length !== 6 || loading}
-            className="w-full h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors mt-8 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full h-12 text-base font-medium rounded-xl bg-[#1B3A5F] text-white hover:bg-[#2E6399] transition-colors mt-8 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? "Verifying..." : "Verify and continue"}
           </Button>

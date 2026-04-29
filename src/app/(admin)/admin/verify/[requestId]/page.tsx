@@ -82,7 +82,7 @@ export default function VerificationDetailPage() {
 
       {/* Member summary card */}
       <div className="mb-6 flex items-center gap-4 rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-5 py-4">
-        <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-[var(--intent-amber-subtle)] text-base font-semibold text-[var(--intent-amber)]">
+        <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-[var(--intent-navy-subtle)] text-base font-semibold text-[var(--intent-navy)]">
           {member.initials}
         </div>
         <div>
@@ -100,7 +100,7 @@ export default function VerificationDetailPage() {
         <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--intent-text-secondary)]">
           Request type
         </h2>
-        <p className="mt-1 text-base font-medium text-[var(--intent-amber)]">
+        <p className="mt-1 text-base font-medium text-[var(--intent-navy)]">
           {requestType}
         </p>
       </div>
@@ -142,11 +142,11 @@ export default function VerificationDetailPage() {
             return (
               <button
                 key={e.id}
-                className="flex flex-col items-center gap-2 rounded-xl border border-[var(--intent-text-tertiary)] bg-white p-4 transition-colors hover:border-[var(--intent-amber)]/40"
+                className="flex flex-col items-center gap-2 rounded-xl border border-[var(--intent-text-tertiary)] bg-white p-4 transition-colors hover:border-[var(--intent-navy)]/40"
               >
-                <div className="flex size-10 items-center justify-center rounded-lg bg-[var(--intent-amber-subtle)]">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-[var(--intent-navy-subtle)]">
                   <Icon
-                    className="size-5 text-[var(--intent-amber)]"
+                    className="size-5 text-[var(--intent-navy)]"
                     strokeWidth={1.5}
                   />
                 </div>
@@ -177,7 +177,7 @@ export default function VerificationDetailPage() {
                 />
               ) : (
                 <AlertTriangle
-                  className="size-4 shrink-0 text-[var(--intent-amber)]"
+                  className="size-4 shrink-0 text-[var(--intent-navy)]"
                   strokeWidth={2}
                 />
               )}
@@ -221,7 +221,7 @@ export default function VerificationDetailPage() {
           >
             Request more info
           </Button>
-          <Button className="h-10 flex-1 rounded-lg bg-[var(--intent-amber)] text-sm font-medium text-white hover:bg-[var(--intent-amber-light)]">
+          <Button className="h-10 flex-1 rounded-lg bg-[var(--intent-navy)] text-sm font-medium text-white hover:bg-[var(--intent-navy-light)]">
             Approve
           </Button>
         </div>

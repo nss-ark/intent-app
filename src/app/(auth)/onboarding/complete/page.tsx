@@ -179,11 +179,11 @@ export default function OnboardingCompletePage() {
         <IntentWordmark size="md" />
 
         {/* Celebration icon */}
-        <div className="mt-10 md:mt-14 w-20 h-20 rounded-full bg-[#F5EDE0] flex items-center justify-center">
+        <div className="mt-10 md:mt-14 w-20 h-20 rounded-full bg-[#E8EFF7] flex items-center justify-center">
           {saving ? (
-            <Loader2 className="w-8 h-8 text-[#B8762A] animate-spin" />
+            <Loader2 className="w-8 h-8 text-[#1B3A5F] animate-spin" />
           ) : (
-            <Send className="w-8 h-8 text-[#B8762A]" />
+            <Send className="w-8 h-8 text-[#1B3A5F]" />
           )}
         </div>
 
@@ -213,10 +213,10 @@ export default function OnboardingCompletePage() {
               {nextSteps.map((step, i) => (
                 <div
                   key={i}
-                  className="flex items-start gap-4 rounded-2xl bg-white border border-[#E8E4DA] shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4"
+                  className="flex items-start gap-4 rounded-2xl bg-white border border-[#D8DCE5] shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-[#F5EDE0] flex items-center justify-center shrink-0">
-                    <step.icon className="w-5 h-5 text-[#B8762A]" />
+                  <div className="w-10 h-10 rounded-xl bg-[#E8EFF7] flex items-center justify-center shrink-0">
+                    <step.icon className="w-5 h-5 text-[#1B3A5F]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-[#1A1A1A]">
@@ -238,7 +238,7 @@ export default function OnboardingCompletePage() {
         <div className="w-full max-w-[500px] mt-10 flex flex-col items-center gap-3">
           <Button
             onClick={() => router.push("/home")}
-            className="w-full h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors"
+            className="w-full h-12 text-base font-medium rounded-xl bg-[#1B3A5F] text-white hover:bg-[#2E6399] transition-colors"
           >
             Take me to my profile
           </Button>

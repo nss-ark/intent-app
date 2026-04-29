@@ -118,7 +118,7 @@ export function FeatureRequestDialog() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Add dark mode support"
                   maxLength={100}
-                  className="w-full rounded-lg border border-[var(--intent-text-tertiary)] bg-white px-3 py-2 text-sm text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)] outline-none focus:border-[var(--intent-amber)]"
+                  className="w-full rounded-lg border border-[var(--intent-text-tertiary)] bg-white px-3 py-2 text-sm text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)] outline-none focus:border-[var(--intent-navy)]"
                 />
               </div>
 
@@ -134,8 +134,8 @@ export function FeatureRequestDialog() {
                       onClick={() => setCategory(category === cat.value ? "" : cat.value)}
                       className={`rounded-full px-2.5 py-1 text-xs transition-colors ${
                         category === cat.value
-                          ? "bg-[var(--intent-amber)] text-white"
-                          : "bg-[var(--intent-amber-subtle)] text-[var(--intent-text-secondary)] hover:text-[var(--intent-text-primary)]"
+                          ? "bg-[var(--intent-navy)] text-white"
+                          : "bg-[var(--intent-navy-subtle)] text-[var(--intent-text-secondary)] hover:text-[var(--intent-text-primary)]"
                       }`}
                     >
                       {cat.label}
@@ -154,7 +154,7 @@ export function FeatureRequestDialog() {
                   placeholder="Describe the feature and why it would be useful..."
                   rows={3}
                   maxLength={1000}
-                  className="w-full resize-none rounded-lg border border-[var(--intent-text-tertiary)] bg-white px-3 py-2 text-sm text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)] outline-none focus:border-[var(--intent-amber)]"
+                  className="w-full resize-none rounded-lg border border-[var(--intent-text-tertiary)] bg-white px-3 py-2 text-sm text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)] outline-none focus:border-[var(--intent-navy)]"
                 />
               </div>
 
@@ -171,7 +171,7 @@ export function FeatureRequestDialog() {
                 size="sm"
                 onClick={handleSubmit}
                 disabled={!title.trim() || status === "submitting"}
-                className="bg-[var(--intent-amber)] text-white hover:bg-[var(--intent-amber-light)]"
+                className="bg-[var(--intent-navy)] text-white hover:bg-[var(--intent-navy-light)]"
               >
                 {status === "submitting" ? (
                   <>

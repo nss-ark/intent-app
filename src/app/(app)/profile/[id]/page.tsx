@@ -80,7 +80,7 @@ function SignalPill({
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium",
         type === "ask"
-          ? "bg-[var(--intent-amber-subtle)] text-[var(--intent-amber)]"
+          ? "bg-[var(--intent-navy-subtle)] text-[var(--intent-navy)]"
           : "bg-[var(--intent-green-subtle)] text-[var(--intent-green)]"
       )}
     >
@@ -185,7 +185,7 @@ export default function ProfileDetailPage({
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--intent-bg)]">
-        <Loader2 className="size-8 animate-spin text-[var(--intent-amber)]" />
+        <Loader2 className="size-8 animate-spin text-[var(--intent-navy)]" />
       </div>
     );
   }
@@ -328,15 +328,15 @@ export default function ProfileDetailPage({
 
           {/* Intent statement */}
           {missionStatement && (
-            <div className="mt-6 rounded-2xl bg-[var(--intent-amber-subtle)]/50 p-4">
+            <div className="mt-6 rounded-2xl bg-[var(--intent-navy-subtle)]/50 p-4">
               <div className="flex items-start gap-2">
-                <span className="text-2xl leading-none text-[var(--intent-amber)]">
+                <span className="text-2xl leading-none text-[var(--intent-navy)]">
                   &ldquo;
                 </span>
                 <p className="flex-1 text-[15px] italic leading-relaxed text-[var(--intent-text-primary)]">
                   {missionStatement}
                 </p>
-                <span className="self-end text-2xl leading-none text-[var(--intent-amber)]">
+                <span className="self-end text-2xl leading-none text-[var(--intent-navy)]">
                   &rdquo;
                 </span>
               </div>
@@ -375,7 +375,7 @@ export default function ProfileDetailPage({
 
             {askSignals.length > 0 && (
               <div className="mt-4">
-                <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-[var(--intent-amber)]">
+                <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-[var(--intent-navy)]">
                   Asks
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -450,7 +450,7 @@ export default function ProfileDetailPage({
                           : nameLower.includes("verified") || nameLower.includes("alumni")
                           ? "bg-[var(--intent-green-subtle)]"
                           : nameLower.includes("mentor")
-                          ? "bg-[var(--intent-amber-subtle)]"
+                          ? "bg-[var(--intent-navy-subtle)]"
                           : "bg-[var(--muted)]"
                       )}
                     >
@@ -464,7 +464,7 @@ export default function ProfileDetailPage({
                       ) : nameLower.includes("mentor") ? (
                         <GraduationCap
                           size={24}
-                          className="text-[var(--intent-amber)]"
+                          className="text-[var(--intent-navy)]"
                         />
                       ) : nameLower.includes("contributor") ? (
                         <Send
@@ -497,7 +497,7 @@ export default function ProfileDetailPage({
         >
           <div className="mx-auto flex max-w-[640px] items-center gap-3 px-4 py-3">
             <Button
-              className="h-12 flex-1 rounded-xl bg-[var(--intent-amber)] text-[15px] font-semibold text-white hover:bg-[var(--intent-amber-light)]"
+              className="h-12 flex-1 rounded-xl bg-[var(--intent-navy)] text-[15px] font-semibold text-white hover:bg-[var(--intent-navy-light)]"
             >
               <Send size={18} className="mr-2" />
               Send a nudge

@@ -122,7 +122,7 @@ export default function AdminDashboardPage() {
       value: String(metrics.pendingVerifications),
       change: metrics.pendingVerifications > 0 ? "Review needed" : "All clear",
       changeColor: metrics.pendingVerifications > 0
-        ? "text-[var(--intent-amber)]"
+        ? "text-[var(--intent-navy)]"
         : "text-[var(--intent-green)]",
       icon: ShieldAlert,
     },
@@ -137,14 +137,14 @@ export default function AdminDashboardPage() {
             intent
           </span>
           <span className="text-lg text-[var(--intent-text-secondary)]">&middot;</span>
-          <span className="font-heading text-lg font-semibold tracking-tight text-[var(--intent-amber)]">
+          <span className="font-heading text-lg font-semibold tracking-tight text-[var(--intent-navy)]">
             admin
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <button className="relative rounded-lg p-2 text-[var(--intent-text-secondary)] hover:bg-[var(--intent-amber-subtle)] transition-colors">
+          <button className="relative rounded-lg p-2 text-[var(--intent-text-secondary)] hover:bg-[var(--intent-navy-subtle)] transition-colors">
             <Bell className="size-5" strokeWidth={1.5} />
-            <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[var(--intent-amber)]" />
+            <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[var(--intent-navy)]" />
           </button>
           <div className="flex size-8 items-center justify-center rounded-full bg-[var(--intent-green)] text-xs font-semibold text-white">
             MK
@@ -175,7 +175,7 @@ export default function AdminDashboardPage() {
       <div className="mb-8 grid grid-cols-2 gap-3 md:gap-4">
         {dashboardLoading ? (
           <div className="col-span-2 flex items-center justify-center py-12">
-            <Loader2 className="size-6 animate-spin text-[var(--intent-amber)]" />
+            <Loader2 className="size-6 animate-spin text-[var(--intent-navy)]" />
           </div>
         ) : (
           metricTiles.map((metric) => {
@@ -217,14 +217,14 @@ export default function AdminDashboardPage() {
           </h2>
           <Link
             href="/admin/verify"
-            className="text-xs font-medium text-[var(--intent-amber)] hover:underline"
+            className="text-xs font-medium text-[var(--intent-navy)] hover:underline"
           >
             View all
           </Link>
         </div>
         {verificationsLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="size-6 animate-spin text-[var(--intent-amber)]" />
+            <Loader2 className="size-6 animate-spin text-[var(--intent-navy)]" />
           </div>
         ) : pendingVerifications.length === 0 ? (
           <div className="rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-4 py-6 text-center">
@@ -239,7 +239,7 @@ export default function AdminDashboardPage() {
                 key={v.id}
                 className="flex items-center gap-3 rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-4 py-3"
               >
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--intent-amber-subtle)] text-xs font-semibold text-[var(--intent-amber)]">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--intent-navy-subtle)] text-xs font-semibold text-[var(--intent-navy)]">
                   {v.userInitials}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -253,7 +253,7 @@ export default function AdminDashboardPage() {
                 <Link href={`/admin/verify/${v.id}`}>
                   <Button
                     variant="outline"
-                    className="h-8 rounded-lg border-[var(--intent-amber)] text-xs font-medium text-[var(--intent-amber)] hover:bg-[var(--intent-amber-subtle)]"
+                    className="h-8 rounded-lg border-[var(--intent-navy)] text-xs font-medium text-[var(--intent-navy)] hover:bg-[var(--intent-navy-subtle)]"
                   >
                     Review
                   </Button>
@@ -271,7 +271,7 @@ export default function AdminDashboardPage() {
         </h2>
         {activityLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="size-6 animate-spin text-[var(--intent-amber)]" />
+            <Loader2 className="size-6 animate-spin text-[var(--intent-navy)]" />
           </div>
         ) : recentActivity.length === 0 ? (
           <div className="rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-4 py-6 text-center">

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export default function WelcomePage() {
   return (
-    <div className="min-h-dvh flex flex-col bg-[#FAFAF6] safe-top safe-bottom">
+    <div className="min-h-dvh flex flex-col bg-[#F7F8FB] safe-top safe-bottom">
       <div className="flex flex-1 flex-col items-center justify-between px-6 py-8 md:py-16">
         {/* Top section */}
         <div className="w-full max-w-[500px] flex flex-col items-center flex-1">
@@ -21,7 +21,7 @@ export default function WelcomePage() {
               className="w-full h-full"
               style={{
                 background:
-                  "linear-gradient(135deg, #F5EDE0 0%, #E8D5B8 25%, #D4A053 50%, #B8762A 75%, #2D4A3A 100%)",
+                  "linear-gradient(135deg, #E8EFF7 0%, #B8CCE0 25%, #2E6399 50%, #1B3A5F 75%, #2D4A3A 100%)",
               }}
             />
           </div>
@@ -41,7 +41,7 @@ export default function WelcomePage() {
         <div className="w-full max-w-[500px] mt-8 md:mt-12 flex flex-col items-center gap-3">
           <Link href="/signup" className="w-full">
             <Button
-              className="w-full h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors"
+              className="w-full h-12 text-base font-medium rounded-xl bg-[#1B3A5F] text-white hover:bg-[#2E6399] transition-colors"
             >
               Create your account
             </Button>

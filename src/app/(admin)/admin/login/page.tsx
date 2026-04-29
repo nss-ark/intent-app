@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
             <span className="font-heading text-2xl font-semibold tracking-tight text-[var(--intent-text-primary)]">
               intent
             </span>
-            <span className="rounded-full border border-[var(--intent-amber)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--intent-amber)]">
+            <span className="rounded-full border border-[var(--intent-navy)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--intent-navy)]">
               Admin
             </span>
           </div>
@@ -61,7 +61,7 @@ export default function AdminLoginPage() {
               </Label>
               <Link
                 href="#"
-                className="text-xs font-medium text-[var(--intent-amber)] hover:underline"
+                className="text-xs font-medium text-[var(--intent-navy)] hover:underline"
               >
                 Forgot password?
               </Link>
@@ -78,7 +78,7 @@ export default function AdminLoginPage() {
 
           <Button
             type="submit"
-            className="h-10 w-full rounded-lg bg-[var(--intent-amber)] text-sm font-medium text-white hover:bg-[var(--intent-amber-light)]"
+            className="h-10 w-full rounded-lg bg-[var(--intent-navy)] text-sm font-medium text-white hover:bg-[var(--intent-navy-light)]"
           >
             Sign in
           </Button>
@@ -128,11 +128,11 @@ export default function AdminLoginPage() {
         <div className="flex items-center justify-center gap-2 text-[11px] text-[var(--intent-text-secondary)]">
           <span>Intent</span>
           <span>&middot;</span>
-          <Link href="#" className="hover:text-[var(--intent-amber)]">
+          <Link href="#" className="hover:text-[var(--intent-navy)]">
             Privacy
           </Link>
           <span>&middot;</span>
-          <Link href="#" className="hover:text-[var(--intent-amber)]">
+          <Link href="#" className="hover:text-[var(--intent-navy)]">
             Terms
           </Link>
           <span>&middot;</span>

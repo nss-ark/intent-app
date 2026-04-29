@@ -14,7 +14,7 @@ export function ProgressBar({ totalSteps, currentStep, className }: ProgressBarP
           key={i}
           className={cn(
             "h-1 flex-1 rounded-full transition-colors duration-300",
-            i < currentStep ? "bg-[#B8762A]" : "bg-[#E8E4DA]"
+            i < currentStep ? "bg-[#1B3A5F]" : "bg-[#D8DCE5]"
           )}
         />
       ))}

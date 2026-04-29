@@ -31,8 +31,8 @@ export function SignalPill({
         "inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium",
         "transition-all duration-150 border select-none",
         isSelected
-          ? "bg-[#B8762A] text-white border-[#B8762A]"
-          : "bg-white text-[#1A1A1A] border-[#E8E4DA] hover:border-[#B8762A]/50 hover:bg-[#F5EDE0]/50",
+          ? "bg-[#1B3A5F] text-white border-[#1B3A5F]"
+          : "bg-white text-[#1A1A1A] border-[#D8DCE5] hover:border-[#1B3A5F]/50 hover:bg-[#E8EFF7]/50",
         className
       )}
     >

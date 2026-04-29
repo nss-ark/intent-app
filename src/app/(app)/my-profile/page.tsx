@@ -55,7 +55,7 @@ function OpenToRow({
 }) {
   const iconColor =
     color === "amber"
-      ? "text-[var(--intent-amber)]"
+      ? "text-[var(--intent-navy)]"
       : color === "green"
       ? "text-[var(--intent-green)]"
       : "text-[var(--intent-text-secondary)]";
@@ -130,7 +130,7 @@ export default function MyProfilePage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--intent-bg)]">
-        <Loader2 className="size-8 animate-spin text-[var(--intent-amber)]" />
+        <Loader2 className="size-8 animate-spin text-[var(--intent-navy)]" />
       </div>
     );
   }
@@ -210,7 +210,7 @@ export default function MyProfilePage() {
           {/* Avatar with camera overlay */}
           <div className="relative mx-auto w-fit">
             <AvatarPlaceholder name={user.fullName} size={96} />
-            <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[var(--intent-amber)] shadow-sm">
+            <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[var(--intent-navy)] shadow-sm">
               <Camera size={14} className="text-white" />
             </div>
           </div>
@@ -254,7 +254,7 @@ export default function MyProfilePage() {
           <h3 className="mb-2 text-[13px] font-semibold uppercase tracking-wider text-[var(--intent-text-secondary)]">
             Your Intent
           </h3>
-          <div className="rounded-2xl bg-[var(--intent-amber-subtle)]/60 p-4">
+          <div className="rounded-2xl bg-[var(--intent-navy-subtle)]/60 p-4">
             <p className="text-[14px] italic leading-relaxed text-[var(--intent-text-primary)]">
               &ldquo;
               {user.profile?.missionStatement ||
@@ -263,7 +263,7 @@ export default function MyProfilePage() {
             </p>
             <Link
               href="/my-profile/edit"
-              className="mt-2 inline-block text-[13px] font-medium text-[var(--intent-amber)] hover:underline"
+              className="mt-2 inline-block text-[13px] font-medium text-[var(--intent-navy)] hover:underline"
             >
               Edit your Intent
             </Link>
@@ -306,18 +306,18 @@ export default function MyProfilePage() {
             {mentorshipCount > 0 ? (
               <Link
                 href="/matching/mentorship"
-                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--intent-amber-subtle)]/40"
+                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--intent-navy-subtle)]/40"
               >
                 <Users
                   size={18}
                   strokeWidth={1.5}
-                  className="text-[var(--intent-amber)]"
+                  className="text-[var(--intent-navy)]"
                 />
                 <span className="flex-1 text-[14px] text-[var(--intent-text-primary)]">
                   <span className="font-semibold">{mentorshipCount}</span>{" "}
                   {mentorshipCount === 1 ? "mentorship" : "mentorships"}
                 </span>
-                <span className="mr-1 text-[13px] font-medium text-[var(--intent-amber)]">
+                <span className="mr-1 text-[13px] font-medium text-[var(--intent-navy)]">
                   View All
                 </span>
                 <ChevronRight
@@ -369,7 +369,7 @@ export default function MyProfilePage() {
             <Share2 size={16} className="mr-2" />
             Share your profile
           </Button>
-          <button className="text-[13px] font-medium text-[var(--intent-amber)] hover:underline">
+          <button className="text-[13px] font-medium text-[var(--intent-navy)] hover:underline">
             View your card as others see it
           </button>
         </div>

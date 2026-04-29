@@ -76,7 +76,7 @@ export function welcomeEmail(name: string, tenantName: string): EmailOptions & {
     to: "", // caller sets this
     subject: `Welcome to Intent, ${firstName}!`,
     html: `
-      <div style="font-family: Inter, system-ui, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #FAFAF6;">
+      <div style="font-family: Inter, system-ui, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #F7F8FB;">
         <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
           <h1 style="color: #1A1A1A; font-size: 24px; margin: 0 0 16px;">Welcome to Intent</h1>
           <p style="color: #6B6B66; font-size: 16px; line-height: 1.6; margin: 0 0 12px;">
@@ -87,7 +87,7 @@ export function welcomeEmail(name: string, tenantName: string): EmailOptions & {
             and sending your first nudge to someone whose work aligns with yours.
           </p>
           <a href="${baseUrl}/home"
-             style="display: inline-block; padding: 14px 32px; background: #B8762A; color: white; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 15px;">
+             style="display: inline-block; padding: 14px 32px; background: #1B3A5F; color: white; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 15px;">
             Explore your community
           </a>
         </div>
@@ -104,7 +104,7 @@ export function otpEmail(name: string, code: string): Omit<EmailOptions, "to"> {
   return {
     subject: `${code} is your Intent verification code`,
     html: `
-      <div style="font-family: Inter, system-ui, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #FAFAF6;">
+      <div style="font-family: Inter, system-ui, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #F7F8FB;">
         <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
           <h1 style="color: #1A1A1A; font-size: 24px; margin: 0 0 16px;">Verify your email</h1>
           <p style="color: #6B6B66; font-size: 16px; line-height: 1.6; margin: 0 0 12px;">
@@ -113,7 +113,7 @@ export function otpEmail(name: string, code: string): Omit<EmailOptions, "to"> {
           <p style="color: #6B6B66; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
             Use the code below to verify your email address and complete your Intent signup.
           </p>
-          <div style="text-align: center; margin: 0 0 24px; padding: 20px; background: #FAFAF6; border-radius: 12px; border: 1px solid #E8E4DA;">
+          <div style="text-align: center; margin: 0 0 24px; padding: 20px; background: #F7F8FB; border-radius: 12px; border: 1px solid #D8DCE5;">
             <span style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #1A1A1A;">${code}</span>
           </div>
           <p style="color: #6B6B66; font-size: 14px; line-height: 1.6; margin: 0;">
@@ -138,7 +138,7 @@ export function nudgeNotificationEmail(
   return {
     subject: `${senderName} sent you a nudge on Intent`,
     html: `
-      <div style="font-family: Inter, system-ui, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #FAFAF6;">
+      <div style="font-family: Inter, system-ui, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #F7F8FB;">
         <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
           <h1 style="color: #1A1A1A; font-size: 24px; margin: 0 0 16px;">New nudge</h1>
           <p style="color: #6B6B66; font-size: 16px; line-height: 1.6; margin: 0 0 12px;">
@@ -146,15 +146,15 @@ export function nudgeNotificationEmail(
           </p>
           <p style="color: #6B6B66; font-size: 16px; line-height: 1.6; margin: 0 0 16px;">
             <strong style="color: #1A1A1A;">${senderName}</strong> reached out about
-            <span style="color: #B8762A; font-weight: 600;">${signal}</span>.
+            <span style="color: #1B3A5F; font-weight: 600;">${signal}</span>.
           </p>
-          <div style="margin: 0 0 24px; padding: 16px; background: #FAFAF6; border-radius: 12px; border: 1px solid #E8E4DA;">
+          <div style="margin: 0 0 24px; padding: 16px; background: #F7F8FB; border-radius: 12px; border: 1px solid #D8DCE5;">
             <p style="color: #1A1A1A; font-size: 14px; line-height: 1.5; margin: 0; font-style: italic;">
               &ldquo;${nudgePreview}&rdquo;
             </p>
           </div>
           <a href="${baseUrl}/inbox"
-             style="display: inline-block; padding: 14px 32px; background: #B8762A; color: white; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 15px;">
+             style="display: inline-block; padding: 14px 32px; background: #1B3A5F; color: white; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 15px;">
             View in Intent
           </a>
         </div>
@@ -171,7 +171,7 @@ export function verificationApprovedEmail(name: string, badgeName: string): Omit
   return {
     subject: `Your ${badgeName} badge has been verified`,
     html: `
-      <div style="font-family: Inter, system-ui, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #FAFAF6;">
+      <div style="font-family: Inter, system-ui, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #F7F8FB;">
         <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
           <h1 style="color: #1A1A1A; font-size: 24px; margin: 0 0 16px;">Badge verified</h1>
           <p style="color: #6B6B66; font-size: 16px; line-height: 1.6; margin: 0 0 12px;">
@@ -182,7 +182,7 @@ export function verificationApprovedEmail(name: string, badgeName: string): Omit
             and is now visible on your profile.
           </p>
           <a href="${baseUrl}/my-profile"
-             style="display: inline-block; padding: 14px 32px; background: #B8762A; color: white; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 15px;">
+             style="display: inline-block; padding: 14px 32px; background: #1B3A5F; color: white; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 15px;">
             View your profile
           </a>
         </div>

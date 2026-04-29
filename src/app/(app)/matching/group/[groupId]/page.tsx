@@ -48,7 +48,7 @@ interface GroupMatchDetail {
 function MemberStatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; text: string; label: string }> = {
     ACCEPTED: { bg: "bg-[var(--intent-green-subtle)]", text: "text-[var(--intent-green)]", label: "Accepted" },
-    PENDING: { bg: "bg-[var(--intent-amber-subtle)]", text: "text-[var(--intent-amber)]", label: "Pending" },
+    PENDING: { bg: "bg-[var(--intent-navy-subtle)]", text: "text-[var(--intent-navy)]", label: "Pending" },
     DECLINED: { bg: "bg-red-50", text: "text-[var(--intent-destructive)]", label: "Declined" },
   };
   const c = config[status] ?? config.PENDING;
@@ -108,7 +108,7 @@ export default function GroupMatchDetailPage({
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--intent-bg)]">
-        <Loader2 className="size-8 animate-spin text-[var(--intent-amber)]" />
+        <Loader2 className="size-8 animate-spin text-[var(--intent-navy)]" />
       </div>
     );
   }
@@ -140,8 +140,8 @@ export default function GroupMatchDetailPage({
   // Group status badge
   const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
     ACTIVE: { bg: "bg-[var(--intent-green-subtle)]", text: "text-[var(--intent-green)]", label: "Active" },
-    PENDING: { bg: "bg-[var(--intent-amber-subtle)]", text: "text-[var(--intent-amber)]", label: "Pending" },
-    NOTIFIED: { bg: "bg-[var(--intent-amber-subtle)]", text: "text-[var(--intent-amber)]", label: "Pending" },
+    PENDING: { bg: "bg-[var(--intent-navy-subtle)]", text: "text-[var(--intent-navy)]", label: "Pending" },
+    NOTIFIED: { bg: "bg-[var(--intent-navy-subtle)]", text: "text-[var(--intent-navy)]", label: "Pending" },
     COMPLETED: { bg: "bg-[var(--muted)]", text: "text-[var(--intent-text-secondary)]", label: "Completed" },
     CANCELLED: { bg: "bg-[var(--muted)]", text: "text-[var(--intent-text-secondary)]", label: "Cancelled" },
   };
@@ -168,8 +168,8 @@ export default function GroupMatchDetailPage({
         {/* Group info */}
         <div className="rounded-2xl bg-white p-6 shadow-[var(--card-shadow)]">
           <div className="flex items-center gap-3">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--intent-amber-subtle)]">
-              <Users size={24} className="text-[var(--intent-amber)]" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--intent-navy-subtle)]">
+              <Users size={24} className="text-[var(--intent-navy)]" />
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="text-[18px] font-bold text-[var(--intent-text-primary)]">
@@ -192,7 +192,7 @@ export default function GroupMatchDetailPage({
               {group.niches.map((n) => (
                 <span
                   key={n.id}
-                  className="rounded-full bg-[var(--intent-amber-subtle)] px-3 py-1 text-[12px] font-medium text-[var(--intent-amber)]"
+                  className="rounded-full bg-[var(--intent-navy-subtle)] px-3 py-1 text-[12px] font-medium text-[var(--intent-navy)]"
                 >
                   {n.displayName}
                 </span>
@@ -234,7 +234,7 @@ export default function GroupMatchDetailPage({
               <Button
                 onClick={() => action.mutate("ACCEPTED")}
                 disabled={action.isPending}
-                className="h-12 flex-1 rounded-xl bg-[var(--intent-amber)] text-[15px] font-semibold text-white hover:bg-[var(--intent-amber-light)]"
+                className="h-12 flex-1 rounded-xl bg-[var(--intent-navy)] text-[15px] font-semibold text-white hover:bg-[var(--intent-navy-light)]"
               >
                 <Check size={18} className="mr-2" />
                 Accept
@@ -254,7 +254,7 @@ export default function GroupMatchDetailPage({
           {isActive && group.conversationId && (
             <Button
               onClick={() => router.push(`/chats/${group.conversationId}`)}
-              className="h-12 w-full rounded-xl bg-[var(--intent-amber)] text-[15px] font-semibold text-white hover:bg-[var(--intent-amber-light)]"
+              className="h-12 w-full rounded-xl bg-[var(--intent-navy)] text-[15px] font-semibold text-white hover:bg-[var(--intent-navy-light)]"
             >
               <MessageCircle size={18} className="mr-2" />
               Open Group Chat

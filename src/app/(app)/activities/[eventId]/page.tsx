@@ -73,7 +73,7 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   REUNION: "bg-pink-50 text-pink-700",
   DINNER: "bg-orange-50 text-orange-700",
   TALK: "bg-teal-50 text-teal-700",
-  MEETUP: "bg-[var(--intent-amber-subtle)] text-[var(--intent-amber)]",
+  MEETUP: "bg-[var(--intent-navy-subtle)] text-[var(--intent-navy)]",
   OTHER: "bg-[var(--muted)] text-[var(--intent-text-secondary)]",
 };
 
@@ -137,7 +137,7 @@ function InviteModal({
           placeholder="Search by name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="mt-3 h-10 w-full rounded-lg border border-[var(--intent-text-tertiary)] bg-[var(--intent-bg)] px-3 text-[14px] outline-none focus:border-[var(--intent-amber)]"
+          className="mt-3 h-10 w-full rounded-lg border border-[var(--intent-text-tertiary)] bg-[var(--intent-bg)] px-3 text-[14px] outline-none focus:border-[var(--intent-navy)]"
         />
         <div className="mt-3 max-h-60 overflow-y-auto space-y-1">
           {isLoading && (
@@ -152,7 +152,7 @@ function InviteModal({
               className={cn(
                 "flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors",
                 selectedIds.includes(user.id)
-                  ? "bg-[var(--intent-amber-subtle)]"
+                  ? "bg-[var(--intent-navy-subtle)]"
                   : "hover:bg-[var(--muted)]"
               )}
             >
@@ -161,7 +161,7 @@ function InviteModal({
                 {user.fullName}
               </span>
               {selectedIds.includes(user.id) && (
-                <Check size={16} className="text-[var(--intent-amber)]" />
+                <Check size={16} className="text-[var(--intent-navy)]" />
               )}
             </button>
           ))}
@@ -182,7 +182,7 @@ function InviteModal({
           <Button
             onClick={() => inviteMutation.mutate()}
             disabled={selectedIds.length === 0 || inviteMutation.isPending}
-            className="h-11 flex-1 rounded-xl bg-[var(--intent-amber)] text-[14px] font-semibold text-white hover:bg-[var(--intent-amber-light)] disabled:opacity-50"
+            className="h-11 flex-1 rounded-xl bg-[var(--intent-navy)] text-[14px] font-semibold text-white hover:bg-[var(--intent-navy-light)] disabled:opacity-50"
           >
             {inviteMutation.isPending ? "Sending..." : `Invite (${selectedIds.length})`}
           </Button>
@@ -249,7 +249,7 @@ export default function EventDetailPage({
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--intent-bg)]">
-        <Loader2 className="size-8 animate-spin text-[var(--intent-amber)]" />
+        <Loader2 className="size-8 animate-spin text-[var(--intent-navy)]" />
       </div>
     );
   }
@@ -414,7 +414,7 @@ export default function EventDetailPage({
               {event.niches.map((n) => (
                 <span
                   key={n.id}
-                  className="rounded-full bg-[var(--intent-amber-subtle)] px-3 py-1 text-[12px] font-medium text-[var(--intent-amber)]"
+                  className="rounded-full bg-[var(--intent-navy-subtle)] px-3 py-1 text-[12px] font-medium text-[var(--intent-navy)]"
                 >
                   {n.displayName}
                 </span>
@@ -504,7 +504,7 @@ export default function EventDetailPage({
                 "h-12 flex-1 rounded-xl text-[15px] font-semibold",
                 isAttending
                   ? "bg-[var(--intent-green-subtle)] text-[var(--intent-green)] hover:bg-[var(--intent-green)]/20"
-                  : "bg-[var(--intent-amber-subtle)] text-[var(--intent-amber)] hover:bg-[var(--intent-amber)]/20"
+                  : "bg-[var(--intent-navy-subtle)] text-[var(--intent-navy)] hover:bg-[var(--intent-navy)]/20"
               )}
             >
               <Check size={18} className="mr-2" />
@@ -514,7 +514,7 @@ export default function EventDetailPage({
             <Button
               onClick={() => rsvpMutation.mutate()}
               disabled={rsvpMutation.isPending}
-              className="h-12 flex-1 rounded-xl bg-[var(--intent-amber)] text-[15px] font-semibold text-white hover:bg-[var(--intent-amber-light)]"
+              className="h-12 flex-1 rounded-xl bg-[var(--intent-navy)] text-[15px] font-semibold text-white hover:bg-[var(--intent-navy-light)]"
             >
               Join Event
             </Button>

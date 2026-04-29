@@ -120,7 +120,7 @@ export default function OnboardingStep1() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="relative w-24 h-24 rounded-full bg-[#F2EFE8] border-2 border-dashed border-[#E8E4DA] flex items-center justify-center overflow-hidden hover:border-[#B8762A]/50 transition-colors group"
+              className="relative w-24 h-24 rounded-full bg-[#EDF0F5] border-2 border-dashed border-[#D8DCE5] flex items-center justify-center overflow-hidden hover:border-[#1B3A5F]/50 transition-colors group"
             >
               {photoPreview ? (
                 <img
@@ -129,7 +129,7 @@ export default function OnboardingStep1() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <Camera className="w-6 h-6 text-[#6B6B66] group-hover:text-[#B8762A] transition-colors" />
+                <Camera className="w-6 h-6 text-[#6B6B66] group-hover:text-[#1B3A5F] transition-colors" />
               )}
               <input
                 ref={fileInputRef}
@@ -225,7 +225,7 @@ export default function OnboardingStep1() {
           <Button
             onClick={handleContinue}
             disabled={!isValid}
-            className="w-full h-12 text-base font-medium rounded-xl bg-[#B8762A] text-white hover:bg-[#D4A053] transition-colors mt-8 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full h-12 text-base font-medium rounded-xl bg-[#1B3A5F] text-white hover:bg-[#2E6399] transition-colors mt-8 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Continue
           </Button>

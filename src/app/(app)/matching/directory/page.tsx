@@ -47,8 +47,8 @@ function FilterPill({
       className={cn(
         "inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[13px] font-medium transition-all",
         isActive
-          ? "bg-[var(--intent-amber)] text-white"
-          : "border border-[var(--intent-text-tertiary)] bg-white text-[var(--intent-text-primary)] hover:border-[var(--intent-amber)]/50"
+          ? "bg-[var(--intent-navy)] text-white"
+          : "border border-[var(--intent-text-tertiary)] bg-white text-[var(--intent-text-primary)] hover:border-[var(--intent-navy)]/50"
       )}
     >
       {label}
@@ -104,7 +104,7 @@ function UserCard({ member }: { member: DiscoveryMember }) {
           e.stopPropagation();
           router.push(`/matching/nudge/${member.id}`);
         }}
-        className="mt-3 flex h-8 items-center justify-center gap-1.5 rounded-lg border border-[var(--intent-amber)] text-[12px] font-semibold text-[var(--intent-amber)] transition-colors hover:bg-[var(--intent-amber-subtle)]"
+        className="mt-3 flex h-8 items-center justify-center gap-1.5 rounded-lg border border-[var(--intent-navy)] text-[12px] font-semibold text-[var(--intent-navy)] transition-colors hover:bg-[var(--intent-navy-subtle)]"
       >
         <Send size={12} />
         Send Nudge
@@ -211,7 +211,7 @@ export default function DirectoryPage() {
               placeholder="Search by name, company, role..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="h-10 w-full rounded-xl border border-[var(--intent-text-tertiary)] bg-[var(--intent-bg)] pl-10 pr-4 text-[14px] text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)]/60 outline-none transition-colors focus:border-[var(--intent-amber)] focus:ring-2 focus:ring-[var(--intent-amber)]/20"
+              className="h-10 w-full rounded-xl border border-[var(--intent-text-tertiary)] bg-[var(--intent-bg)] pl-10 pr-4 text-[14px] text-[var(--intent-text-primary)] placeholder:text-[var(--intent-text-secondary)]/60 outline-none transition-colors focus:border-[var(--intent-navy)] focus:ring-2 focus:ring-[var(--intent-navy)]/20"
             />
             {searchInput && (
               <button
@@ -271,7 +271,7 @@ export default function DirectoryPage() {
                   setActiveNiche(null);
                   setActiveCity(null);
                 }}
-                className="ml-2 text-[var(--intent-amber)] hover:underline"
+                className="ml-2 text-[var(--intent-navy)] hover:underline"
               >
                 Clear filters
               </button>

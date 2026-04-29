@@ -84,13 +84,13 @@ const tabs = [
 
 const slaColors: Record<SLAStatus, string> = {
   green: "bg-[var(--intent-green)]",
-  amber: "bg-[var(--intent-amber)]",
+  amber: "bg-[var(--intent-navy)]",
   red: "bg-[var(--destructive)]",
 };
 
 const slaTextColors: Record<SLAStatus, string> = {
   green: "text-[var(--intent-green)]",
-  amber: "text-[var(--intent-amber)]",
+  amber: "text-[var(--intent-navy)]",
   red: "text-[var(--destructive)]",
 };
 
@@ -112,7 +112,7 @@ export default function VerificationQueuePage() {
         <h1 className="font-heading text-xl font-semibold text-[var(--intent-text-primary)]">
           Verifications
         </h1>
-        <button className="rounded-lg p-2 text-[var(--intent-text-secondary)] hover:bg-[var(--intent-amber-subtle)] transition-colors">
+        <button className="rounded-lg p-2 text-[var(--intent-text-secondary)] hover:bg-[var(--intent-navy-subtle)] transition-colors">
           <SlidersHorizontal className="size-4" strokeWidth={1.5} />
         </button>
       </div>
@@ -135,7 +135,7 @@ export default function VerificationQueuePage() {
               className={cn(
                 "ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold",
                 activeTab === tab.id
-                  ? "bg-[var(--intent-amber)] text-white"
+                  ? "bg-[var(--intent-navy)] text-white"
                   : "bg-[var(--intent-text-tertiary)] text-[var(--intent-text-secondary)]"
               )}
             >
@@ -151,10 +151,10 @@ export default function VerificationQueuePage() {
           <Link
             key={v.id}
             href={`/admin/verify/${v.id}`}
-            className="flex items-center gap-3 rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-4 py-3 transition-colors hover:border-[var(--intent-amber)]/30"
+            className="flex items-center gap-3 rounded-xl border border-[var(--intent-text-tertiary)] bg-white px-4 py-3 transition-colors hover:border-[var(--intent-navy)]/30"
           >
             {/* Avatar */}
-            <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-[var(--intent-amber-subtle)] text-sm font-semibold text-[var(--intent-amber)]">
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-[var(--intent-navy-subtle)] text-sm font-semibold text-[var(--intent-navy)]">
               {v.initials}
             </div>
 
@@ -163,7 +163,7 @@ export default function VerificationQueuePage() {
               <p className="text-sm font-medium text-[var(--intent-text-primary)] truncate">
                 {v.name}
               </p>
-              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--intent-amber)]">
+              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--intent-navy)]">
                 {v.requestType}
               </p>
               <div className="mt-1.5 flex items-center gap-3">

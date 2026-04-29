@@ -8,12 +8,12 @@ import { cn, getInitials } from "@/lib/utils";
  */
 function getGradientColors(name: string): [string, string] {
   const gradients: [string, string][] = [
-    ["#B8762A", "#D4A053"],
+    ["#1B3A5F", "#2E6399"],
     ["#2D4A3A", "#3D6B52"],
     ["#8B5CF6", "#A78BFA"],
     ["#0EA5E9", "#38BDF8"],
     ["#6B6B66", "#9B9B94"],
-    ["#D97706", "#F59E0B"],
+    ["#0D9488", "#14B8A6"],
     ["#DC2626", "#EF4444"],
     ["#059669", "#10B981"],
   ];

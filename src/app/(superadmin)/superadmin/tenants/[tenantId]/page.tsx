@@ -41,7 +41,7 @@ function StatusBadge({ status }: { status: TenantDetail["status"] }) {
   const styles: Record<TenantDetail["status"], string> = {
     ACTIVE: "bg-[var(--intent-green-subtle)] text-[var(--intent-green)]",
     SUSPENDED: "bg-red-50 text-red-700",
-    TRIAL: "bg-[var(--intent-amber-subtle)] text-[var(--intent-amber)]",
+    TRIAL: "bg-[var(--intent-navy-subtle)] text-[var(--intent-navy)]",
   };
 
   return (

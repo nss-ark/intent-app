@@ -20,7 +20,7 @@ export default function ChatsPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-amber-subtle)]"
+            className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-navy-subtle)]"
             aria-label="Search conversations"
           >
             <Search
@@ -31,7 +31,7 @@ export default function ChatsPage() {
           </button>
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-amber-subtle)]"
+            className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-[var(--intent-navy-subtle)]"
             aria-label="New conversation"
           >
             <PenSquare
@@ -48,7 +48,7 @@ export default function ChatsPage() {
         <div className="flex items-center justify-center py-20">
           <Loader2
             size={28}
-            className="animate-spin text-[var(--intent-amber)]"
+            className="animate-spin text-[var(--intent-navy)]"
           />
         </div>
       )}
@@ -77,7 +77,7 @@ export default function ChatsPage() {
               href={`/chats/${conv.id}`}
               className="group block"
             >
-              <div className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--intent-amber-subtle)]/40">
+              <div className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--intent-navy-subtle)]/40">
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
                   <AvatarPlaceholder
@@ -97,7 +97,7 @@ export default function ChatsPage() {
                       {conv.otherUser.fullName}
                     </span>
                     {conv.matchId && (
-                      <span className="flex-shrink-0 rounded-full bg-[var(--intent-amber-subtle)] px-2 py-0.5 text-[10px] font-medium text-[var(--intent-amber)]">
+                      <span className="flex-shrink-0 rounded-full bg-[var(--intent-navy-subtle)] px-2 py-0.5 text-[10px] font-medium text-[var(--intent-navy)]">
                         Matched
                       </span>
                     )}
@@ -118,14 +118,14 @@ export default function ChatsPage() {
                   <span
                     className={`text-[12px] ${
                       conv.unreadCount > 0
-                        ? "font-medium text-[var(--intent-amber)]"
+                        ? "font-medium text-[var(--intent-navy)]"
                         : "text-[var(--intent-text-secondary)]"
                     }`}
                   >
                     {timestamp}
                   </span>
                   {conv.unreadCount > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--intent-amber)] px-1.5 text-[11px] font-bold text-white">
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--intent-navy)] px-1.5 text-[11px] font-bold text-white">
                       {conv.unreadCount}
                     </span>
                   )}

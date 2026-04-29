@@ -28,13 +28,13 @@ export function AdminMobileHeader() {
           <span className="font-heading text-base font-semibold tracking-tight text-[var(--intent-text-primary)]">
             intent
           </span>
-          <span className="rounded-full border border-[var(--intent-amber)] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[var(--intent-amber)]">
+          <span className="rounded-full border border-[var(--intent-navy)] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[var(--intent-navy)]">
             Admin
           </span>
         </div>
         <button
           onClick={() => setOpen(!open)}
-          className="rounded-lg p-1.5 text-[var(--intent-text-secondary)] hover:bg-[var(--intent-amber-subtle)] transition-colors"
+          className="rounded-lg p-1.5 text-[var(--intent-text-secondary)] hover:bg-[var(--intent-navy-subtle)] transition-colors"
           aria-label={open ? "Close menu" : "Open menu"}
         >
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -65,8 +65,8 @@ export function AdminMobileHeader() {
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-[var(--intent-amber-subtle)] text-[var(--intent-amber)]"
-                        : "text-[var(--intent-text-secondary)] hover:bg-[var(--intent-amber-subtle)]/50 hover:text-[var(--intent-text-primary)]"
+                        ? "bg-[var(--intent-navy-subtle)] text-[var(--intent-navy)]"
+                        : "text-[var(--intent-text-secondary)] hover:bg-[var(--intent-navy-subtle)]/50 hover:text-[var(--intent-text-primary)]"
                     )}
                   >
                     <Icon className="size-[18px]" strokeWidth={1.5} />

@@ -103,8 +103,8 @@ function PillGroup({
                 className={cn(
                   "rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all",
                   isActive
-                    ? "bg-[var(--intent-amber)] text-white shadow-sm"
-                    : "border border-[var(--intent-text-tertiary)] bg-white text-[var(--intent-text-primary)] hover:border-[var(--intent-amber)]/50 hover:bg-[var(--intent-amber-subtle)]/50"
+                    ? "bg-[var(--intent-navy)] text-white shadow-sm"
+                    : "border border-[var(--intent-text-tertiary)] bg-white text-[var(--intent-text-primary)] hover:border-[var(--intent-navy)]/50 hover:bg-[var(--intent-navy-subtle)]/50"
                 )}
               >
                 {opt.label}
@@ -138,7 +138,7 @@ function ToggleRow({
       className={cn(
         "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-all",
         active
-          ? "border-[var(--intent-amber)] bg-[var(--intent-amber-subtle)]"
+          ? "border-[var(--intent-navy)] bg-[var(--intent-navy-subtle)]"
           : "border-[var(--intent-text-tertiary)] bg-white hover:bg-[var(--muted)]"
       )}
     >
@@ -154,7 +154,7 @@ function ToggleRow({
         className={cn(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
           active
-            ? "border-[var(--intent-amber)] bg-[var(--intent-amber)]"
+            ? "border-[var(--intent-navy)] bg-[var(--intent-navy)]"
             : "border-[var(--intent-text-tertiary)]"
         )}
       >
@@ -265,7 +265,7 @@ export function FilterDrawer({ filters, onApply, onClear }: FilterDrawerProps) {
           <button className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--intent-text-tertiary)] bg-white transition-colors hover:bg-[var(--muted)]">
             <SlidersHorizontal size={18} strokeWidth={1.5} />
             {activeCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--intent-amber)] text-[9px] font-bold text-white">
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--intent-navy)] text-[9px] font-bold text-white">
                 {activeCount}
               </span>
             )}
@@ -291,7 +291,7 @@ export function FilterDrawer({ filters, onApply, onClear }: FilterDrawerProps) {
           {draftCount > 0 && (
             <button
               onClick={handleClear}
-              className="text-[13px] font-medium text-[var(--intent-amber)] hover:underline"
+              className="text-[13px] font-medium text-[var(--intent-navy)] hover:underline"
             >
               Clear all
             </button>
@@ -367,7 +367,7 @@ export function FilterDrawer({ filters, onApply, onClear }: FilterDrawerProps) {
             </SheetClose>
             <Button
               onClick={handleApply}
-              className="h-12 flex-1 rounded-xl bg-[var(--intent-amber)] text-[15px] font-semibold text-white hover:bg-[var(--intent-amber-light)]"
+              className="h-12 flex-1 rounded-xl bg-[var(--intent-navy)] text-[15px] font-semibold text-white hover:bg-[var(--intent-navy-light)]"
             >
               {previewFetching ? (
                 <Loader2 size={16} className="mr-2 animate-spin" />

@@ -55,8 +55,8 @@ export function AppHeader() {
                 className={cn(
                   "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-[var(--intent-amber-subtle)] text-[var(--intent-amber)]"
-                    : "text-[var(--intent-text-secondary)] hover:bg-[var(--intent-amber-subtle)]/40 hover:text-[var(--intent-text-primary)]"
+                    ? "bg-[var(--intent-navy-subtle)] text-[var(--intent-navy)]"
+                    : "text-[var(--intent-text-secondary)] hover:bg-[var(--intent-navy-subtle)]/40 hover:text-[var(--intent-text-primary)]"
                 )}
               >
                 <Icon size={18} strokeWidth={isActive ? 2 : 1.5} />
@@ -73,7 +73,7 @@ export function AppHeader() {
             className={cn(
               "relative flex items-center justify-center rounded-lg p-2 transition-colors",
               pathname?.startsWith("/chats")
-                ? "text-[var(--intent-amber)]"
+                ? "text-[var(--intent-navy)]"
                 : "text-[var(--intent-text-secondary)] hover:text-[var(--intent-text-primary)]"
             )}
           >
@@ -85,13 +85,13 @@ export function AppHeader() {
             className={cn(
               "relative flex items-center justify-center rounded-lg p-2 transition-colors",
               pathname?.startsWith("/notifications")
-                ? "text-[var(--intent-amber)]"
+                ? "text-[var(--intent-navy)]"
                 : "text-[var(--intent-text-secondary)] hover:text-[var(--intent-text-primary)]"
             )}
           >
             <Bell size={20} strokeWidth={1.5} />
             {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--intent-amber)] px-1 text-[10px] font-bold text-white">
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--intent-navy)] px-1 text-[10px] font-bold text-white">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             )}
@@ -126,7 +126,7 @@ function ProfileDropdown({ pathname }: { pathname: string | null }) {
         className={cn(
           "flex items-center justify-center rounded-lg p-2 transition-colors",
           isActive
-            ? "text-[var(--intent-amber)]"
+            ? "text-[var(--intent-navy)]"
             : "text-[var(--intent-text-secondary)] hover:text-[var(--intent-text-primary)]"
         )}
       >
@@ -134,11 +134,11 @@ function ProfileDropdown({ pathname }: { pathname: string | null }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-1 w-44 rounded-xl border border-[#E8E4DA] bg-white py-1 shadow-lg">
+        <div className="absolute right-0 mt-1 w-44 rounded-xl border border-[#D8DCE5] bg-white py-1 shadow-lg">
           <Link
             href="/my-profile"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--intent-text-primary)] hover:bg-[var(--intent-amber-subtle)]/60 transition-colors"
+            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--intent-text-primary)] hover:bg-[var(--intent-navy-subtle)]/60 transition-colors"
           >
             <User size={16} strokeWidth={1.5} />
             My Profile
@@ -146,12 +146,12 @@ function ProfileDropdown({ pathname }: { pathname: string | null }) {
           <Link
             href="/settings"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--intent-text-primary)] hover:bg-[var(--intent-amber-subtle)]/60 transition-colors"
+            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--intent-text-primary)] hover:bg-[var(--intent-navy-subtle)]/60 transition-colors"
           >
             <Settings size={16} strokeWidth={1.5} />
             Settings
           </Link>
-          <div className="my-1 h-px bg-[#E8E4DA]" />
+          <div className="my-1 h-px bg-[#D8DCE5]" />
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
             className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"

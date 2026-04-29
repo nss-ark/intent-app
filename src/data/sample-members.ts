@@ -49,8 +49,8 @@ export const sampleMembers: SampleMember[] = [
     offers: 3,
     isVerified: true,
     isFounder: false,
-    gradientFrom: "#B8762A",
-    gradientTo: "#D4A053",
+    gradientFrom: "#1B3A5F",
+    gradientTo: "#2E6399",
     badges: ["Verified Alumni", "Top Contributor"],
     experience: [
       { company: "Lightspeed", role: "Principal", period: "2021 - Present", isCurrent: true },
@@ -195,7 +195,7 @@ export const currentUser: SampleMember = {
   offers: 1,
   isVerified: false,
   isFounder: false,
-  gradientFrom: "#B8762A",
+  gradientFrom: "#1B3A5F",
   gradientTo: "#2D4A3A",
   badges: ["Current Student"],
   experience: [

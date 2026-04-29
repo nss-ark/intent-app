@@ -9,19 +9,19 @@
 // ── Colors ──────────────────────────────────────────────────────────────
 
 export const colors = {
-  background: "#FAFAF6",
+  background: "#F7F8FB",
   surface: "#FFFFFF",
   textPrimary: "#1A1A1A",
   textSecondary: "#6B6B66",
-  textTertiary: "#E8E4DA",
-  amber: "#B8762A",
-  amberLight: "#D4A053",
-  amberSubtle: "#F5EDE0",
+  textTertiary: "#D8DCE5",
+  navy: "#1B3A5F",
+  navyLight: "#2E6399",
+  navySubtle: "#E8EFF7",
   green: "#2D4A3A",
   greenLight: "#3D6B52",
   greenSubtle: "#E4EDE8",
   destructive: "#D94141",
-  muted: "#F2EFE8",
+  muted: "#EDF0F5",
 } as const;
 
 // ── Typography ──────────────────────────────────────────────────────────

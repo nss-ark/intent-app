@@ -58,14 +58,14 @@ function NotificationIcon({ type }: { type: string }) {
   switch (type) {
     case "MATCH_CREATED":
       return (
-        <div className={`${base} bg-[var(--intent-amber-subtle)]`}>
-          <Handshake size={18} strokeWidth={1.5} className="text-[var(--intent-amber)]" />
+        <div className={`${base} bg-[var(--intent-navy-subtle)]`}>
+          <Handshake size={18} strokeWidth={1.5} className="text-[var(--intent-navy)]" />
         </div>
       );
     case "GROUP_MATCH_CREATED":
       return (
-        <div className={`${base} bg-[var(--intent-amber-subtle)]`}>
-          <Users size={18} strokeWidth={1.5} className="text-[var(--intent-amber)]" />
+        <div className={`${base} bg-[var(--intent-navy-subtle)]`}>
+          <Users size={18} strokeWidth={1.5} className="text-[var(--intent-navy)]" />
         </div>
       );
     case "SURVEY_AVAILABLE":
@@ -88,8 +88,8 @@ function NotificationIcon({ type }: { type: string }) {
       );
     default:
       return (
-        <div className={`${base} bg-[var(--intent-amber-subtle)]`}>
-          <Bell size={18} strokeWidth={1.5} className="text-[var(--intent-amber)]" />
+        <div className={`${base} bg-[var(--intent-navy-subtle)]`}>
+          <Bell size={18} strokeWidth={1.5} className="text-[var(--intent-navy)]" />
         </div>
       );
   }
@@ -182,7 +182,7 @@ export default function NotificationsPage() {
             size="sm"
             onClick={() => markAllAsRead.mutate()}
             disabled={markAllAsRead.isPending}
-            className="text-[13px] font-medium text-[var(--intent-amber)] hover:text-[var(--intent-amber)]"
+            className="text-[13px] font-medium text-[var(--intent-navy)] hover:text-[var(--intent-navy)]"
           >
             <CheckCheck size={16} className="mr-1.5" />
             Mark all as read
@@ -193,15 +193,15 @@ export default function NotificationsPage() {
       {/* ── Loading ─────────────────────────────────────────────── */}
       {isLoading && (
         <div className="flex items-center justify-center py-20">
-          <Loader2 size={28} className="animate-spin text-[var(--intent-amber)]" />
+          <Loader2 size={28} className="animate-spin text-[var(--intent-navy)]" />
         </div>
       )}
 
       {/* ── Empty state ─────────────────────────────────────────── */}
       {!isLoading && notifications.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--intent-amber-subtle)]">
-            <Bell size={28} style={{ color: "var(--intent-amber)" }} />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--intent-navy-subtle)]">
+            <Bell size={28} style={{ color: "var(--intent-navy)" }} />
           </div>
           <p className="text-sm" style={{ color: "var(--intent-text-secondary)" }}>
             No notifications
@@ -223,7 +223,7 @@ export default function NotificationsPage() {
                 key={notification.id}
                 type="button"
                 onClick={() => handleTap(notification)}
-                className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-[var(--intent-amber-subtle)]/40"
+                className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-[var(--intent-navy-subtle)]/40"
               >
                 <NotificationIcon type={notification.type} />
 
@@ -250,7 +250,7 @@ export default function NotificationsPage() {
                 {/* Unread indicator */}
                 {isUnread && (
                   <div className="mt-1.5 flex-shrink-0">
-                    <div className="h-2.5 w-2.5 rounded-full bg-[var(--intent-amber)]" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-[var(--intent-navy)]" />
                   </div>
                 )}
               </button>
@@ -280,7 +280,7 @@ export default function NotificationsPage() {
               }
             />
             <Button
-              className="rounded-xl bg-[var(--intent-amber)] text-white hover:bg-[var(--intent-amber-light)]"
+              className="rounded-xl bg-[var(--intent-navy)] text-white hover:bg-[var(--intent-navy-light)]"
               onClick={() => {
                 setSurveyDialogOpen(false);
                 if (selectedNotification?.relatedEntityId) {

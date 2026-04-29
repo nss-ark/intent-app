@@ -108,7 +108,7 @@ export default function MatchDetailPage({
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--intent-bg)]">
-        <Loader2 className="size-8 animate-spin text-[var(--intent-amber)]" />
+        <Loader2 className="size-8 animate-spin text-[var(--intent-navy)]" />
       </div>
     );
   }
@@ -200,7 +200,7 @@ export default function MatchDetailPage({
               "inline-flex items-center gap-1 rounded-full px-3 py-1 text-[12px] font-medium",
               match.matchType === "MENTORSHIP"
                 ? "bg-purple-50 text-purple-700"
-                : "bg-[var(--intent-amber-subtle)] text-[var(--intent-amber)]"
+                : "bg-[var(--intent-navy-subtle)] text-[var(--intent-navy)]"
             )}
           >
             {match.matchType === "MENTORSHIP" ? (
@@ -238,7 +238,7 @@ export default function MatchDetailPage({
                 {match.niches.map((n) => (
                   <span
                     key={n.id}
-                    className="rounded-full bg-[var(--intent-amber-subtle)] px-3 py-1 text-[12px] font-medium text-[var(--intent-amber)]"
+                    className="rounded-full bg-[var(--intent-navy-subtle)] px-3 py-1 text-[12px] font-medium text-[var(--intent-navy)]"
                   >
                     {n.displayName}
                   </span>
@@ -260,7 +260,7 @@ export default function MatchDetailPage({
                     className={cn(
                       "rounded-full px-3 py-1 text-[12px] font-medium",
                       s.signalType === "ASK"
-                        ? "bg-[var(--intent-amber-subtle)] text-[var(--intent-amber)]"
+                        ? "bg-[var(--intent-navy-subtle)] text-[var(--intent-navy)]"
                         : s.signalType === "OFFER"
                         ? "bg-[var(--intent-green-subtle)] text-[var(--intent-green)]"
                         : "bg-[var(--muted)] text-[var(--intent-text-secondary)]"
@@ -286,7 +286,7 @@ export default function MatchDetailPage({
               <Button
                 onClick={() => action.mutate("ACCEPTED")}
                 disabled={action.isPending}
-                className="h-12 flex-1 rounded-xl bg-[var(--intent-amber)] text-[15px] font-semibold text-white hover:bg-[var(--intent-amber-light)]"
+                className="h-12 flex-1 rounded-xl bg-[var(--intent-navy)] text-[15px] font-semibold text-white hover:bg-[var(--intent-navy-light)]"
               >
                 <Check size={18} className="mr-2" />
                 Accept
@@ -313,7 +313,7 @@ export default function MatchDetailPage({
           {isActive && match.conversationId && (
             <Button
               onClick={() => router.push(`/chats/${match.conversationId}`)}
-              className="h-12 w-full rounded-xl bg-[var(--intent-amber)] text-[15px] font-semibold text-white hover:bg-[var(--intent-amber-light)]"
+              className="h-12 w-full rounded-xl bg-[var(--intent-navy)] text-[15px] font-semibold text-white hover:bg-[var(--intent-navy-light)]"
             >
               <MessageCircle size={18} className="mr-2" />
               Open Chat

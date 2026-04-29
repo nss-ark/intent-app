@@ -34,14 +34,14 @@ export function NudgeRow({
       onClick={() => onClick?.(id)}
       className={cn(
         "w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors",
-        "hover:bg-[#F5EDE0]/40 active:bg-[#F5EDE0]/60",
-        !isRead && "bg-[#F5EDE0]/20",
+        "hover:bg-[#E8EFF7]/40 active:bg-[#E8EFF7]/60",
+        !isRead && "bg-[#E8EFF7]/20",
         className
       )}
     >
       {/* Avatar */}
       <div className="relative shrink-0">
-        <div className="w-12 h-12 rounded-full overflow-hidden bg-[#F2EFE8]">
+        <div className="w-12 h-12 rounded-full overflow-hidden bg-[#EDF0F5]">
           {senderPhotoUrl ? (
             <img
               src={senderPhotoUrl}
@@ -55,7 +55,7 @@ export function NudgeRow({
           )}
         </div>
         {!isRead && (
-          <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-[#B8762A] ring-2 ring-white" />
+          <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-[#1B3A5F] ring-2 ring-white" />
         )}
       </div>
 
@@ -82,7 +82,7 @@ export function NudgeRow({
         </div>
 
         {/* Signal tag */}
-        <p className="text-xs font-medium text-[#B8762A] mb-1 truncate">
+        <p className="text-xs font-medium text-[#1B3A5F] mb-1 truncate">
           <span className="mr-0.5">&#x2193;</span>
           {signal}
         </p>
