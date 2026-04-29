@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { apiSuccess, apiError, parseBody } from "@/lib/api-helpers";
-import { sendEmailAsync, welcomeEmail } from "@/lib/email";
+import { sendEmail, welcomeEmail } from "@/lib/email";
 
 const verifySchema = z.object({
   email: z.string().email(),
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
     if (user) {
       const template = welcomeEmail(user.fullName, user.tenant.displayName);
-      sendEmailAsync({ ...template, to: normalizedEmail });
+      await sendEmail({ ...template, to: normalizedEmail });
     }
 
     return apiSuccess({ verified: true });

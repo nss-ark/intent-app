@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { apiSuccess, apiError, parseBody } from "@/lib/api-helpers";
-import { sendEmailAsync, otpEmail } from "@/lib/email";
+import { sendEmail, otpEmail } from "@/lib/email";
 
 const resendSchema = z.object({
   email: z.string().email(),
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
     const template = otpEmail(user.fullName, otpCode);
-    sendEmailAsync({ ...template, to: normalizedEmail });
+    await sendEmail({ ...template, to: normalizedEmail });
 
     return apiSuccess({ sent: true });
   } catch (error) {
