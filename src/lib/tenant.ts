@@ -5,6 +5,9 @@ import type { AuthSession } from "@/lib/api-helpers";
  * In the future, this may resolve from subdomain for Postgres schema-per-tenant.
  */
 export function getTenantId(session: AuthSession): string {
+  if (!session.user.tenantId) {
+    throw new Error("No tenantId available for this session");
+  }
   return session.user.tenantId;
 }
 

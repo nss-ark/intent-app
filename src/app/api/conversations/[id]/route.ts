@@ -82,6 +82,8 @@ export const GET = withAuth(async (request, context, session) => {
       userBId: conversation.userBId,
       createdAt: conversation.createdAt,
       lastMessageAt: conversation.lastMessageAt,
+      matchId: conversation.matchId ?? null,
+      originatedFromNudgeId: conversation.originatedFromNudgeId ?? null,
       otherUser,
       messages: {
         items: messages,

@@ -94,6 +94,7 @@ async function getDemoSession(): Promise<AuthSession | null> {
         name: user.fullName,
         role: "OWNER", // Demo mode: grant admin access for full app testing
         tenantId: user.tenantId,
+        isSuperAdmin: false,
       },
       expires: new Date(Date.now() + 86400000).toISOString(),
     };
@@ -135,6 +136,28 @@ export function withAdminAuth(handler: AuthenticatedHandler, requiredRoles?: str
     const roles = requiredRoles ?? ADMIN_ROLES;
     if (!roles.includes(session.user.role)) {
       return apiError("FORBIDDEN", "Admin access required", 403);
+    }
+    return handler(request, context, session);
+  });
+}
+
+const SUPER_ADMIN_ROLES = ["SUPER_ADMIN", "SUPPORT", "FINANCE", "READ_ONLY"];
+
+/**
+ * Wraps a route handler to require superadmin authentication.
+ * Optionally restrict to specific superadmin roles.
+ */
+export function withSuperAdminAuth(
+  handler: AuthenticatedHandler,
+  requiredRoles?: string[]
+) {
+  return withAuth(async (request, context, session) => {
+    if (!(session.user as any).isSuperAdmin) {
+      return apiError("FORBIDDEN", "SuperAdmin access required", 403);
+    }
+    const roles = requiredRoles ?? SUPER_ADMIN_ROLES;
+    if (!roles.includes(session.user.role)) {
+      return apiError("FORBIDDEN", "Insufficient superadmin privileges", 403);
     }
     return handler(request, context, session);
   });

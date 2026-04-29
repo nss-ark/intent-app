@@ -144,19 +144,20 @@ export default function ConversationDetailPage() {
         </div>
       </header>
 
-      {/* ── Mentorship banner ───────────────────────────────────────── */}
-      <div className="flex items-center justify-center gap-1.5 border-b border-[var(--intent-text-tertiary)] bg-[var(--intent-amber-subtle)]/60 px-4 py-2">
-        <span className="text-[13px] text-[var(--intent-text-secondary)]">
-          You&apos;re in an active mentorship
-        </span>
-        <span className="text-[13px] text-[var(--intent-text-secondary)]">&middot;</span>
-        <button
-          type="button"
-          className="text-[13px] font-medium text-[var(--intent-amber)] hover:underline"
-        >
-          See goals
-        </button>
-      </div>
+      {/* ── Context banner ────────────────────────────────────────── */}
+      {conversation?.matchId ? (
+        <div className="flex items-center justify-center gap-1.5 border-b border-[var(--intent-text-tertiary)] bg-[var(--intent-amber-subtle)]/60 px-4 py-2">
+          <span className="text-[13px] text-[var(--intent-text-secondary)]">
+            Connected via match
+          </span>
+        </div>
+      ) : conversation?.originatedFromNudgeId ? (
+        <div className="flex items-center justify-center gap-1.5 border-b border-[var(--intent-text-tertiary)] bg-[var(--intent-amber-subtle)]/60 px-4 py-2">
+          <span className="text-[13px] text-[var(--intent-text-secondary)]">
+            Connected via nudge
+          </span>
+        </div>
+      ) : null}
 
       {/* ── Message area ────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide">

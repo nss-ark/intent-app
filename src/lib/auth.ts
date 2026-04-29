@@ -13,7 +13,8 @@ declare module "next-auth" {
       email: string;
       name: string;
       role: string;
-      tenantId: string;
+      tenantId: string | null;
+      isSuperAdmin: boolean;
     };
   }
 
@@ -22,7 +23,8 @@ declare module "next-auth" {
     email: string;
     name: string;
     role: string;
-    tenantId: string;
+    tenantId: string | null;
+    isSuperAdmin: boolean;
   }
 }
 
@@ -32,7 +34,8 @@ declare module "next-auth/jwt" {
     email: string;
     name: string;
     role: string;
-    tenantId: string;
+    tenantId: string | null;
+    isSuperAdmin: boolean;
   }
 }
 
@@ -91,6 +94,56 @@ const providers: NextAuthOptions["providers"] = [
         name: user.fullName,
         role,
         tenantId: user.tenantId,
+        isSuperAdmin: false,
+      };
+    },
+  }),
+
+  CredentialsProvider({
+    id: "superadmin-credentials",
+    name: "SuperAdmin Credentials",
+    credentials: {
+      email: { label: "Email", type: "email" },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      if (!credentials?.email || !credentials?.password) {
+        throw new Error("Email and password are required");
+      }
+
+      const superAdmin = await db.superAdmin.findUnique({
+        where: { email: credentials.email.toLowerCase().trim() },
+      });
+
+      if (!superAdmin) {
+        throw new Error("Invalid email or password");
+      }
+
+      if (!superAdmin.hashedPassword) {
+        throw new Error("Invalid email or password");
+      }
+
+      const isPasswordValid = await compare(
+        credentials.password,
+        superAdmin.hashedPassword
+      );
+
+      if (!isPasswordValid) {
+        throw new Error("Invalid email or password");
+      }
+
+      await db.superAdmin.update({
+        where: { id: superAdmin.id },
+        data: { lastLoginAt: new Date() },
+      });
+
+      return {
+        id: superAdmin.id,
+        email: superAdmin.email,
+        name: superAdmin.name,
+        role: superAdmin.role,
+        tenantId: null,
+        isSuperAdmin: true,
       };
     },
   }),
@@ -157,6 +210,7 @@ async function findOrCreateOAuthUser(
       name: existing.fullName,
       role: existing.adminUser?.role ?? "USER",
       tenantId: existing.tenantId,
+      isSuperAdmin: false,
     };
   }
 
@@ -204,6 +258,7 @@ async function findOrCreateOAuthUser(
     name: newUser.fullName,
     role: "USER",
     tenantId: newUser.tenantId,
+    isSuperAdmin: false,
   };
 }
 
@@ -218,7 +273,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account }) {
       // Credentials are already handled by authorize()
-      if (account?.provider === "credentials") return true;
+      if (account?.provider === "credentials" || account?.provider === "superadmin-credentials") return true;
 
       // OAuth sign-in — find or create user
       if (account && user.email) {
@@ -235,6 +290,7 @@ export const authOptions: NextAuthOptions = {
           user.role = dbUser.role;
           user.tenantId = dbUser.tenantId;
           user.name = dbUser.name;
+          user.isSuperAdmin = false;
           return true;
         } catch (err) {
           const message = err instanceof Error ? err.message : "Sign in failed";
@@ -251,7 +307,8 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email;
         token.name = user.name;
         token.role = user.role;
-        token.tenantId = user.tenantId;
+        token.tenantId = user.tenantId ?? null;
+        token.isSuperAdmin = (user as any).isSuperAdmin ?? false;
       }
       return token;
     },
@@ -263,6 +320,7 @@ export const authOptions: NextAuthOptions = {
         name: token.name,
         role: token.role,
         tenantId: token.tenantId,
+        isSuperAdmin: token.isSuperAdmin ?? false,
       };
       return session;
     },

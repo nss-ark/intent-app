@@ -21,6 +21,8 @@ export interface ConversationItem {
   id: string;
   createdAt: string;
   lastMessageAt: string | null;
+  matchId: string | null;
+  originatedFromNudgeId: string | null;
   otherUser: ConversationUser;
   lastMessage: MessageItem | null;
   unreadCount: number;
@@ -55,6 +57,8 @@ interface ConversationDetail {
   userBId: string;
   createdAt: string;
   lastMessageAt: string | null;
+  matchId: string | null;
+  originatedFromNudgeId: string | null;
   otherUser: ConversationUser;
   messages: PaginatedMessages;
 }

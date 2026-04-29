@@ -13,8 +13,11 @@ import {
   Eye,
   Star,
   Loader2,
+  Users,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { apiFetch } from "@/hooks/use-api";
 import { AvatarPlaceholder } from "@/components/avatar-placeholder";
 import { Button } from "@/components/ui/button";
 
@@ -113,6 +116,16 @@ function ActivityRow({
 
 export default function MyProfilePage() {
   const { data: user, isLoading, isError } = useCurrentUser();
+
+  const { data: mentorshipData } = useQuery<{
+    items: unknown[];
+    total: number;
+  }>({
+    queryKey: ["mentorships", "active"],
+    queryFn: () => apiFetch("/api/mentorships?status=ACTIVE&pageSize=1"),
+    enabled: !!user,
+  });
+  const mentorshipCount = mentorshipData?.total ?? 0;
 
   if (isLoading) {
     return (
@@ -281,6 +294,45 @@ export default function MyProfilePage() {
               label={mutualSignals.length === 1 ? "Mutual" : "Mutuals"}
               color="neutral"
             />
+          </div>
+        </div>
+
+        {/* Active Mentorships */}
+        <div className="mt-6">
+          <h3 className="mb-2 text-[13px] font-semibold uppercase tracking-wider text-[var(--intent-text-secondary)]">
+            Active Mentorships
+          </h3>
+          <div className="overflow-hidden rounded-2xl bg-white shadow-[var(--card-shadow)]">
+            {mentorshipCount > 0 ? (
+              <Link
+                href="/matching/mentorship"
+                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--intent-amber-subtle)]/40"
+              >
+                <Users
+                  size={18}
+                  strokeWidth={1.5}
+                  className="text-[var(--intent-amber)]"
+                />
+                <span className="flex-1 text-[14px] text-[var(--intent-text-primary)]">
+                  <span className="font-semibold">{mentorshipCount}</span>{" "}
+                  {mentorshipCount === 1 ? "mentorship" : "mentorships"}
+                </span>
+                <span className="mr-1 text-[13px] font-medium text-[var(--intent-amber)]">
+                  View All
+                </span>
+                <ChevronRight
+                  size={18}
+                  strokeWidth={1.5}
+                  className="text-[var(--intent-text-secondary)]"
+                />
+              </Link>
+            ) : (
+              <div className="px-4 py-3">
+                <p className="text-[13px] text-[var(--intent-text-secondary)]">
+                  No active mentorships
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

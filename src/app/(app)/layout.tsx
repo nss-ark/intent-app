@@ -2,19 +2,24 @@
 
 import { usePathname } from "next/navigation";
 import { BottomTabBar } from "@/components/bottom-tab-bar";
+import { AppHeader } from "@/components/app-header";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Hide the bottom tab bar on conversation detail pages (/chats/[conversationId])
+  // Hide navigation on conversation detail pages (/chats/[conversationId])
   const isConversationDetail =
     pathname?.startsWith("/chats/") && pathname !== "/chats";
 
   return (
     <div className="relative min-h-screen bg-[var(--intent-bg)]">
-      {/* Main content with bottom padding for tab bar (skip when tab bar is hidden) */}
-      <main className={isConversationDetail ? "" : "pb-20"}>{children}</main>
-      {/* Sticky bottom navigation — hidden on conversation detail */}
+      {/* Sticky header with logo, nav (desktop), chat & notification icons */}
+      {!isConversationDetail && <AppHeader />}
+      {/* Main content with bottom padding for mobile tab bar */}
+      <main className={isConversationDetail ? "" : "pb-20 md:pb-0"}>
+        {children}
+      </main>
+      {/* Mobile bottom tab bar — hidden on desktop and conversation detail */}
       {!isConversationDetail && <BottomTabBar />}
     </div>
   );

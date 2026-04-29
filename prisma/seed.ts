@@ -436,6 +436,356 @@ async function main() {
   }
   console.log("  Created Career Fork survey with 7 questions");
 
+  // ─── SuperAdmin ────────────────────────────────────────────────────
+  const superAdminPassword = await hash("superadmin123", 12);
+  await db.superAdmin.create({
+    data: {
+      id: uuid(),
+      email: "admin@complyark.com",
+      name: "Platform Admin",
+      hashedPassword: superAdminPassword,
+      role: "SUPER_ADMIN",
+    },
+  });
+  console.log("  Created SuperAdmin: admin@complyark.com");
+
+  // ─── Matching Configs ──────────────────────────────────────────────
+  const matchingConfigs = [
+    { matchType: "ONE_TO_ONE", frequency: "WEEKLY", isEnabled: true },
+    { matchType: "GROUP", frequency: "WEEKLY", isEnabled: true },
+    { matchType: "MENTORSHIP", frequency: "BIWEEKLY", isEnabled: true },
+  ];
+  for (const mc of matchingConfigs) {
+    await db.matchingConfig.create({
+      data: {
+        id: uuid(),
+        tenantId: tenant.id,
+        matchType: mc.matchType,
+        frequency: mc.frequency,
+        isEnabled: mc.isEnabled,
+      },
+    });
+  }
+  console.log("  Created 3 matching configs");
+
+  // ─── Niche Group Conversations ────────────────────────────────────
+  const allNiches = await db.niche.findMany();
+  for (const niche of allNiches) {
+    await db.groupConversation.create({
+      data: {
+        id: uuid(),
+        name: niche.displayName,
+        nicheId: niche.id,
+      },
+    });
+  }
+  console.log(`  Created ${allNiches.length} niche group conversations`);
+
+  // ─── Mock Matching Run ─────────────────────────────────────────────
+  const matchingRunId = uuid();
+  await db.matchingRun.create({
+    data: {
+      id: matchingRunId,
+      matchType: "ONE_TO_ONE",
+      status: "COMPLETED",
+      completedAt: new Date(),
+      usersConsidered: 6,
+      matchesCreated: 4,
+    },
+  });
+
+  // ─── 1:1 Matches ──────────────────────────────────────────────────
+  const arjun = userIds["arjun.mehta@isb.edu"];
+  const ananya = userIds["ananya.krishnan@isb.edu"];
+  const vikram = userIds["vikram.subramanian@isb.edu"];
+  const priya = userIds["priya.reddy@isb.edu"];
+  const rohan = userIds["rohan.kapoor@isb.edu"];
+  const rajesh = userIds["rajesh.iyer@isb.edu"];
+
+  // Match 1: Arjun <-> Ananya (pending — Arjun seeks mentor, Ananya offers)
+  await db.match.create({
+    data: {
+      id: uuid(), matchType: "ONE_TO_ONE", userAId: arjun, userBId: ananya,
+      status: "NOTIFIED", userAStatus: "PENDING", userBStatus: "PENDING",
+      matchScore: 0.87, matchReason: "Shared interest in Climate, Complementary signals: seek_mentor ↔ offer_mentor",
+      matchingRunId, notifiedAt: new Date(Date.now() - 2 * 3600000),
+    },
+  });
+
+  // Match 2: Arjun <-> Vikram (active — both accepted, conversation created)
+  const match2Id = uuid();
+  const conv2Id = uuid();
+  await db.match.create({
+    data: {
+      id: match2Id, matchType: "ONE_TO_ONE", userAId: arjun, userBId: vikram,
+      status: "ACTIVE", userAStatus: "ACCEPTED", userBStatus: "ACCEPTED",
+      matchScore: 0.92, matchReason: "Shared niche: Fintech, Both in Tech/Product domain, Cofounder search signal",
+      matchingRunId, notifiedAt: new Date(Date.now() - 48 * 3600000),
+      acceptedAt: new Date(Date.now() - 24 * 3600000),
+    },
+  });
+  await db.conversation.create({
+    data: {
+      id: conv2Id, userAId: arjun, userBId: vikram, matchId: match2Id,
+      lastMessageAt: new Date(Date.now() - 2 * 3600000),
+    },
+  });
+  await db.message.create({
+    data: {
+      id: uuid(), conversationId: conv2Id, senderUserId: vikram,
+      body: "Hey Arjun! Great to be matched. I saw you're interested in fintech and looking for a co-founder. I'm building fraud detection at FinAxis — would love to chat about your ideas.",
+      sentAt: new Date(Date.now() - 22 * 3600000),
+    },
+  });
+  await db.message.create({
+    data: {
+      id: uuid(), conversationId: conv2Id, senderUserId: arjun,
+      body: "Vikram! This is exactly the kind of connection I was hoping for. I've been thinking about embedded lending products — your fraud detection angle is fascinating. Free this week?",
+      sentAt: new Date(Date.now() - 20 * 3600000),
+    },
+  });
+  await db.message.create({
+    data: {
+      id: uuid(), conversationId: conv2Id, senderUserId: vikram,
+      body: "Absolutely. How about Thursday afternoon? We can grab coffee at the campus cafe.",
+      sentAt: new Date(Date.now() - 2 * 3600000),
+    },
+  });
+
+  // Match 3: Mentorship — Priya <-> Rohan (pending for Priya)
+  await db.match.create({
+    data: {
+      id: uuid(), matchType: "MENTORSHIP", userAId: priya, userBId: rohan,
+      status: "NOTIFIED", userAStatus: "PENDING", userBStatus: "ACCEPTED",
+      matchScore: 0.81, matchReason: "Priya seeks mentor for career switch to VC, Rohan offers mentorship in PE/VC",
+      matchingRunId, notifiedAt: new Date(Date.now() - 6 * 3600000),
+    },
+  });
+
+  // Match 4: Completed — Rajesh <-> Arjun (completed mentorship)
+  const match4Id = uuid();
+  const conv4Id = uuid();
+  await db.match.create({
+    data: {
+      id: match4Id, matchType: "MENTORSHIP", userAId: rajesh, userBId: arjun,
+      status: "COMPLETED", userAStatus: "ACCEPTED", userBStatus: "ACCEPTED",
+      matchScore: 0.79, matchReason: "Arjun exploring consulting to operations switch, Rajesh experienced in same transition",
+      matchingRunId, notifiedAt: new Date(Date.now() - 30 * 24 * 3600000),
+      acceptedAt: new Date(Date.now() - 28 * 24 * 3600000),
+      completedAt: new Date(Date.now() - 3 * 24 * 3600000),
+    },
+  });
+  await db.conversation.create({
+    data: {
+      id: conv4Id, userAId: rajesh, userBId: arjun, matchId: match4Id,
+      lastMessageAt: new Date(Date.now() - 3 * 24 * 3600000),
+    },
+  });
+  await db.mentorship.create({
+    data: {
+      id: uuid(), conversationId: conv4Id, mentorUserId: rajesh, menteeUserId: arjun,
+      proposedByUserId: rajesh, matchId: match4Id, status: "COMPLETED",
+      goal: "Navigate the consulting-to-operations career transition",
+      cadence: "EVERY_2_WEEKS", startedAt: new Date(Date.now() - 28 * 24 * 3600000),
+      endedAt: new Date(Date.now() - 3 * 24 * 3600000), completionReason: "Goal achieved",
+    },
+  });
+  console.log("  Created 4 mock matches (1 pending, 1 active with chat, 1 mentorship pending, 1 completed)");
+
+  // ─── Group Match ───────────────────────────────────────────────────
+  const groupMatch1Id = uuid();
+  const groupConv1Id = uuid();
+  await db.groupMatch.create({
+    data: {
+      id: groupMatch1Id, status: "ACTIVE", matchScore: 0.85,
+      matchReason: "Fintech enthusiasts group — shared niche and complementary experience levels",
+      matchingRunId, groupSize: 3, activatedAt: new Date(Date.now() - 5 * 24 * 3600000),
+    },
+  });
+  // Link to fintech niche
+  await db.groupMatchNiche.create({
+    data: { groupMatchId: groupMatch1Id, nicheId: niches["fintech"] },
+  });
+  // Add members
+  for (const uid of [arjun, vikram, priya]) {
+    await db.groupMatchMember.create({
+      data: { groupMatchId: groupMatch1Id, userId: uid, status: "ACCEPTED", fitScore: 0.85, respondedAt: new Date() },
+    });
+  }
+  // Create group conversation
+  await db.groupConversation.create({
+    data: { id: groupConv1Id, name: "Fintech Circle", groupMatchId: groupMatch1Id, lastMessageAt: new Date(Date.now() - 3600000) },
+  });
+  for (const uid of [arjun, vikram, priya]) {
+    await db.groupConversationMember.create({
+      data: { groupConversationId: groupConv1Id, userId: uid },
+    });
+  }
+  await db.groupMessage.create({
+    data: { id: uuid(), groupConversationId: groupConv1Id, senderUserId: vikram, body: "Welcome to the Fintech Circle! Excited to have this group together. Anyone following the new UPI regulations?", sentAt: new Date(Date.now() - 24 * 3600000) },
+  });
+  await db.groupMessage.create({
+    data: { id: uuid(), groupConversationId: groupConv1Id, senderUserId: priya, body: "Yes! The impact on cross-border payments is going to be massive. Would love to discuss the implications for lending.", sentAt: new Date(Date.now() - 12 * 3600000) },
+  });
+  await db.groupMessage.create({
+    data: { id: uuid(), groupConversationId: groupConv1Id, senderUserId: arjun, body: "Count me in. I've been digging into embedded finance models — we should do a knowledge share session.", sentAt: new Date(Date.now() - 3600000) },
+  });
+
+  // Group match 2: Pending (Climate group)
+  const groupMatch2Id = uuid();
+  await db.groupMatch.create({
+    data: {
+      id: groupMatch2Id, status: "NOTIFIED", matchScore: 0.78,
+      matchReason: "Climate-tech group — shared niche in sustainability and climate innovation",
+      matchingRunId, groupSize: 3,
+    },
+  });
+  await db.groupMatchNiche.create({
+    data: { groupMatchId: groupMatch2Id, nicheId: niches["climate"] },
+  });
+  await db.groupMatchMember.create({
+    data: { groupMatchId: groupMatch2Id, userId: arjun, status: "ACCEPTED", fitScore: 0.80, respondedAt: new Date() },
+  });
+  await db.groupMatchMember.create({
+    data: { groupMatchId: groupMatch2Id, userId: ananya, status: "PENDING", fitScore: 0.82 },
+  });
+  await db.groupMatchMember.create({
+    data: { groupMatchId: groupMatch2Id, userId: priya, status: "PENDING", fitScore: 0.75 },
+  });
+  console.log("  Created 2 group matches (1 active with chat, 1 pending)");
+
+  // ─── Feed Posts ────────────────────────────────────────────────────
+  const post1Id = uuid();
+  const post2Id = uuid();
+  const post3Id = uuid();
+  const post4Id = uuid();
+  const post5Id = uuid();
+
+  await db.post.create({
+    data: {
+      id: post1Id, authorId: arjun, feedType: "CAMPUS", body: "Anyone else attending the fintech workshop this Thursday? Heard the speaker from Razorpay is going to talk about the future of UPI 3.0. Would be great to grab lunch after and discuss.", status: "ACTIVE",
+      createdAt: new Date(Date.now() - 2 * 3600000),
+    },
+  });
+  await db.postReply.create({ data: { id: uuid(), postId: post1Id, authorId: priya, body: "I'll be there! Let's definitely connect after. I have some questions about their international expansion.", createdAt: new Date(Date.now() - 1.5 * 3600000) } });
+  await db.postReply.create({ data: { id: uuid(), postId: post1Id, authorId: vikram, body: "Can't make it in person but would love a recap. Maybe someone can post key takeaways here?", createdAt: new Date(Date.now() - 1 * 3600000) } });
+
+  await db.post.create({
+    data: {
+      id: post2Id, authorId: priya, feedType: "CAMPUS", body: "Study group for the Operations Management midterm? Thinking we meet at the library tomorrow at 6pm. DM me if interested — I have notes from last year's exam.", status: "ACTIVE",
+      createdAt: new Date(Date.now() - 8 * 3600000),
+    },
+  });
+  await db.postReply.create({ data: { id: uuid(), postId: post2Id, authorId: arjun, body: "Count me in! I'll bring the coffee ☕", createdAt: new Date(Date.now() - 7 * 3600000) } });
+
+  await db.post.create({
+    data: {
+      id: post3Id, authorId: ananya, feedType: "NETWORK", body: "We just closed a Series A for an incredible climate-tech startup out of Bangalore. The founders are ISB alumni (Class of 2019). Proud of this community — the ISB network in climate keeps growing. Happy to make introductions for anyone interested in the space.", status: "ACTIVE",
+      createdAt: new Date(Date.now() - 24 * 3600000),
+    },
+  });
+  await db.postReply.create({ data: { id: uuid(), postId: post3Id, authorId: rohan, body: "Congratulations Ananya! We looked at this deal too — fantastic team. The ISB climate network is really something special.", createdAt: new Date(Date.now() - 20 * 3600000) } });
+  await db.postReply.create({ data: { id: uuid(), postId: post3Id, authorId: arjun, body: "This is inspiring! Would love an intro to the founders. I'm exploring climate-fintech intersections for my thesis.", createdAt: new Date(Date.now() - 18 * 3600000) } });
+  await db.postReply.create({ data: { id: uuid(), postId: post3Id, authorId: rajesh, body: "Great to see the network creating real value. Would be happy to share some operational scaling insights if the founders need it.", createdAt: new Date(Date.now() - 12 * 3600000) } });
+
+  await db.post.create({
+    data: {
+      id: post4Id, authorId: rajesh, feedType: "NETWORK", body: "Reflecting on 15 years post-ISB: the single best career decision I made was moving from consulting to an operating role. It was terrifying at the time, but the learning curve in Year 1 as a COO was steeper than 5 years of strategy work. Happy to chat with anyone considering the same leap.", status: "ACTIVE",
+      createdAt: new Date(Date.now() - 48 * 3600000),
+    },
+  });
+  await db.postReply.create({ data: { id: uuid(), postId: post4Id, authorId: priya, body: "This resonates so much. I'm at that exact crossroads right now. Would love to hear more about how you made the decision.", createdAt: new Date(Date.now() - 44 * 3600000) } });
+  await db.postReply.create({ data: { id: uuid(), postId: post4Id, authorId: vikram, body: "Can confirm. Made a similar move from consulting to founding. The first 6 months are brutal but transformative.", createdAt: new Date(Date.now() - 40 * 3600000) } });
+
+  await db.post.create({
+    data: {
+      id: post5Id, authorId: rohan, feedType: "NETWORK", body: "We're hiring a VP of Growth at one of our portfolio companies (B2B SaaS, Series B, Bangalore). ISB alumni preferred. Strong unit economics, 3x ARR growth. DM me for details.", status: "ACTIVE",
+      createdAt: new Date(Date.now() - 72 * 3600000),
+    },
+  });
+  await db.postReply.create({ data: { id: uuid(), postId: post5Id, authorId: ananya, body: "Shared with a couple of people from our network who might be a fit. Great opportunity!", createdAt: new Date(Date.now() - 68 * 3600000) } });
+
+  console.log("  Created 5 feed posts with replies (2 Campus, 3 Network)");
+
+  // ─── Events / Activities ───────────────────────────────────────────
+  const event1Id = uuid();
+  const event2Id = uuid();
+  const event3Id = uuid();
+  const event4Id = uuid();
+
+  // Public event by user
+  await db.event.create({
+    data: {
+      id: event1Id, title: "Fintech Founders Fireside Chat", description: "An informal evening with fintech founders from the ISB network. Hear about their journeys, failures, and what they wish they knew before starting. Open to all students and alumni.",
+      source: "USER_CREATED", eventType: "TALK", startsAt: new Date(Date.now() + 3 * 24 * 3600000),
+      endsAt: new Date(Date.now() + 3 * 24 * 3600000 + 2 * 3600000),
+      isPublished: true, visibility: "PUBLIC", createdByUserId: vikram, location: "LRC Auditorium, ISB Hyderabad",
+      capacity: 50,
+    },
+  });
+  await db.eventNiche.create({ data: { eventId: event1Id, nicheId: niches["fintech"] } });
+  await db.eventRsvp.create({ data: { id: uuid(), eventId: event1Id, userId: arjun, status: "ATTENDING" } });
+  await db.eventRsvp.create({ data: { id: uuid(), eventId: event1Id, userId: priya, status: "ATTENDING" } });
+  await db.eventRsvp.create({ data: { id: uuid(), eventId: event1Id, userId: ananya, status: "ATTENDING" } });
+
+  // Private event
+  await db.event.create({
+    data: {
+      id: event2Id, title: "Climate VC Deal Review (Invite Only)", description: "Monthly deal review session for climate-focused investors. We'll review 3 deals in pipeline and discuss market trends.",
+      source: "USER_CREATED", eventType: "WORKSHOP", startsAt: new Date(Date.now() + 7 * 24 * 3600000),
+      endsAt: new Date(Date.now() + 7 * 24 * 3600000 + 3 * 3600000),
+      isPublished: true, visibility: "PRIVATE", createdByUserId: ananya, location: "Zoom (link shared on invite)",
+      capacity: 12,
+    },
+  });
+  await db.eventNiche.create({ data: { eventId: event2Id, nicheId: niches["climate"] } });
+  await db.eventInvite.create({ data: { id: uuid(), eventId: event2Id, inviterId: ananya, inviteeId: rohan, status: "ACCEPTED" } });
+  await db.eventInvite.create({ data: { id: uuid(), eventId: event2Id, inviterId: ananya, inviteeId: arjun, status: "PENDING" } });
+
+  // Public campus event
+  await db.event.create({
+    data: {
+      id: event3Id, title: "Weekend Cricket Match - ISB vs Faculty", description: "Annual cricket match between students and faculty. Come cheer or play! Sign up in comments. Refreshments provided.",
+      source: "USER_CREATED", eventType: "OTHER", startsAt: new Date(Date.now() + 5 * 24 * 3600000),
+      endsAt: new Date(Date.now() + 5 * 24 * 3600000 + 4 * 3600000),
+      isPublished: true, visibility: "PUBLIC", createdByUserId: arjun, location: "ISB Cricket Ground",
+      capacity: 100,
+    },
+  });
+  await db.eventRsvp.create({ data: { id: uuid(), eventId: event3Id, userId: priya, status: "ATTENDING" } });
+  await db.eventRsvp.create({ data: { id: uuid(), eventId: event3Id, userId: vikram, status: "ATTENDING" } });
+
+  // Networking dinner
+  await db.event.create({
+    data: {
+      id: event4Id, title: "Alumni Networking Dinner - Mumbai Chapter", description: "Quarterly dinner for ISB Mumbai alumni. Great food, better conversations. Bring a plus-one who might be interested in ISB.",
+      source: "USER_CREATED", eventType: "DINNER", startsAt: new Date(Date.now() + 14 * 24 * 3600000),
+      endsAt: new Date(Date.now() + 14 * 24 * 3600000 + 3 * 3600000),
+      isPublished: true, visibility: "PUBLIC", createdByUserId: rajesh, location: "The Table, Colaba, Mumbai",
+      capacity: 30,
+    },
+  });
+  await db.eventRsvp.create({ data: { id: uuid(), eventId: event4Id, userId: rohan, status: "ATTENDING" } });
+  await db.eventRsvp.create({ data: { id: uuid(), eventId: event4Id, userId: vikram, status: "ATTENDING" } });
+  await db.eventRsvp.create({ data: { id: uuid(), eventId: event4Id, userId: ananya, status: "ATTENDING" } });
+
+  console.log("  Created 4 events (2 public, 1 private, 1 dinner) with RSVPs and invites");
+
+  // ─── Notifications ─────────────────────────────────────────────────
+  await db.notification.create({
+    data: { id: uuid(), userId: arjun, type: "MATCH_CREATED", title: "New Match!", body: "You've been matched with Ananya Krishnan based on shared interests in Climate", relatedEntityType: "MATCH", createdAt: new Date(Date.now() - 2 * 3600000) },
+  });
+  await db.notification.create({
+    data: { id: uuid(), userId: arjun, type: "GROUP_MATCH_CREATED", title: "New Group Match!", body: "You've been added to the Climate-Tech group with 2 other members", relatedEntityType: "GROUP_MATCH", createdAt: new Date(Date.now() - 4 * 3600000) },
+  });
+  await db.notification.create({
+    data: { id: uuid(), userId: arjun, type: "EVENT_REMINDER", title: "Event This Week", body: "Fintech Founders Fireside Chat is in 3 days. Don't forget to RSVP!", relatedEntityType: "EVENT", relatedEntityId: event1Id, createdAt: new Date(Date.now() - 6 * 3600000) },
+  });
+  await db.notification.create({
+    data: { id: uuid(), userId: arjun, type: "NUDGE_RECEIVED", title: "New Nudge", body: "Priya Reddy wants to connect with you", createdAt: new Date(Date.now() - 12 * 3600000) },
+  });
+  console.log("  Created 4 notifications for Arjun (demo user)");
+
   console.log("\nSeeding complete!");
   await db.$disconnect();
 }

@@ -46,10 +46,13 @@ model Tenant {
 }
 
 model SuperAdmin {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  role      String   @default("SUPER_ADMIN") // SUPER_ADMIN | SUPPORT | FINANCE | READ_ONLY
-  createdAt DateTime @default(now())
+  id             String    @id @default(uuid())
+  email          String    @unique
+  name           String    @default("")
+  hashedPassword String?
+  role           String    @default("SUPER_ADMIN") // SUPER_ADMIN | SUPPORT | FINANCE | READ_ONLY
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
 
   @@map("super_admins")
 }
@@ -72,6 +75,7 @@ model User {
   program               String?
   hashedPassword        String?
   authProvider          String    @default("credentials") // credentials | google | microsoft
+  userType              String    @default("STUDENT") // STUDENT | ALUMNI
   tenantId              String
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -88,8 +92,6 @@ model User {
   linkedinLinks         LinkedinLink[]
   badges                UserBadge[]
   openSignals           UserOpenSignal[]
-  savedUsers            SavedUser[]         @relation("UserSaves")
-  savedByUsers          SavedUser[]         @relation("SavedByUsers")
   nudgesSent            Nudge[]             @relation("NudgeSender")
   nudgesReceived        Nudge[]             @relation("NudgeReceiver")
   nudgeRelationshipsAsSender   NudgeRelationship[] @relation("NudgeRelSender")
@@ -114,11 +116,22 @@ model User {
   verificationRequests  VerificationRequest[]
   consents              UserConsent[]
   dataSubjectRequests   DataSubjectRequest[]
-  resourceShelfItems    ResourceShelfItem[]
+  posts                 Post[]
+  postReplies           PostReply[]
+  postReports           PostReport[]         @relation("PostReporter")
+  matchesAsUserA        Match[]              @relation("MatchUserA")
+  matchesAsUserB        Match[]              @relation("MatchUserB")
+  groupMatchMemberships2 GroupMatchMember[]
+  groupConvMemberships  GroupConversationMember[]
+  groupMessagesSent     GroupMessage[]
+  eventsCreatedByUser   Event[]              @relation("EventCreatorUser")
+  eventInvitesSent      EventInvite[]        @relation("EventInviteSender")
+  eventInvitesReceived  EventInvite[]        @relation("EventInviteRecipient")
 
   @@index([tenantId])
   @@index([email])
   @@index([deletedAt])
+  @@index([userType])
   @@map("users")
 }
 
@@ -234,7 +247,10 @@ model Niche {
   position    Int     @default(0)
   isActive    Boolean @default(true)
 
-  userNiches UserNiche[]
+  userNiches      UserNiche[]
+  groupChat       GroupConversation?
+  groupMatchLinks GroupMatchNiche[]
+  eventLinks      EventNiche[]
 
   @@map("niches")
 }
@@ -356,21 +372,6 @@ model UserOpenSignal {
 // CONNECTION LAYER
 // ─────────────────────────────────────────────
 
-model SavedUser {
-  id          String   @id @default(uuid())
-  userId      String
-  savedUserId String
-  note        String?
-  createdAt   DateTime @default(now())
-
-  user      User @relation("UserSaves", fields: [userId], references: [id], onDelete: Cascade)
-  savedUser User @relation("SavedByUsers", fields: [savedUserId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, savedUserId])
-  @@index([savedUserId])
-  @@map("saved_users")
-}
-
 model Nudge {
   id              String    @id @default(uuid())
   senderUserId    String
@@ -441,12 +442,14 @@ model Conversation {
   isArchivedByA        Boolean   @default(false)
   isArchivedByB        Boolean   @default(false)
   originatedFromNudgeId String?
+  matchId              String?   @unique
 
   userA      User        @relation("ConversationUserA", fields: [userAId], references: [id])
   userB      User        @relation("ConversationUserB", fields: [userBId], references: [id])
   messages   Message[]
   nudges     Nudge[]     @relation("NudgeConversation")
   mentorship Mentorship?
+  match      Match?      @relation(fields: [matchId], references: [id])
 
   @@unique([userAId, userBId])
   @@index([userBId])
@@ -479,6 +482,7 @@ model Mentorship {
   goal             String?
   cadence          String?   // EVERY_2_WEEKS | MONTHLY | AD_HOC
   proposedByUserId String
+  matchId          String?   @unique
   startedAt        DateTime?
   endedAt          DateTime?
   completionReason String?
@@ -487,6 +491,7 @@ model Mentorship {
   mentor       User               @relation("MentorUser", fields: [mentorUserId], references: [id])
   mentee       User               @relation("MenteeUser", fields: [menteeUserId], references: [id])
   proposedBy   User               @relation("MentorshipProposer", fields: [proposedByUserId], references: [id])
+  match        Match?             @relation(fields: [matchId], references: [id])
   sessions     MentorshipSession[]
 
   @@index([mentorUserId])
@@ -664,31 +669,39 @@ model Venue {
 // ─────────────────────────────────────────────
 
 model Event {
-  id                  String    @id @default(uuid())
-  title               String
-  description         String?
-  source              String    @default("ADMIN_ORGANIZED") // ADMIN_ORGANIZED | SYSTEM_GENERATED
-  eventType           String?   // PANEL | WORKSHOP | REUNION | DINNER | TALK
-  startsAt            DateTime
-  endsAt              DateTime?
-  timezone            String    @default("Asia/Kolkata")
-  venueId             String?
-  capacity            Int?
-  rsvpDeadline        DateTime?
-  isPublished         Boolean   @default(false)
-  createdByAdminId    String?
+  id                    String    @id @default(uuid())
+  title                 String
+  description           String?
+  source                String    @default("ADMIN_CREATED") // ADMIN_CREATED | USER_CREATED | SYSTEM_GENERATED
+  eventType             String?   // PANEL | WORKSHOP | REUNION | DINNER | TALK | MEETUP | OTHER
+  startsAt              DateTime
+  endsAt                DateTime?
+  timezone              String    @default("Asia/Kolkata")
+  venueId               String?
+  capacity              Int?
+  rsvpDeadline          DateTime?
+  isPublished           Boolean   @default(false)
+  visibility            String    @default("PUBLIC") // PUBLIC | PRIVATE
+  createdByAdminId      String?
+  createdByUserId       String?
   generatedFromMeetupId String?
-  coverImageUrl       String?
+  coverImageUrl         String?
+  location              String?
 
   venue          Venue?            @relation(fields: [venueId], references: [id])
   createdByAdmin AdminUser?        @relation("EventCreator", fields: [createdByAdminId], references: [id])
+  createdByUser  User?             @relation("EventCreatorUser", fields: [createdByUserId], references: [id])
   generatedFrom  Meetup?           @relation("EventFromMeetup", fields: [generatedFromMeetupId], references: [id])
   rsvps          EventRsvp[]
   attendances    EventAttendance[]
+  niches         EventNiche[]
+  invites        EventInvite[]
 
   @@index([venueId])
   @@index([startsAt])
   @@index([isPublished])
+  @@index([visibility])
+  @@index([createdByUserId])
   @@map("events")
 }
 
@@ -856,6 +869,9 @@ model AdminUser {
   meetupsOrganized        Meetup[]              @relation("MeetupOrganizer")
   eventsCreated           Event[]               @relation("EventCreator")
   dataSubjectRequests     DataSubjectRequest[]  @relation("DSRHandler")
+  postsRemoved            Post[]                @relation("PostRemover")
+  repliesRemoved          PostReply[]           @relation("ReplyRemover")
+  reportsReviewed         PostReport[]          @relation("ReportReviewer")
 
   @@index([tenantId])
   @@map("admin_users")
@@ -978,35 +994,289 @@ model DataSubjectRequest {
 }
 
 // ─────────────────────────────────────────────
-// RESOURCE SHELF
+// FEED / POSTS
 // ─────────────────────────────────────────────
 
-model ResourceCategory {
-  id          String  @id @default(uuid())
-  code        String  @unique
-  displayName String
-  isActive    Boolean @default(true)
+model Post {
+  id               String    @id @default(uuid())
+  authorId         String
+  feedType         String    // CAMPUS | NETWORK
+  body             String    // text-only, max 2000 chars
+  status           String    @default("ACTIVE") // ACTIVE | ARCHIVED | REMOVED
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  archivedAt       DateTime?
+  removedAt        DateTime?
+  removedByAdminId String?
 
-  items ResourceShelfItem[]
+  author         User        @relation(fields: [authorId], references: [id])
+  removedByAdmin AdminUser?  @relation("PostRemover", fields: [removedByAdminId], references: [id])
+  replies        PostReply[]
+  reports        PostReport[]
 
-  @@map("resource_categories")
+  @@index([authorId])
+  @@index([feedType])
+  @@index([status])
+  @@index([createdAt])
+  @@index([feedType, status, createdAt])
+  @@map("posts")
 }
 
-model ResourceShelfItem {
-  id              String   @id @default(uuid())
-  userId          String
-  categoryId      String
-  title           String
-  description     String?
-  canSharePointer Boolean  @default(false)
-  canRunSession   Boolean  @default(false)
-  tags            String?  // JSON array
-  createdAt       DateTime @default(now())
+model PostReply {
+  id               String    @id @default(uuid())
+  postId           String
+  authorId         String
+  body             String    // max 1000 chars
+  status           String    @default("ACTIVE") // ACTIVE | ARCHIVED | REMOVED
+  createdAt        DateTime  @default(now())
+  archivedAt       DateTime?
+  removedAt        DateTime?
+  removedByAdminId String?
 
-  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category ResourceCategory @relation(fields: [categoryId], references: [id])
+  post           Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author         User       @relation(fields: [authorId], references: [id])
+  removedByAdmin AdminUser? @relation("ReplyRemover", fields: [removedByAdminId], references: [id])
+  reports        PostReport[] @relation("ReplyReports")
 
+  @@index([postId])
+  @@index([authorId])
+  @@index([postId, createdAt])
+  @@map("post_replies")
+}
+
+model PostReport {
+  id                String    @id @default(uuid())
+  reporterId        String
+  postId            String?
+  replyId           String?
+  reason            String    // SPAM | HARASSMENT | INAPPROPRIATE | MISINFORMATION | OTHER
+  description       String?
+  status            String    @default("PENDING") // PENDING | REVIEWED | RESOLVED | DISMISSED
+  reviewedByAdminId String?
+  reviewedAt        DateTime?
+  adminNotes        String?
+  createdAt         DateTime  @default(now())
+
+  reporter        User       @relation("PostReporter", fields: [reporterId], references: [id])
+  post            Post?      @relation(fields: [postId], references: [id])
+  reply           PostReply? @relation("ReplyReports", fields: [replyId], references: [id])
+  reviewedByAdmin AdminUser? @relation("ReportReviewer", fields: [reviewedByAdminId], references: [id])
+
+  @@index([reporterId])
+  @@index([postId])
+  @@index([replyId])
+  @@index([status])
+  @@map("post_reports")
+}
+
+// ─────────────────────────────────────────────
+// MATCHING SYSTEM
+// ─────────────────────────────────────────────
+
+model Match {
+  id            String    @id @default(uuid())
+  matchType     String    // ONE_TO_ONE | MENTORSHIP
+  userAId       String
+  userBId       String
+  status        String    @default("PENDING") // PENDING | NOTIFIED | ACTIVE | COMPLETED | CANCELLED
+  userAStatus   String    @default("PENDING") // PENDING | ACCEPTED | DECLINED | EXPIRED
+  userBStatus   String    @default("PENDING") // PENDING | ACCEPTED | DECLINED | EXPIRED
+  matchScore    Float?
+  matchReason   String?   // JSON: shared signals, domains, niches
+  matchingRunId String?
+  notifiedAt    DateTime?
+  acceptedAt    DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  userA        User          @relation("MatchUserA", fields: [userAId], references: [id])
+  userB        User          @relation("MatchUserB", fields: [userBId], references: [id])
+  conversation Conversation?
+  mentorship   Mentorship?
+  matchingRun  MatchingRun?  @relation(fields: [matchingRunId], references: [id])
+
+  @@index([userAId])
+  @@index([userBId])
+  @@index([status])
+  @@index([matchType])
+  @@index([matchingRunId])
+  @@unique([userAId, userBId, matchingRunId])
+  @@map("matches")
+}
+
+model GroupMatch {
+  id            String    @id @default(uuid())
+  status        String    @default("PENDING") // PENDING | NOTIFIED | ACTIVE | COMPLETED | CANCELLED
+  matchScore    Float?
+  matchReason   String?   // JSON
+  matchingRunId String?
+  groupSize     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  activatedAt   DateTime?
+
+  members           GroupMatchMember[]
+  niches            GroupMatchNiche[]
+  groupConversation GroupConversation?
+  matchingRun       MatchingRun?       @relation(fields: [matchingRunId], references: [id])
+
+  @@index([status])
+  @@index([matchingRunId])
+  @@map("group_matches")
+}
+
+model GroupMatchMember {
+  groupMatchId String
+  userId       String
+  status       String    @default("PENDING") // PENDING | ACCEPTED | DECLINED | EXPIRED
+  notifiedAt   DateTime?
+  respondedAt  DateTime?
+  fitScore     Float?
+
+  groupMatch GroupMatch @relation(fields: [groupMatchId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@id([groupMatchId, userId])
   @@index([userId])
-  @@index([categoryId])
-  @@map("resource_shelf_items")
+  @@map("group_match_members")
+}
+
+model GroupMatchNiche {
+  groupMatchId String
+  nicheId      String
+
+  groupMatch GroupMatch @relation(fields: [groupMatchId], references: [id], onDelete: Cascade)
+  niche      Niche      @relation(fields: [nicheId], references: [id])
+
+  @@id([groupMatchId, nicheId])
+  @@index([nicheId])
+  @@map("group_match_niches")
+}
+
+model MatchingConfig {
+  id                    String    @id @default(uuid())
+  tenantId              String?
+  matchType             String    // ONE_TO_ONE | GROUP | MENTORSHIP
+  isEnabled             Boolean   @default(true)
+  frequency             String    @default("WEEKLY") // DAILY | WEEKLY | BIWEEKLY | MONTHLY
+  nextRunAt             DateTime?
+  lastRunAt             DateTime?
+  minMatchScore         Float     @default(0.5)
+  groupSizeMin          Int       @default(3)
+  groupSizeMax          Int       @default(6)
+  acceptanceWindowHours Int       @default(72)
+  matchesPerUserPerRun  Int       @default(1)
+  algorithmConfig       String?   // JSON: weights for domain, niche, signals
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([tenantId, matchType])
+  @@map("matching_configs")
+}
+
+model MatchingRun {
+  id              String    @id @default(uuid())
+  matchType       String    // ONE_TO_ONE | GROUP | MENTORSHIP
+  configId        String?
+  status          String    @default("RUNNING") // RUNNING | COMPLETED | FAILED
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+  usersConsidered Int       @default(0)
+  matchesCreated  Int       @default(0)
+  errorLog        String?   // JSON
+
+  matches      Match[]
+  groupMatches GroupMatch[]
+
+  @@index([status])
+  @@index([startedAt])
+  @@map("matching_runs")
+}
+
+// ─────────────────────────────────────────────
+// GROUP CONVERSATIONS
+// ─────────────────────────────────────────────
+
+model GroupConversation {
+  id            String    @id @default(uuid())
+  name          String?
+  groupMatchId  String?   @unique
+  nicheId       String?   @unique
+  createdAt     DateTime  @default(now())
+  lastMessageAt DateTime?
+
+  groupMatch GroupMatch?               @relation(fields: [groupMatchId], references: [id])
+  niche      Niche?                    @relation(fields: [nicheId], references: [id])
+  members    GroupConversationMember[]
+  messages   GroupMessage[]
+
+  @@index([lastMessageAt])
+  @@map("group_conversations")
+}
+
+model GroupConversationMember {
+  groupConversationId String
+  userId              String
+  joinedAt            DateTime  @default(now())
+  leftAt              DateTime?
+  isArchived          Boolean   @default(false)
+  lastReadAt          DateTime?
+
+  groupConversation GroupConversation @relation(fields: [groupConversationId], references: [id], onDelete: Cascade)
+  user              User             @relation(fields: [userId], references: [id])
+
+  @@id([groupConversationId, userId])
+  @@index([userId])
+  @@map("group_conversation_members")
+}
+
+model GroupMessage {
+  id                  String    @id @default(uuid())
+  groupConversationId String
+  senderUserId        String
+  body                String
+  sentAt              DateTime  @default(now())
+  deletedAt           DateTime?
+
+  groupConversation GroupConversation @relation(fields: [groupConversationId], references: [id], onDelete: Cascade)
+  sender            User             @relation(fields: [senderUserId], references: [id])
+
+  @@index([groupConversationId])
+  @@index([senderUserId])
+  @@index([groupConversationId, sentAt])
+  @@map("group_messages")
+}
+
+// ─────────────────────────────────────────────
+// EVENT EXTENSIONS
+// ─────────────────────────────────────────────
+
+model EventNiche {
+  eventId String
+  nicheId String
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  niche Niche @relation(fields: [nicheId], references: [id])
+
+  @@id([eventId, nicheId])
+  @@index([nicheId])
+  @@map("event_niches")
+}
+
+model EventInvite {
+  id          String    @id @default(uuid())
+  eventId     String
+  inviterId   String
+  inviteeId   String
+  status      String    @default("PENDING") // PENDING | ACCEPTED | DECLINED
+  sentAt      DateTime  @default(now())
+  respondedAt DateTime?
+
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  inviter User  @relation("EventInviteSender", fields: [inviterId], references: [id])
+  invitee User  @relation("EventInviteRecipient", fields: [inviteeId], references: [id])
+
+  @@unique([eventId, inviteeId])
+  @@index([inviteeId])
+  @@index([inviterId])
+  @@map("event_invites")
 }

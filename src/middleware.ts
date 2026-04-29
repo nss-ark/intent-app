@@ -16,6 +16,7 @@ const publicPaths = [
   "/onboarding/step4",
   "/onboarding/complete",
   "/admin/login",
+  "/superadmin/login",
 ];
 
 const publicPrefixes = ["/api/auth/", "/_next/", "/favicon.ico"];
@@ -62,6 +63,12 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (pathname.startsWith("/superadmin") && pathname !== "/superadmin/login") {
+    if (!token.isSuperAdmin) {
+      return NextResponse.redirect(new URL("/superadmin/login", request.url));
+    }
   }
 
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {

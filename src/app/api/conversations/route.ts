@@ -58,6 +58,8 @@ export const GET = withAuth(async (request, _context, session) => {
           id: convo.id,
           createdAt: convo.createdAt,
           lastMessageAt: convo.lastMessageAt,
+          matchId: convo.matchId ?? null,
+          originatedFromNudgeId: convo.originatedFromNudgeId ?? null,
           otherUser,
           lastMessage,
           unreadCount,

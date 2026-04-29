@@ -38,6 +38,8 @@ export type InstitutionMemberStatus =
   | "recent_grad"
   | "alumni";
 
+export type UserType = "STUDENT" | "ALUMNI";
+
 export interface User extends Timestamped, SoftDeletable {
   id: UUID;
   email: string;
@@ -48,6 +50,7 @@ export interface User extends Timestamped, SoftDeletable {
   photoUrl: string | null;
   dateOfBirth: ISODate | null;
   institutionMemberStatus: InstitutionMemberStatus;
+  userType: UserType;
   graduationYear: number | null;
   program: string | null;
   lastActiveAt: ISODateTime | null;
@@ -330,18 +333,6 @@ export interface NudgeQuota {
   weeklyLimit: number;
 }
 
-// ── Saved Users ─────────────────────────────────────────────────────────
-
-export interface SavedUser {
-  id: UUID;
-  userId: UUID;
-  savedUserId: UUID;
-  note: string | null;
-  createdAt: ISODateTime;
-  /** Populated when joined */
-  savedUser?: UserCard;
-}
-
 // ── Conversations & Messages ────────────────────────────────────────────
 
 export interface Conversation {
@@ -353,6 +344,7 @@ export interface Conversation {
   isArchivedByA: boolean;
   isArchivedByB: boolean;
   originatedFromNudgeId: UUID | null;
+  matchId: UUID | null;
   /** Populated when joined */
   otherUser?: UserCard;
   lastMessage?: Message;
@@ -389,6 +381,7 @@ export interface Mentorship {
   goal: string | null;
   cadence: MentorshipCadence;
   proposedByUserId: UUID;
+  matchId: UUID | null;
   startedAt: ISODateTime | null;
   endedAt: ISODateTime | null;
   completionReason: string | null;
@@ -509,30 +502,37 @@ export interface Venue {
 
 // ── Events ──────────────────────────────────────────────────────────────
 
-export type EventSource = "admin_organized" | "system_generated_from_meetup";
+export type EventSource = "ADMIN_CREATED" | "USER_CREATED" | "SYSTEM_GENERATED";
 
-export type EventType = "panel" | "workshop" | "reunion" | "dinner" | "talk";
+export type EventVisibility = "PUBLIC" | "PRIVATE";
+
+export type EventType = "PANEL" | "WORKSHOP" | "REUNION" | "DINNER" | "TALK" | "MEETUP" | "OTHER";
 
 export interface Event {
   id: UUID;
   title: string;
   description: string | null;
   source: EventSource;
-  eventType: EventType;
+  eventType: EventType | null;
   startsAt: ISODateTime;
-  endsAt: ISODateTime;
+  endsAt: ISODateTime | null;
   timezone: string;
   venueId: UUID | null;
   capacity: number | null;
   rsvpDeadline: ISODateTime | null;
   isPublished: boolean;
-  createdByAdminId: UUID;
+  visibility: EventVisibility;
+  createdByAdminId: UUID | null;
+  createdByUserId: UUID | null;
   generatedFromMeetupId: UUID | null;
   coverImageUrl: string | null;
+  location: string | null;
   /** Populated when joined */
   venue?: Venue;
   rsvpCount?: number;
   userRsvpStatus?: EventRsvpStatus | null;
+  creator?: UserCard;
+  niches?: Niche[];
 }
 
 export type EventRsvpStatus = "attending" | "waitlisted" | "declined";
@@ -553,37 +553,158 @@ export interface EventAttendance {
   checkedInBy: string;
 }
 
-// ── Resource Shelf ──────────────────────────────────────────────────────
+// ── Feed / Posts ────────────────────────────────────────────────────────
 
-export interface ResourceCategory {
+export type FeedType = "CAMPUS" | "NETWORK";
+
+export type PostStatus = "ACTIVE" | "ARCHIVED" | "REMOVED";
+
+export type PostReportReason = "SPAM" | "HARASSMENT" | "INAPPROPRIATE" | "MISINFORMATION" | "OTHER";
+
+export type PostReportStatus = "PENDING" | "REVIEWED" | "RESOLVED" | "DISMISSED";
+
+export interface Post {
   id: UUID;
-  code: string;
-  displayName: string;
-  isActive: boolean;
+  authorId: UUID;
+  feedType: FeedType;
+  body: string;
+  status: PostStatus;
+  createdAt: ISODateTime;
+  updatedAt: ISODateTime;
+  archivedAt: ISODateTime | null;
+  removedAt: ISODateTime | null;
+  /** Populated when joined */
+  author?: UserCard;
+  replyCount?: number;
+  replies?: PostReply[];
 }
 
-export interface ResourceShelfItem {
+export interface PostReply {
   id: UUID;
-  userId: UUID;
-  categoryId: UUID;
-  title: string;
-  description: string | null;
-  canSharePointer: boolean;
-  canRunSession: boolean;
-  tags: string[];
+  postId: UUID;
+  authorId: UUID;
+  body: string;
+  status: PostStatus;
   createdAt: ISODateTime;
   /** Populated when joined */
-  category?: ResourceCategory;
+  author?: UserCard;
 }
 
-export interface ResourceRequest {
+export interface PostReport {
   id: UUID;
-  requesterUserId: UUID;
-  itemId: UUID;
-  message: string | null;
-  status: "pending" | "accepted" | "declined";
-  requestedAt: ISODateTime;
+  reporterId: UUID;
+  postId: UUID | null;
+  replyId: UUID | null;
+  reason: PostReportReason;
+  description: string | null;
+  status: PostReportStatus;
+  createdAt: ISODateTime;
+}
+
+// ── Matching System ────────────────────────────────────────────────────
+
+export type MatchType = "ONE_TO_ONE" | "MENTORSHIP";
+
+export type MatchStatus = "PENDING" | "NOTIFIED" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+
+export type MatchUserStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED";
+
+export interface Match {
+  id: UUID;
+  matchType: MatchType;
+  userAId: UUID;
+  userBId: UUID;
+  status: MatchStatus;
+  userAStatus: MatchUserStatus;
+  userBStatus: MatchUserStatus;
+  matchScore: number | null;
+  matchReason: string | null;
+  matchingRunId: UUID | null;
+  notifiedAt: ISODateTime | null;
+  acceptedAt: ISODateTime | null;
+  createdAt: ISODateTime;
+  /** Populated when joined */
+  otherUser?: UserCard;
+  sharedNiches?: Niche[];
+  sharedSignals?: TenantSignal[];
+}
+
+export interface GroupMatchItem {
+  id: UUID;
+  status: MatchStatus;
+  matchScore: number | null;
+  matchReason: string | null;
+  groupSize: number;
+  createdAt: ISODateTime;
+  activatedAt: ISODateTime | null;
+  /** Populated when joined */
+  members?: GroupMatchMemberItem[];
+  niches?: Niche[];
+  groupConversationId?: UUID | null;
+}
+
+export interface GroupMatchMemberItem {
+  groupMatchId: UUID;
+  userId: UUID;
+  status: MatchUserStatus;
+  fitScore: number | null;
+  /** Populated when joined */
+  user?: UserCard;
+}
+
+export interface MatchingConfigItem {
+  id: UUID;
+  tenantId: UUID | null;
+  matchType: string;
+  isEnabled: boolean;
+  frequency: string;
+  nextRunAt: ISODateTime | null;
+  lastRunAt: ISODateTime | null;
+  minMatchScore: number;
+  groupSizeMin: number;
+  groupSizeMax: number;
+  acceptanceWindowHours: number;
+  matchesPerUserPerRun: number;
+}
+
+// ── Group Conversations ────────────────────────────────────────────────
+
+export interface GroupConversationItem {
+  id: UUID;
+  name: string | null;
+  groupMatchId: UUID | null;
+  nicheId: UUID | null;
+  createdAt: ISODateTime;
+  lastMessageAt: ISODateTime | null;
+  /** Populated when joined */
+  memberCount?: number;
+  unreadCount?: number;
+  lastMessage?: GroupMessageItem;
+}
+
+export interface GroupMessageItem {
+  id: UUID;
+  groupConversationId: UUID;
+  senderUserId: UUID;
+  body: string;
+  sentAt: ISODateTime;
+  /** Populated when joined */
+  sender?: UserCard;
+}
+
+// ── Event Extensions ───────────────────────────────────────────────────
+
+export interface EventInviteItem {
+  id: UUID;
+  eventId: UUID;
+  inviterId: UUID;
+  inviteeId: UUID;
+  status: "PENDING" | "ACCEPTED" | "DECLINED";
+  sentAt: ISODateTime;
   respondedAt: ISODateTime | null;
+  /** Populated when joined */
+  event?: Event;
+  inviter?: UserCard;
 }
 
 // ── Gamification ────────────────────────────────────────────────────────
@@ -770,7 +891,10 @@ export type SuperAdminRole = "super_admin" | "support" | "finance" | "read_only"
 export interface SuperAdmin {
   id: UUID;
   email: string;
+  name: string;
+  hashedPassword: string | null;
   role: SuperAdminRole;
+  lastLoginAt: ISODateTime | null;
   createdAt: ISODateTime;
 }
 

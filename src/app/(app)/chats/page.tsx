@@ -96,6 +96,11 @@ export default function ChatsPage() {
                     >
                       {conv.otherUser.fullName}
                     </span>
+                    {conv.matchId && (
+                      <span className="flex-shrink-0 rounded-full bg-[var(--intent-amber-subtle)] px-2 py-0.5 text-[10px] font-medium text-[var(--intent-amber)]">
+                        Matched
+                      </span>
+                    )}
                   </div>
                   <p
                     className={`mt-0.5 truncate text-[13px] leading-snug ${
