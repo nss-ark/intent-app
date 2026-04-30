@@ -19,16 +19,14 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tosAccepted, setTosAccepted] = useState(false);
-  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [profileVisible, setProfileVisible] = useState(false);
 
   const isValid =
     email.trim() !== "" &&
     fullName.trim() !== "" &&
     password.length >= 8 &&
-    tosAccepted &&
-    privacyAccepted;
+    termsAccepted;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +62,7 @@ export default function SignUpPage() {
           password,
           fullName,
           ...(phone.trim() ? { phone: `+91${phone}` } : {}),
-          consents: { tosAccepted, privacyAccepted, profileVisible },
+          consents: { tosAccepted: termsAccepted, privacyAccepted: termsAccepted, profileVisible },
         })
       );
 
@@ -210,8 +208,8 @@ export default function SignUpPage() {
             <div className="space-y-3 pt-1">
               <label className="flex items-start gap-3 cursor-pointer">
                 <Checkbox
-                  checked={tosAccepted}
-                  onCheckedChange={(c) => setTosAccepted(c as boolean)}
+                  checked={termsAccepted}
+                  onCheckedChange={(c) => setTermsAccepted(c as boolean)}
                   className="mt-0.5 shrink-0"
                 />
                 <span className="text-xs text-[#6B6B66] leading-relaxed">
