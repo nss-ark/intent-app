@@ -28,8 +28,7 @@ export default function SignUpPage() {
     fullName.trim() !== "" &&
     password.length >= 8 &&
     tosAccepted &&
-    privacyAccepted &&
-    (phone.length === 0 || phone.length === 10);
+    privacyAccepted;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,6 +206,43 @@ export default function SignUpPage() {
               We&apos;ll send a verification code to your email address.
             </p>
 
+            {/* Consent */}
+            <div className="space-y-3 pt-1">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={tosAccepted}
+                  onCheckedChange={(c) => setTosAccepted(c as boolean)}
+                  className="mt-0.5 shrink-0"
+                />
+                <span className="text-xs text-[#6B6B66] leading-relaxed">
+                  I agree to Intent&apos;s{" "}
+                  <Link href="/terms" target="_blank" className="text-[#1B3A5F] hover:underline font-medium">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" target="_blank" className="text-[#1B3A5F] hover:underline font-medium">
+                    Privacy Policy
+                  </Link>
+                  . <span className="text-[10px] font-medium uppercase tracking-wider text-[#1B3A5F]">Required</span>
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={profileVisible}
+                  onCheckedChange={(c) => setProfileVisible(c as boolean)}
+                  className="mt-0.5 shrink-0"
+                />
+                <span className="text-xs text-[#6B6B66] leading-relaxed">
+                  Allow other verified ISB members to discover my profile in the community directory.
+                </span>
+              </label>
+
+              <p className="text-[11px] text-[#6B6B66] leading-relaxed pl-7">
+                You can change these preferences anytime from Settings.
+              </p>
+            </div>
+
             {/* Continue */}
             <Button
               type="submit"
@@ -220,43 +256,6 @@ export default function SignUpPage() {
               )}
             </Button>
           </form>
-
-          {/* Consent */}
-          <div className="mt-6 space-y-3">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <Checkbox
-                checked={tosAccepted}
-                onCheckedChange={(c) => setTosAccepted(c as boolean)}
-                className="mt-0.5 shrink-0"
-              />
-              <span className="text-xs text-[#6B6B66] leading-relaxed">
-                I agree to Intent&apos;s{" "}
-                <Link href="/terms" target="_blank" className="text-[#1B3A5F] hover:underline font-medium">
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link href="/privacy" target="_blank" className="text-[#1B3A5F] hover:underline font-medium">
-                  Privacy Policy
-                </Link>
-                . <span className="text-[10px] font-medium uppercase tracking-wider text-[#1B3A5F]">Required</span>
-              </span>
-            </label>
-
-            <label className="flex items-start gap-3 cursor-pointer">
-              <Checkbox
-                checked={profileVisible}
-                onCheckedChange={(c) => setProfileVisible(c as boolean)}
-                className="mt-0.5 shrink-0"
-              />
-              <span className="text-xs text-[#6B6B66] leading-relaxed">
-                Allow other verified ISB members to discover my profile in the community directory.
-              </span>
-            </label>
-
-            <p className="text-[11px] text-[#6B6B66] leading-relaxed pl-7">
-              You can change these preferences anytime from Settings.
-            </p>
-          </div>
         </div>
       </div>
     </div>
