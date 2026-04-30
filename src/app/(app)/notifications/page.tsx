@@ -145,20 +145,20 @@ export default function NotificationsPage() {
 
     switch (notification.type) {
       case "MATCH_CREATED":
-        if (entityId) router.push(`/matching/1-on-1/${entityId}`);
+        if (entityId) router.push(`/aligned/1-on-1/${entityId}`);
         break;
       case "GROUP_MATCH_CREATED":
-        if (entityId) router.push(`/matching/group/${entityId}`);
+        if (entityId) router.push(`/aligned/group/${entityId}`);
         break;
       case "SURVEY_AVAILABLE":
         setSelectedNotification(notification);
         setSurveyDialogOpen(true);
         break;
       case "EVENT_REMINDER":
-        if (entityId) router.push(`/activities/${entityId}`);
+        if (entityId) router.push(`/spaces/${entityId}`);
         break;
       case "NUDGE_RECEIVED":
-        router.push("/matching");
+        router.push("/aligned");
         break;
       default:
         // Just mark as read, no navigation

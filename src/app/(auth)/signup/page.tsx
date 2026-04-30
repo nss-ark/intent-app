@@ -7,6 +7,7 @@ import { signIn } from "next-auth/react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { IntentWordmark } from "@/components/intent-wordmark";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -18,11 +19,17 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tosAccepted, setTosAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [profileVisible, setProfileVisible] = useState(false);
 
   const isValid =
     email.trim() !== "" &&
     fullName.trim() !== "" &&
-    password.length >= 8;
+    password.length >= 8 &&
+    tosAccepted &&
+    privacyAccepted &&
+    (phone.length === 0 || phone.length === 10);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,10 +57,16 @@ export default function SignUpPage() {
         return;
       }
 
-      // Store credentials in sessionStorage for auto-login after consent
+      // Store credentials and consent in sessionStorage for auto-login after OTP
       sessionStorage.setItem(
         "intent_signup",
-        JSON.stringify({ email, password, fullName, ...(phone.trim() ? { phone: `+91${phone}` } : {}) })
+        JSON.stringify({
+          email,
+          password,
+          fullName,
+          ...(phone.trim() ? { phone: `+91${phone}` } : {}),
+          consents: { tosAccepted, privacyAccepted, profileVisible },
+        })
       );
 
       router.push("/signup/verify");
@@ -208,18 +221,42 @@ export default function SignUpPage() {
             </Button>
           </form>
 
-          {/* Terms */}
-          <p className="mt-6 text-xs text-[#6B6B66] text-center leading-relaxed">
-            By continuing, you agree to Intent&apos;s{" "}
-            <Link href="#" className="text-[#1B3A5F] hover:underline font-medium">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="#" className="text-[#1B3A5F] hover:underline font-medium">
-              Privacy Policy
-            </Link>
-            .
-          </p>
+          {/* Consent */}
+          <div className="mt-6 space-y-3">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <Checkbox
+                checked={tosAccepted}
+                onCheckedChange={(c) => setTosAccepted(c as boolean)}
+                className="mt-0.5 shrink-0"
+              />
+              <span className="text-xs text-[#6B6B66] leading-relaxed">
+                I agree to Intent&apos;s{" "}
+                <Link href="/terms" target="_blank" className="text-[#1B3A5F] hover:underline font-medium">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" target="_blank" className="text-[#1B3A5F] hover:underline font-medium">
+                  Privacy Policy
+                </Link>
+                . <span className="text-[10px] font-medium uppercase tracking-wider text-[#1B3A5F]">Required</span>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <Checkbox
+                checked={profileVisible}
+                onCheckedChange={(c) => setProfileVisible(c as boolean)}
+                className="mt-0.5 shrink-0"
+              />
+              <span className="text-xs text-[#6B6B66] leading-relaxed">
+                Allow other verified ISB members to discover my profile in the community directory.
+              </span>
+            </label>
+
+            <p className="text-[11px] text-[#6B6B66] leading-relaxed pl-7">
+              You can change these preferences anytime from Settings.
+            </p>
+          </div>
         </div>
       </div>
     </div>

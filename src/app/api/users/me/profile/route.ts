@@ -57,11 +57,6 @@ export const PATCH = withAuth(async (request, _context, session) => {
       let profile;
 
       if (hasProfileUpdates) {
-        // Track city change timestamp
-        if (currentCity !== undefined) {
-          profileUpdate.cityChangedAt = new Date();
-        }
-
         profile = await tx.userProfile.upsert({
           where: { userId: session.user.id },
           update: profileUpdate,

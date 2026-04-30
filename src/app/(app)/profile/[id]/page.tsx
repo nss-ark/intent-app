@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Bookmark,
   MapPin,
   Briefcase,
   GraduationCap,
@@ -196,7 +195,7 @@ export default function ProfileDetailPage({
         <p className="text-[var(--intent-text-secondary)]">Member not found</p>
         <Button
           variant="outline"
-          onClick={() => router.push("/home")}
+          onClick={() => router.push("/feed")}
           className="rounded-xl"
         >
           Back to feed
@@ -254,14 +253,6 @@ export default function ProfileDetailPage({
           >
             <ArrowLeft size={20} className="text-white" />
           </button>
-          {!isOwnProfile && (
-            <button
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/20 backdrop-blur-sm transition-colors hover:bg-black/30"
-              aria-label="Bookmark"
-            >
-              <Bookmark size={20} className="text-white" />
-            </button>
-          )}
         </div>
 
         <HeroPlaceholder
@@ -352,7 +343,7 @@ export default function ProfileDetailPage({
             )}
             <MetadataRow
               icon={Briefcase}
-              label="Current Role"
+              label="Latest Role"
               value={`${currentRole} at ${currentCompanyName}`}
             />
             {educationLine && (
@@ -497,17 +488,11 @@ export default function ProfileDetailPage({
         >
           <div className="mx-auto flex max-w-[640px] items-center gap-3 px-4 py-3">
             <Button
+              onClick={() => router.push(`/aligned/nudge/${id}`)}
               className="h-12 flex-1 rounded-xl bg-[var(--intent-navy)] text-[15px] font-semibold text-white hover:bg-[var(--intent-navy-light)]"
             >
               <Send size={18} className="mr-2" />
               Send a nudge
-            </Button>
-            <Button
-              variant="outline"
-              className="h-12 shrink-0 rounded-xl border-[var(--intent-text-tertiary)] px-5 text-[15px] font-medium"
-            >
-              <Bookmark size={18} className="mr-2" />
-              Save
             </Button>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { ArrowLeft } from "lucide-react";
 import { IntentWordmark } from "@/components/intent-wordmark";
 import { OtpInput } from "@/components/otp-input";
@@ -72,7 +73,39 @@ export default function VerifyPage() {
         return;
       }
 
-      router.push("/signup/consent");
+      // Auto-login and record consents (replaces separate consent page)
+      const signupRaw = sessionStorage.getItem("intent_signup");
+      if (signupRaw) {
+        const signupData = JSON.parse(signupRaw);
+        const loginResult = await signIn("credentials", {
+          email: signupData.email,
+          password: signupData.password,
+          redirect: false,
+        });
+
+        if (loginResult?.ok && signupData.consents) {
+          const consentMap: Record<string, string> = {
+            tosAccepted: "TERMS_OF_SERVICE",
+            privacyAccepted: "PRIVACY_POLICY",
+            profileVisible: "PROFILE_VISIBILITY",
+          };
+          for (const [key, consentType] of Object.entries(consentMap)) {
+            if (signupData.consents[key]) {
+              await fetch("/api/consents", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ consentType }),
+              }).catch(() => {});
+            }
+          }
+        }
+
+        // Clear password from sessionStorage
+        delete signupData.password;
+        sessionStorage.setItem("intent_signup", JSON.stringify(signupData));
+      }
+
+      router.push("/onboarding/step1");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

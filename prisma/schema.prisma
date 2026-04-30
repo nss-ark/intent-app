@@ -39,8 +39,9 @@ model Tenant {
   contractEndDate   DateTime?
   planTier          String?
 
-  users      User[]
-  adminUsers AdminUser[]
+  users         User[]
+  adminUsers    AdminUser[]
+  customOptions CustomOption[]
 
   @@map("tenants")
 }
@@ -127,6 +128,7 @@ model User {
   eventsCreatedByUser   Event[]              @relation("EventCreatorUser")
   eventInvitesSent      EventInvite[]        @relation("EventInviteSender")
   eventInvitesReceived  EventInvite[]        @relation("EventInviteRecipient")
+  customOptionsCreated  CustomOption[]
 
   @@index([tenantId])
   @@index([email])
@@ -160,7 +162,7 @@ model UserProfile {
 model UserNiche {
   userId   String
   nicheId  String
-  position Int    // 1-3
+  position Int    // 1-5
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   niche Niche @relation(fields: [nicheId], references: [id])
@@ -1295,4 +1297,26 @@ model EventInvite {
   @@index([inviteeId])
   @@index([inviterId])
   @@map("event_invites")
+}
+
+// ── Custom Options (user-created interests, specializations, domains) ──
+
+model CustomOption {
+  id          String   @id @default(uuid())
+  tenantId    String
+  type        String   // INTEREST | SPECIALIZATION | DOMAIN
+  label       String
+  value       String   // slugified key
+  createdById String
+  usageCount  Int      @default(1)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, type, value])
+  @@index([tenantId, type, isActive])
+  @@map("custom_options")
 }

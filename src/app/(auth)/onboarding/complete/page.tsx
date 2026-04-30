@@ -56,8 +56,6 @@ async function saveOnboardingData(): Promise<{
       isVisibleInDiscovery: true,
     };
     if (step1.fullName) profilePayload.fullName = step1.fullName;
-    if (step1.city) profilePayload.currentCity = step1.city;
-    if (step1.country) profilePayload.currentCountry = step1.country;
     if (step3.intent) profilePayload.missionStatement = step3.intent;
 
     const profileRes = await fetch("/api/users/me/profile", {
@@ -237,14 +235,14 @@ export default function OnboardingCompletePage() {
       {!saving && (
         <div className="w-full max-w-[500px] mt-10 flex flex-col items-center gap-3">
           <Button
-            onClick={() => router.push("/home")}
+            onClick={() => router.push("/my-profile")}
             className="w-full h-12 text-base font-medium rounded-xl bg-[#1B3A5F] text-white hover:bg-[#2E6399] transition-colors"
           >
             Take me to my profile
           </Button>
 
           <Link
-            href="/home"
+            href="/aligned/directory"
             className="flex items-center gap-1.5 text-sm font-medium text-[#6B6B66] hover:text-[#1A1A1A] transition-colors py-2"
           >
             Browse other ISB members

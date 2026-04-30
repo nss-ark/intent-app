@@ -10,9 +10,9 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/hooks/use-api";
 
 const desktopTabs = [
-  { href: "/matching", label: "Matching", icon: Handshake },
+  { href: "/aligned", label: "Aligned", icon: Handshake },
   { href: "/feed", label: "Feed", icon: MessageSquareText },
-  { href: "/activities", label: "Activities", icon: Calendar },
+  { href: "/spaces", label: "Spaces", icon: Calendar },
 ] as const;
 
 export function AppHeader() {

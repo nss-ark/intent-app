@@ -31,7 +31,7 @@ const domains = [
   "Other",
 ];
 
-const nicheOptions = [
+const defaultNicheOptions = [
   { value: "product_management", label: "Product Management" },
   { value: "venture_capital", label: "Venture Capital" },
   { value: "private_equity", label: "Private Equity" },
@@ -61,10 +61,13 @@ export default function OnboardingStep2() {
   const [currentTitle, setCurrentTitle] = useState("");
   const [pastExperiences, setPastExperiences] = useState<PastExperience[]>([]);
   const [domain, setDomain] = useState("");
+  const [customDomain, setCustomDomain] = useState("");
   const [niches, setNiches] = useState<string[]>([]);
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [nicheOptions, setNicheOptions] = useState(defaultNicheOptions);
+  const [customDomains, setCustomDomains] = useState<string[]>([]);
 
-  // Load saved data
+  // Load saved data and fetch custom options
   useEffect(() => {
     try {
       const step2 = JSON.parse(localStorage.getItem("intent_step2") || "{}");
@@ -72,11 +75,37 @@ export default function OnboardingStep2() {
       if (step2.currentTitle) setCurrentTitle(step2.currentTitle);
       if (step2.pastExperiences) setPastExperiences(step2.pastExperiences);
       if (step2.domain) setDomain(step2.domain);
+      if (step2.customDomain) setCustomDomain(step2.customDomain);
       if (step2.niches) setNiches(step2.niches);
       if (step2.linkedinUrl) setLinkedinUrl(step2.linkedinUrl);
     } catch {
       // ignore
     }
+
+    // Fetch custom interests
+    fetch("/api/custom-options?type=INTEREST")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          const customOpts = json.data
+            .filter((o: { value: string }) => !defaultNicheOptions.some((d) => d.value === o.value))
+            .map((o: { label: string; value: string }) => ({ value: o.value, label: o.label }));
+          if (customOpts.length > 0) {
+            setNicheOptions([...defaultNicheOptions, ...customOpts]);
+          }
+        }
+      })
+      .catch(() => {});
+
+    // Fetch custom domains
+    fetch("/api/custom-options?type=DOMAIN")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setCustomDomains(json.data.map((o: { label: string }) => o.label));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const addPastExperience = () => {
@@ -97,14 +126,41 @@ export default function OnboardingStep2() {
     setPastExperiences((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleCreateInterest = (label: string) => {
+    const value = label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+    if (!nicheOptions.some((o) => o.value === value)) {
+      setNicheOptions((prev) => [...prev, { value, label }]);
+    }
+    // Persist to backend
+    fetch("/api/custom-options", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "INTEREST", label }),
+    }).catch(() => {});
+  };
+
   const handleContinue = () => {
+    const finalDomain = domain === "Other" && customDomain.trim()
+      ? customDomain.trim()
+      : domain;
+
+    // Persist custom domain
+    if (domain === "Other" && customDomain.trim()) {
+      fetch("/api/custom-options", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "DOMAIN", label: customDomain.trim() }),
+      }).catch(() => {});
+    }
+
     localStorage.setItem(
       "intent_step2",
       JSON.stringify({
         currentCompany,
         currentTitle,
         pastExperiences,
-        domain,
+        domain: finalDomain,
+        customDomain,
         niches,
         linkedinUrl,
       })
@@ -136,13 +192,13 @@ export default function OnboardingStep2() {
             Step 2 of 4 &middot; Career
           </p>
 
-          {/* Current Role */}
+          {/* Latest Role */}
           <div className="mt-8">
             <h2 className="text-base font-heading font-semibold text-[#1A1A1A]">
-              Current role
+              Latest role
             </h2>
-            <div className="mt-4 space-y-4">
-              <div className="space-y-2">
+            <div className="mt-4 flex gap-3">
+              <div className="flex-1 space-y-2">
                 <Label htmlFor="company" className="text-sm font-medium text-[#1A1A1A]">
                   Company
                 </Label>
@@ -155,7 +211,7 @@ export default function OnboardingStep2() {
                   className="h-11 rounded-xl bg-white text-base"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="flex-1 space-y-2">
                 <Label htmlFor="title" className="text-sm font-medium text-[#1A1A1A]">
                   Title
                 </Label>
@@ -179,22 +235,15 @@ export default function OnboardingStep2() {
             </h2>
 
             {pastExperiences.map((exp, index) => (
-              <div key={index} className="mt-4 relative">
-                <div className="rounded-xl border border-[#D8DCE5] bg-white p-4 space-y-3">
-                  <button
-                    onClick={() => removePastExperience(index)}
-                    className="absolute top-3 right-3 p-1 rounded-lg hover:bg-[#EDF0F5] transition-colors"
-                    type="button"
-                  >
-                    <X className="w-4 h-4 text-[#6B6B66]" />
-                  </button>
+              <div key={index} className="mt-3 relative">
+                <div className="flex items-center gap-3 rounded-xl border border-[#D8DCE5] bg-white p-3">
                   <Input
                     placeholder="Company"
                     value={exp.company}
                     onChange={(e) =>
                       updatePastExperience(index, "company", e.target.value)
                     }
-                    className="h-10 rounded-lg bg-[#F7F8FB] text-sm"
+                    className="h-9 flex-1 rounded-lg bg-[#F7F8FB] text-sm border-none"
                   />
                   <Input
                     placeholder="Title"
@@ -202,8 +251,15 @@ export default function OnboardingStep2() {
                     onChange={(e) =>
                       updatePastExperience(index, "title", e.target.value)
                     }
-                    className="h-10 rounded-lg bg-[#F7F8FB] text-sm"
+                    className="h-9 flex-1 rounded-lg bg-[#F7F8FB] text-sm border-none"
                   />
+                  <button
+                    onClick={() => removePastExperience(index)}
+                    className="p-1.5 rounded-lg hover:bg-[#EDF0F5] transition-colors shrink-0"
+                    type="button"
+                  >
+                    <X className="w-3.5 h-3.5 text-[#6B6B66]" />
+                  </button>
                 </div>
               </div>
             ))}
@@ -223,7 +279,7 @@ export default function OnboardingStep2() {
             <Label className="text-sm font-medium text-[#1A1A1A]">
               Domain
             </Label>
-            <Select value={domain} onValueChange={(v) => setDomain(v ?? "")}>
+            <Select value={domain} onValueChange={(v) => { setDomain(v ?? ""); if (v !== "Other") setCustomDomain(""); }}>
               <SelectTrigger className="w-full h-11 rounded-xl bg-white text-base">
                 <SelectValue placeholder="Select your domain" />
               </SelectTrigger>
@@ -233,23 +289,42 @@ export default function OnboardingStep2() {
                     {d}
                   </SelectItem>
                 ))}
+                {customDomains
+                  .filter((cd) => !domains.includes(cd))
+                  .map((cd) => (
+                    <SelectItem key={cd} value={cd}>
+                      {cd}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
+            {domain === "Other" && (
+              <Input
+                type="text"
+                placeholder="Enter your domain"
+                value={customDomain}
+                onChange={(e) => setCustomDomain(e.target.value.slice(0, 50))}
+                className="h-11 rounded-xl bg-white text-base mt-2"
+                maxLength={50}
+              />
+            )}
           </div>
 
-          {/* Niche interests */}
+          {/* Interests */}
           <div className="mt-6 space-y-3">
             <Label className="text-sm font-medium text-[#1A1A1A]">
-              Niche interests
+              Interests
               <span className="text-[#6B6B66] font-normal ml-1">
-                (pick up to 3)
+                (pick up to 5)
               </span>
             </Label>
             <NichePills
               options={nicheOptions}
               selected={niches}
               onChange={setNiches}
-              max={3}
+              max={5}
+              allowCreate
+              onCreateOption={handleCreateInterest}
             />
           </div>
 

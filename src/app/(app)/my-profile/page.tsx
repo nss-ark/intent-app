@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   Settings,
   Camera,
@@ -10,10 +12,10 @@ import {
   ArrowLeftRight,
   Share2,
   MessageSquare,
-  Eye,
   Star,
   Loader2,
   Users,
+  Check,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -115,7 +117,9 @@ function ActivityRow({
 /* ------------------------------------------------------------------ */
 
 export default function MyProfilePage() {
+  const router = useRouter();
   const { data: user, isLoading, isError } = useCurrentUser();
+  const [shareLabel, setShareLabel] = useState<"share" | "copied">("share");
 
   const { data: mentorshipData } = useQuery<{
     items: unknown[];
@@ -239,8 +243,8 @@ export default function MyProfilePage() {
         {/* Quick stats */}
         <div className="mt-4 flex gap-3">
           <StatCard
-            value={String(user.niches.length + user.badges.length)}
-            label="Connections"
+            value={String(user.niches.length)}
+            label="Interests"
           />
           <StatCard
             value={currentLevel > 0 ? `Level ${currentLevel}` : "—"}
@@ -305,7 +309,7 @@ export default function MyProfilePage() {
           <div className="overflow-hidden rounded-2xl bg-white shadow-[var(--card-shadow)]">
             {mentorshipCount > 0 ? (
               <Link
-                href="/matching/mentorship"
+                href="/aligned/mentorship"
                 className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--intent-navy-subtle)]/40"
               >
                 <Users
@@ -348,13 +352,8 @@ export default function MyProfilePage() {
               value={String(nudgesSent)}
             />
             <ActivityRow
-              icon={Eye}
-              label="Profile views"
-              value="—"
-            />
-            <ActivityRow
               icon={Star}
-              label="Endorsements"
+              label="Badges"
               value={String(user.badges.length)}
             />
           </div>
@@ -365,11 +364,29 @@ export default function MyProfilePage() {
           <Button
             variant="outline"
             className="w-full rounded-xl border-[var(--intent-text-tertiary)] py-3 text-[14px] font-medium"
+            onClick={async () => {
+              const url = `${window.location.origin}/profile/${user.id}`;
+              if (navigator.share) {
+                try {
+                  await navigator.share({ title: `${user.fullName} on Intent`, url });
+                } catch { /* user cancelled */ }
+              } else {
+                await navigator.clipboard.writeText(url);
+                setShareLabel("copied");
+                setTimeout(() => setShareLabel("share"), 2000);
+              }
+            }}
           >
-            <Share2 size={16} className="mr-2" />
-            Share your profile
+            {shareLabel === "copied" ? (
+              <><Check size={16} className="mr-2" />Link copied</>
+            ) : (
+              <><Share2 size={16} className="mr-2" />Share your profile</>
+            )}
           </Button>
-          <button className="text-[13px] font-medium text-[var(--intent-navy)] hover:underline">
+          <button
+            onClick={() => router.push(`/profile/${user.id}`)}
+            className="text-[13px] font-medium text-[var(--intent-navy)] hover:underline"
+          >
             View your card as others see it
           </button>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Lightbulb } from "lucide-react";
+import { ArrowLeft, Lightbulb, Compass } from "lucide-react";
 import { IntentWordmark } from "@/components/intent-wordmark";
 import { ProgressBar } from "@/components/progress-bar";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,22 @@ import { Textarea } from "@/components/ui/textarea";
 const MAX_CHARS = 200;
 
 const exampleIntents = [
-  "Looking to transition from consulting to building my own D2C brand in the health & wellness space.",
-  "Exploring the VC ecosystem in India and seeking to connect with founders building in climate-tech.",
-  "Want to mentor early-career professionals pivoting into product management from engineering roles.",
+  {
+    tag: "Entrepreneur",
+    text: "Building a climate-tech startup — looking for co-founders with ops experience and angel investors from the ISB network.",
+  },
+  {
+    tag: "Career changer",
+    text: "Pivoting from consulting to product — seeking mentors who've navigated this shift and hiring managers at top tech firms.",
+  },
+  {
+    tag: "Investor",
+    text: "Exploring co-investment opportunities in SaaS and fintech with fellow alumni who share deal flow.",
+  },
+  {
+    tag: "Mentor",
+    text: "Want to mentor first-gen entrepreneurs and connect with industry practitioners for applied research.",
+  },
 ];
 
 export default function OnboardingStep3() {
@@ -117,12 +130,45 @@ export default function OnboardingStep3() {
                 <button
                   key={i}
                   type="button"
-                  onClick={() => setIntent(example.slice(0, MAX_CHARS))}
-                  className="block w-full text-left text-sm text-[#6B6B66] leading-relaxed hover:text-[#1A1A1A] transition-colors cursor-pointer"
+                  onClick={() => setIntent(example.text.slice(0, MAX_CHARS))}
+                  className="block w-full text-left group"
                 >
-                  &ldquo;{example}&rdquo;
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#1B3A5F]/70">
+                    {example.tag}
+                  </span>
+                  <p className="text-sm text-[#6B6B66] leading-relaxed group-hover:text-[#1A1A1A] transition-colors mt-0.5">
+                    &ldquo;{example.text}&rdquo;
+                  </p>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Guiding prompts */}
+          <div className="mt-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Compass className="w-4 h-4 text-[#1B3A5F]" />
+              <span className="text-xs font-semibold text-[#1B3A5F] uppercase tracking-wider">
+                Think about...
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="rounded-xl border border-[#D8DCE5] bg-white/80 p-4">
+                <p className="text-sm font-medium text-[#1A1A1A] leading-snug">
+                  What is your intention from ISB?
+                </p>
+                <p className="mt-1 text-xs text-[#6B6B66] leading-relaxed">
+                  What are you determined to do?
+                </p>
+              </div>
+              <div className="rounded-xl border border-[#D8DCE5] bg-white/80 p-4">
+                <p className="text-sm font-medium text-[#1A1A1A] leading-snug">
+                  What impact do you hope to create?
+                </p>
+                <p className="mt-1 text-xs text-[#6B6B66] leading-relaxed">
+                  What do you aim to build through this network?
+                </p>
+              </div>
             </div>
           </div>
 

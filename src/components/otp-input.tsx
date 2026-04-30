@@ -91,7 +91,7 @@ export function OtpInput({ length = 6, value, onChange, className }: OtpInputPro
           onPaste={handlePaste}
           onFocus={() => setFocusedIndex(i)}
           className={cn(
-            "w-11 h-13 md:w-12 md:h-14 text-center text-xl font-semibold rounded-xl border-2 bg-white transition-all duration-150 outline-none",
+            "w-11 h-14 md:w-12 md:h-14 text-center text-xl font-semibold rounded-xl border-2 bg-white transition-all duration-150 outline-none",
             focusedIndex === i && !digits[i]
               ? "border-[#1B3A5F] ring-3 ring-[#1B3A5F]/20"
               : digits[i]

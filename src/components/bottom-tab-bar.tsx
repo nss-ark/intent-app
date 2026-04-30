@@ -6,9 +6,9 @@ import { Handshake, MessageSquareText, Calendar, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { href: "/matching", label: "Matching", icon: Handshake },
+  { href: "/aligned", label: "Aligned", icon: Handshake },
   { href: "/feed", label: "Feed", icon: MessageSquareText },
-  { href: "/activities", label: "Activities", icon: Calendar },
+  { href: "/spaces", label: "Spaces", icon: Calendar },
   { href: "/my-profile", label: "Profile", icon: User },
 ] as const;
 

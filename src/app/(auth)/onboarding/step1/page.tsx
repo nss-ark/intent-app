@@ -18,17 +18,36 @@ import {
 
 const programs = [
   "PGP",
-  "PGP Pro",
+  "PGPPro",
   "PGPMAX",
-  "YLP",
-  "EEP",
   "MFAB",
-  "MFin",
-  "AMPBI",
+  "YLP",
+  "FPM",
+  "EFPM",
+  "AMPBA",
+  "AMPHP",
+  "AMPIM",
+  "AMPPP",
+  "AMPOS",
+  "ISB Online",
+  "EEP",
+  "IVI",
   "Other",
 ];
 
-const classYears = Array.from({ length: 15 }, (_, i) => (2015 + i).toString());
+const currentYear = new Date().getFullYear();
+const classYears = Array.from({ length: currentYear + 4 - 1996 + 1 }, (_, i) =>
+  (currentYear + 4 - i).toString()
+);
+
+function getYearLabel(program: string): string {
+  if (["PGP", "PGPPro", "PGPMAX", "MFAB", "YLP"].includes(program)) return "Class of";
+  if (["FPM", "EFPM"].includes(program)) return "Cohort";
+  if (["AMPBA", "AMPHP", "AMPIM", "AMPPP", "AMPOS", "IVI"].includes(program)) return "Batch of";
+  if (["EEP", "ISB Online"].includes(program)) return "Year";
+  if (program === "Other") return "Year at ISB";
+  return "Class year";
+}
 
 const specializations = [
   "Finance",
@@ -50,24 +69,35 @@ export default function OnboardingStep1() {
   const [program, setProgram] = useState("");
   const [classYear, setClassYear] = useState("");
   const [specialization, setSpecialization] = useState("");
+  const [customSpecialization, setCustomSpecialization] = useState("");
+  const [customSpecializations, setCustomSpecializations] = useState<string[]>([]);
 
-  // Load saved data
+  // Load saved data and fetch custom specializations
   useEffect(() => {
     try {
-      // Pre-fill fullName from sessionStorage signup data
       const signup = JSON.parse(sessionStorage.getItem("intent_signup") || "{}");
       if (signup.fullName) setFullName(signup.fullName);
 
-      // Restore step1 progress from localStorage
       const step1 = JSON.parse(localStorage.getItem("intent_step1") || "{}");
       if (step1.fullName) setFullName(step1.fullName);
       if (step1.program) setProgram(step1.program);
       if (step1.classYear) setClassYear(step1.classYear);
       if (step1.specialization) setSpecialization(step1.specialization);
+      if (step1.customSpecialization) setCustomSpecialization(step1.customSpecialization);
       if (step1.photoPreview) setPhotoPreview(step1.photoPreview);
     } catch {
       // ignore parse errors
     }
+
+    // Fetch custom specializations
+    fetch("/api/custom-options?type=SPECIALIZATION")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setCustomSpecializations(json.data.map((o: { label: string }) => o.label));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const isValid = fullName.trim() !== "" && program !== "" && classYear !== "";
@@ -84,9 +114,23 @@ export default function OnboardingStep1() {
 
   const handleContinue = () => {
     if (!isValid) return;
+
+    const finalSpecialization = specialization === "Other" && customSpecialization.trim()
+      ? customSpecialization.trim()
+      : specialization;
+
+    // Persist custom specialization to backend
+    if (specialization === "Other" && customSpecialization.trim()) {
+      fetch("/api/custom-options", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "SPECIALIZATION", label: customSpecialization.trim() }),
+      }).catch(() => {});
+    }
+
     localStorage.setItem(
       "intent_step1",
-      JSON.stringify({ fullName, program, classYear, specialization, photoPreview })
+      JSON.stringify({ fullName, program, classYear, specialization: finalSpecialization, customSpecialization, photoPreview })
     );
     router.push("/onboarding/step2");
   };
@@ -181,14 +225,14 @@ export default function OnboardingStep1() {
               </Select>
             </div>
 
-            {/* Class Year */}
+            {/* Year */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-[#1A1A1A]">
-                Class year
+                {program ? getYearLabel(program) : "Class year"}
               </Label>
               <Select value={classYear} onValueChange={(v) => setClassYear(v ?? "")}>
                 <SelectTrigger className="w-full h-11 rounded-xl bg-white text-base">
-                  <SelectValue placeholder="Select your class year" />
+                  <SelectValue placeholder={`Select ${program ? getYearLabel(program).toLowerCase() : "year"}`} />
                 </SelectTrigger>
                 <SelectContent>
                   {classYears.map((y) => (
@@ -206,7 +250,7 @@ export default function OnboardingStep1() {
                 Specialization
                 <span className="text-[#6B6B66] font-normal ml-1">(optional)</span>
               </Label>
-              <Select value={specialization} onValueChange={(v) => setSpecialization(v ?? "")}>
+              <Select value={specialization} onValueChange={(v) => { setSpecialization(v ?? ""); if (v !== "Other") setCustomSpecialization(""); }}>
                 <SelectTrigger className="w-full h-11 rounded-xl bg-white text-base">
                   <SelectValue placeholder="Select specialization" />
                 </SelectTrigger>
@@ -216,8 +260,25 @@ export default function OnboardingStep1() {
                       {s}
                     </SelectItem>
                   ))}
+                  {customSpecializations
+                    .filter((cs) => !specializations.includes(cs))
+                    .map((cs) => (
+                      <SelectItem key={cs} value={cs}>
+                        {cs}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
+              {specialization === "Other" && (
+                <Input
+                  type="text"
+                  placeholder="Enter your specialization"
+                  value={customSpecialization}
+                  onChange={(e) => setCustomSpecialization(e.target.value.slice(0, 50))}
+                  className="h-11 rounded-xl bg-white text-base mt-2"
+                  maxLength={50}
+                />
+              )}
             </div>
           </div>
 
