@@ -73,33 +73,62 @@ async function saveOnboardingData(): Promise<{
       };
     }
 
-    // Save step2 career data: current experience + past experiences
+    // Save step2 career data via experience API
     if (step2.currentCompany || step2.currentTitle) {
       try {
         // Save current experience
-        await fetch("/api/users/me/profile", {
-          method: "PATCH",
+        await fetch("/api/users/me/experience", {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            experience: [
-              {
-                companyName: step2.currentCompany || "",
-                title: step2.currentTitle || "",
-                isCurrent: true,
-              },
-              ...(step2.pastExperiences ?? [])
-                .filter((exp: { company: string; title: string }) => exp.company || exp.title)
-                .map((exp: { company: string; title: string }) => ({
-                  companyName: exp.company,
-                  title: exp.title,
-                  isCurrent: false,
-                })),
-            ],
+            companyName: step2.currentCompany || "",
+            title: step2.currentTitle || "",
+            isCurrent: true,
           }),
         });
+
+        // Save past experiences
+        const pastExps = (step2.pastExperiences ?? []).filter(
+          (exp: { company: string; title: string }) => exp.company || exp.title
+        );
+        for (const exp of pastExps) {
+          await fetch("/api/users/me/experience", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              companyName: exp.company || "",
+              title: exp.title || "",
+              isCurrent: false,
+            }),
+          });
+        }
       } catch (err) {
         console.error("Experience save failed:", err);
         // Non-blocking — user can edit later
+      }
+    }
+
+    // Save step2 niches if any selected
+    if (step2.niches && Array.isArray(step2.niches) && step2.niches.length > 0) {
+      try {
+        // Fetch available niches to map codes to IDs
+        const nichesRes = await fetch("/api/discovery/filters");
+        if (nichesRes.ok) {
+          const nichesJson = await nichesRes.json();
+          const availableNiches: { id: string; code: string }[] = nichesJson?.niches ?? [];
+          const nicheIds = step2.niches
+            .map((code: string) => availableNiches.find((n) => n.code === code)?.id)
+            .filter(Boolean) as string[];
+          if (nicheIds.length > 0) {
+            await fetch("/api/users/me/niches", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nicheIds }),
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Niches save failed:", err);
       }
     }
 
