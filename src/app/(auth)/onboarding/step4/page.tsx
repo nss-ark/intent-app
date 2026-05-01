@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   GraduationCap,
-  Building2,
+  Briefcase,
+  ClipboardCheck,
+  Lightbulb,
+  TrendingUp,
   Send,
-  ArrowRightLeft,
   BookOpen,
   Coffee,
   Rocket,
+  Users,
 } from "lucide-react";
 import { IntentWordmark } from "@/components/intent-wordmark";
 import { ProgressBar } from "@/components/progress-bar";
@@ -24,16 +27,19 @@ import { cn } from "@/lib/utils";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
   "graduation-cap": GraduationCap,
-  "building-2": Building2,
+  briefcase: Briefcase,
+  "clipboard-check": ClipboardCheck,
+  lightbulb: Lightbulb,
+  "trending-up": TrendingUp,
   send: Send,
-  "arrow-right-left": ArrowRightLeft,
   "book-open": BookOpen,
   coffee: Coffee,
   rocket: Rocket,
+  users: Users,
 };
 
 /* ------------------------------------------------------------------ */
-/* Signal Card                                                         */
+/* Signal Card — compact sharp square                                  */
 /* ------------------------------------------------------------------ */
 
 function SignalCard({
@@ -41,17 +47,17 @@ function SignalCard({
   displayName,
   icon,
   checked,
-  accentClass,
+  selectedBg,
+  selectedBorder,
   onToggle,
-  index,
 }: {
   code: string;
   displayName: string;
   icon: string;
   checked: boolean;
-  accentClass: string;
+  selectedBg: string;
+  selectedBorder: string;
   onToggle: (code: string, value: boolean) => void;
-  index: number;
 }) {
   const Icon = iconMap[icon] ?? GraduationCap;
 
@@ -60,47 +66,27 @@ function SignalCard({
       type="button"
       onClick={() => onToggle(code, !checked)}
       className={cn(
-        "group relative flex flex-col items-center justify-center gap-2.5 rounded-2xl border-2 p-4 text-center transition-all duration-200 ease-out select-none min-h-[120px]",
+        "flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 p-3 text-center transition-all duration-200 ease-out select-none aspect-square",
         checked
-          ? `${accentClass} border-transparent shadow-lg scale-[1.02]`
-          : "border-[#D8DCE5] bg-white hover:border-[#1B3A5F]/30 hover:shadow-md"
+          ? `${selectedBg} ${selectedBorder} shadow-md scale-[1.03]`
+          : "border-[#D8DCE5] bg-white hover:border-[#B0B8C9] hover:shadow-sm active:scale-[0.97]"
       )}
-      style={{
-        animationDelay: `${index * 60}ms`,
-        animationFillMode: "both",
-      }}
     >
-      <div
+      <Icon
+        size={18}
         className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200",
-          checked
-            ? "bg-white/20"
-            : "bg-[#E8EFF7]"
+          "transition-colors duration-200",
+          checked ? "text-white" : "text-[#1B3A5F]"
         )}
-      >
-        <Icon
-          size={20}
-          className={cn(
-            "transition-colors duration-200",
-            checked ? "text-white" : "text-[#1B3A5F]"
-          )}
-        />
-      </div>
+      />
       <span
         className={cn(
-          "text-[13px] font-medium leading-tight transition-colors duration-200",
+          "text-[11px] font-semibold leading-tight transition-colors duration-200",
           checked ? "text-white" : "text-[#1A1A1A]"
         )}
       >
         {displayName}
       </span>
-
-      {/* Selection indicator */}
-      {checked && (
-        <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-white/25">
-          <div className="h-2 w-2 rounded-full bg-white" />
-        </div>
-      )}
     </button>
   );
 }
@@ -181,73 +167,73 @@ export default function OnboardingStep4() {
             </p>
           </div>
 
-          {/* ── What are you looking for? ──────────────────────────── */}
+          {/* ── Your Intent ───────────────────────────────────────── */}
           <div className="mt-8">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-1 w-6 rounded-full bg-gradient-to-r from-[#1B3A5F] to-[#2E6399]" />
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-1 w-6 rounded-full bg-[#1B3A5F]" />
               <h2 className="text-sm font-semibold text-[#1A1A1A]">
-                What are you looking for?
+                Your Intent
               </h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {asks.map((signal, i) => (
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
+              {asks.map((signal) => (
                 <SignalCard
                   key={signal.code}
                   code={signal.code}
-                  displayName={signal.displayName.replace(/^Looking for |^Curious about |^Want to chat about /i, "").replace(/^a /i, "")}
+                  displayName={signal.displayName}
                   icon={signal.icon}
                   checked={signals[signal.code] ?? false}
-                  accentClass="bg-gradient-to-br from-[#1B3A5F] to-[#2E6399]"
+                  selectedBg="bg-[#1B3A5F]"
+                  selectedBorder="border-[#2E6399]"
                   onToggle={toggleSignal}
-                  index={i}
                 />
               ))}
             </div>
           </div>
 
-          {/* ── How can you help? ──────────────────────────────────── */}
-          <div className="mt-8">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-1 w-6 rounded-full bg-gradient-to-r from-[#2D4A3A] to-[#3D6B52]" />
+          {/* ── Your Impact ───────────────────────────────────────── */}
+          <div className="mt-7">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-1 w-6 rounded-full bg-[#2D4A3A]" />
               <h2 className="text-sm font-semibold text-[#1A1A1A]">
-                How can you help?
+                Your Impact
               </h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {offers.map((signal, i) => (
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
+              {offers.map((signal) => (
                 <SignalCard
                   key={signal.code}
                   code={signal.code}
-                  displayName={signal.displayName.replace(/^Open to /i, "").replace(/someone in my domain/, "in your domain")}
+                  displayName={signal.displayName}
                   icon={signal.icon}
                   checked={signals[signal.code] ?? false}
-                  accentClass="bg-gradient-to-br from-[#2D4A3A] to-[#3D6B52]"
+                  selectedBg="bg-[#2D4A3A]"
+                  selectedBorder="border-[#3D6B52]"
                   onToggle={toggleSignal}
-                  index={i}
                 />
               ))}
             </div>
           </div>
 
-          {/* ── Let's connect ──────────────────────────────────────── */}
-          <div className="mt-8">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-1 w-6 rounded-full bg-gradient-to-r from-[#4A3A6B] to-[#7C5FA8]" />
+          {/* ── Let's connect ─────────────────────────────────────── */}
+          <div className="mt-7">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-1 w-6 rounded-full bg-[#4A3A6B]" />
               <h2 className="text-sm font-semibold text-[#1A1A1A]">
                 Let&apos;s connect
               </h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {mutuals.map((signal, i) => (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+              {mutuals.map((signal) => (
                 <SignalCard
                   key={signal.code}
                   code={signal.code}
-                  displayName={signal.displayName.replace(/^Looking for |^Open to /i, "").replace(/^a /i, "").replace(/^an /i, "")}
+                  displayName={signal.displayName}
                   icon={signal.icon}
                   checked={signals[signal.code] ?? false}
-                  accentClass="bg-gradient-to-br from-[#4A3A6B] to-[#7C5FA8]"
+                  selectedBg="bg-[#4A3A6B]"
+                  selectedBorder="border-[#7C5FA8]"
                   onToggle={toggleSignal}
-                  index={i}
                 />
               ))}
             </div>
