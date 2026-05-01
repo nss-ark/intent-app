@@ -78,17 +78,23 @@ async function main() {
 
   // ─── Signal Templates ────────────────────────────────────────────────
   const signalTemplateData = [
-    { code: "seek_mentor", displayName: "Looking for a mentor in this domain", signalType: "ASK", icon: "graduation-cap", pairedCode: "offer_mentor" as string | null },
-    { code: "offer_mentor", displayName: "Open to mentoring someone in my domain", signalType: "OFFER", icon: "graduation-cap", pairedCode: "seek_mentor" as string | null },
-    { code: "curious_company", displayName: "Curious about working at your company", signalType: "ASK", icon: "building-2", pairedCode: "discuss_company" as string | null },
-    { code: "discuss_company", displayName: "Open to discussing my company", signalType: "OFFER", icon: "building-2", pairedCode: "curious_company" as string | null },
-    { code: "seek_referral", displayName: "Looking for an interview referral", signalType: "ASK", icon: "send", pairedCode: "offer_referral" as string | null },
-    { code: "offer_referral", displayName: "Open to giving referrals", signalType: "OFFER", icon: "send", pairedCode: "seek_referral" as string | null },
-    { code: "career_switch_ask", displayName: "Want to chat about a career switch", signalType: "ASK", icon: "arrow-right-left", pairedCode: "career_switch_offer" as string | null },
-    { code: "career_switch_offer", displayName: "Open to discussing career switches into my domain", signalType: "OFFER", icon: "arrow-right-left", pairedCode: "career_switch_ask" as string | null },
-    { code: "case_prep_partner", displayName: "Looking for a case prep partner", signalType: "MUTUAL", icon: "book-open", pairedCode: null },
-    { code: "coffee_chat", displayName: "Open to an informal coffee chat", signalType: "MUTUAL", icon: "coffee", pairedCode: null },
-    { code: "cofounder_search", displayName: "Looking for a co-founder", signalType: "MUTUAL", icon: "rocket", pairedCode: null },
+    // Your Intent (asks)
+    { code: "seek_mentor", displayName: "Domain Mentor", signalType: "ASK", icon: "graduation-cap", pairedCode: "offer_mentor" as string | null },
+    { code: "curious_company", displayName: "Career Advice", signalType: "ASK", icon: "briefcase", pairedCode: "discuss_company" as string | null },
+    { code: "seek_referral", displayName: "Interview Prep", signalType: "ASK", icon: "clipboard-check", pairedCode: "offer_referral" as string | null },
+    { code: "knowledge_sharing_ask", displayName: "Knowledge Sharing", signalType: "ASK", icon: "lightbulb", pairedCode: "knowledge_sharing_offer" as string | null },
+    { code: "upskill_ask", displayName: "Upskill", signalType: "ASK", icon: "trending-up", pairedCode: "upskill_offer" as string | null },
+    // Your Impact (offers)
+    { code: "offer_mentor", displayName: "Mentor Others", signalType: "OFFER", icon: "graduation-cap", pairedCode: "seek_mentor" as string | null },
+    { code: "discuss_company", displayName: "Share Experience", signalType: "OFFER", icon: "briefcase", pairedCode: "curious_company" as string | null },
+    { code: "offer_referral", displayName: "Give Referrals", signalType: "OFFER", icon: "send", pairedCode: "seek_referral" as string | null },
+    { code: "knowledge_sharing_offer", displayName: "Share Knowledge", signalType: "OFFER", icon: "lightbulb", pairedCode: "knowledge_sharing_ask" as string | null },
+    { code: "upskill_offer", displayName: "Teach & Guide", signalType: "OFFER", icon: "trending-up", pairedCode: "upskill_ask" as string | null },
+    // Let's connect (mutuals)
+    { code: "coffee_chat", displayName: "Coffee Chat", signalType: "MUTUAL", icon: "coffee", pairedCode: null },
+    { code: "cofounder_search", displayName: "Co-founder", signalType: "MUTUAL", icon: "rocket", pairedCode: null },
+    { code: "case_prep_partner", displayName: "Case Prep", signalType: "MUTUAL", icon: "book-open", pairedCode: null },
+    { code: "networking", displayName: "Networking", signalType: "MUTUAL", icon: "users", pairedCode: null },
   ];
   const signalTemplates: Record<string, string> = {};
   for (const st of signalTemplateData) {
