@@ -51,12 +51,15 @@ async function saveOnboardingData(): Promise<{
       firstName = step1.fullName.split(" ")[0];
     }
 
-    // Save profile data (step1 + step3 fields)
+    // Save profile data (step1 + step2 domain + step3 fields)
     const profilePayload: Record<string, unknown> = {
       isVisibleInDiscovery: true,
     };
     if (step1.fullName) profilePayload.fullName = step1.fullName;
+    if (step1.photoPreview) profilePayload.photoUrl = step1.photoPreview;
     if (step3.intent) profilePayload.missionStatement = step3.intent;
+    if (step2.domainId) profilePayload.domainId = step2.domainId;
+    if (step2.yearsOfExperience) profilePayload.yearsOfExperience = parseInt(step2.yearsOfExperience, 10);
 
     const profileRes = await fetch("/api/users/me/profile", {
       method: "PATCH",

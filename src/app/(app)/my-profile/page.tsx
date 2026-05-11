@@ -213,7 +213,15 @@ export default function MyProfilePage() {
         <div className="rounded-2xl bg-white p-6 shadow-[var(--card-shadow)]">
           {/* Avatar with camera overlay */}
           <div className="relative mx-auto w-fit">
-            <AvatarPlaceholder name={user.fullName} size={96} />
+            {user.photoUrl ? (
+              <img
+                src={user.photoUrl}
+                alt={user.fullName}
+                className="h-24 w-24 rounded-full object-cover"
+              />
+            ) : (
+              <AvatarPlaceholder name={user.fullName} size={96} />
+            )}
             <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[var(--intent-navy)] shadow-sm">
               <Camera size={14} className="text-white" />
             </div>

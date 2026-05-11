@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Flag,
+  Heart,
   Loader2,
   MoreHorizontal,
   Send,
@@ -51,7 +52,8 @@ interface PostDetail {
   status: string;
   createdAt: string;
   author: PostAuthor;
-  _count: { replies: number };
+  _count: { replies: number; likes: number };
+  likedByMe: boolean;
 }
 
 interface ReplyItem {
@@ -278,6 +280,30 @@ export default function PostDetailPage() {
     },
   });
 
+  // Like post mutation (optimistic)
+  const likePost = useMutation({
+    mutationFn: () =>
+      apiFetch(`/api/posts/${postId}/like`, { method: "POST" }),
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: ["post", postId] });
+      const prev = qc.getQueryData<PostDetail>(["post", postId]);
+      if (prev) {
+        qc.setQueryData<PostDetail>(["post", postId], {
+          ...prev,
+          likedByMe: !prev.likedByMe,
+          _count: {
+            ...prev._count,
+            likes: prev._count.likes + (prev.likedByMe ? -1 : 1),
+          },
+        });
+      }
+      return { prev };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.prev) qc.setQueryData(["post", postId], context.prev);
+    },
+  });
+
   // Report post mutation
   const reportPost = useMutation({
     mutationFn: ({
@@ -417,7 +443,24 @@ export default function PostDetailPage() {
           {post.body}
         </p>
 
-        <div className="mt-4 border-t border-[var(--intent-text-tertiary)] pt-3">
+        <div className="mt-4 flex items-center gap-4 border-t border-[var(--intent-text-tertiary)] pt-3">
+          <button
+            type="button"
+            onClick={() => likePost.mutate()}
+            className={cn(
+              "flex items-center gap-1.5 text-[13px] font-medium transition-colors",
+              post.likedByMe
+                ? "text-red-500"
+                : "text-[var(--intent-text-secondary)] hover:text-red-500"
+            )}
+          >
+            <Heart
+              size={16}
+              strokeWidth={1.5}
+              className={post.likedByMe ? "fill-red-500" : ""}
+            />
+            {post._count.likes > 0 && post._count.likes}
+          </button>
           <p className="text-[13px] text-[var(--intent-text-secondary)]">
             {post._count.replies}{" "}
             {post._count.replies === 1 ? "reply" : "replies"}

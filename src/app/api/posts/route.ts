@@ -61,7 +61,12 @@ export const GET = withAuth(async (request, _context, session) => {
           _count: {
             select: {
               replies: { where: { status: "ACTIVE" } },
+              likes: true,
             },
+          },
+          likes: {
+            where: { userId: session.user.id },
+            select: { userId: true },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -71,8 +76,14 @@ export const GET = withAuth(async (request, _context, session) => {
       db.post.count({ where }),
     ]);
 
+    // Map to add likedByMe flag and flatten
+    const items = posts.map(({ likes, ...post }) => ({
+      ...post,
+      likedByMe: likes.length > 0,
+    }));
+
     return apiSuccess({
-      items: posts,
+      items,
       page,
       pageSize,
       total,
@@ -124,12 +135,13 @@ export const POST = withAuth(async (request, _context, session) => {
         _count: {
           select: {
             replies: { where: { status: "ACTIVE" } },
+            likes: true,
           },
         },
       },
     });
 
-    return apiSuccess(post, 201);
+    return apiSuccess({ ...post, likedByMe: false }, 201);
   } catch (error) {
     console.error("Error creating post:", error);
     return apiError("INTERNAL_ERROR", "Failed to create post", 500);

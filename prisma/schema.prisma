@@ -120,6 +120,7 @@ model User {
   posts                 Post[]
   postReplies           PostReply[]
   postReports           PostReport[]         @relation("PostReporter")
+  postLikes             PostLike[]           @relation("PostLiker")
   matchesAsUserA        Match[]              @relation("MatchUserA")
   matchesAsUserB        Match[]              @relation("MatchUserB")
   groupMatchMemberships2 GroupMatchMember[]
@@ -1031,6 +1032,7 @@ model Post {
   removedByAdmin AdminUser?  @relation("PostRemover", fields: [removedByAdminId], references: [id])
   replies        PostReply[]
   reports        PostReport[]
+  likes          PostLike[]
 
   @@index([authorId])
   @@index([feedType])
@@ -1085,6 +1087,19 @@ model PostReport {
   @@index([replyId])
   @@index([status])
   @@map("post_reports")
+}
+
+model PostLike {
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation("PostLiker", fields: [userId], references: [id])
+
+  @@id([postId, userId])
+  @@index([userId])
+  @@map("post_likes")
 }
 
 // ─────────────────────────────────────────────

@@ -22,7 +22,12 @@ export const GET = withAuth(async (_request, context, session) => {
         _count: {
           select: {
             replies: { where: { status: "ACTIVE" } },
+            likes: true,
           },
+        },
+        likes: {
+          where: { userId: session.user.id },
+          select: { userId: true },
         },
       },
     });
@@ -46,7 +51,8 @@ export const GET = withAuth(async (_request, context, session) => {
       }
     }
 
-    return apiSuccess(post);
+    const { likes, ...rest } = post;
+    return apiSuccess({ ...rest, likedByMe: likes.length > 0 });
   } catch (error) {
     console.error("Error fetching post:", error);
     return apiError("INTERNAL_ERROR", "Failed to fetch post", 500);

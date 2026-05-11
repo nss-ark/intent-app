@@ -27,10 +27,12 @@ import {
   Info,
   LogOut,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { apiFetch } from "@/hooks/use-api";
+import { FeatureRequestDialog } from "@/components/feature-request-dialog";
 
 /* ------------------------------------------------------------------ */
 /* Section heading                                                      */
@@ -331,6 +333,12 @@ export default function SettingsPage() {
           <ChevronRow icon={AtSign} label="Change email" />
           <ChevronRow icon={Lock} label="Change password" />
           <ChevronRow icon={Link2} label="Linked accounts" />
+          <ChevronRow
+            icon={RefreshCw}
+            label="Re-run setup wizard"
+            caption="Revisit the onboarding flow to update your profile"
+            onClick={() => router.push("/onboarding/step1")}
+          />
         </div>
 
         {/* DATA AND PRIVACY (DPDPA) */}
@@ -360,6 +368,12 @@ export default function SettingsPage() {
           <ChevronRow icon={MessageCircle} label="Contact support" />
           <ChevronRow icon={FileText} label="Terms" />
           <ChevronRow icon={Shield} label="Privacy Policy" />
+        </div>
+
+        {/* Feature request */}
+        <SectionHeading title="Feedback" />
+        <div className="overflow-hidden rounded-2xl bg-white mx-4 shadow-[var(--card-shadow)] px-4 py-3">
+          <FeatureRequestDialog />
         </div>
 
         {/* ABOUT */}

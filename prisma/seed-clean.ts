@@ -24,9 +24,12 @@ async function main() {
     { code: "finance", displayName: "Finance" },
     { code: "tech_product", displayName: "Tech / Product" },
     { code: "vc_pe", displayName: "VC / PE" },
+    { code: "sales", displayName: "Sales" },
+    { code: "marketing", displayName: "Marketing" },
     { code: "climate", displayName: "Climate" },
     { code: "public_policy", displayName: "Public Policy" },
     { code: "healthcare", displayName: "Healthcare" },
+    { code: "hospitality_services", displayName: "Hospitality & Services" },
     { code: "social_impact", displayName: "Social Impact" },
   ];
   for (let i = 0; i < domainData.length; i++) {
@@ -38,16 +41,20 @@ async function main() {
 
   // ─── Niches ──────────────────────────────────────────────────────────
   const nicheData = [
-    { code: "ai_ml", displayName: "AI/ML" },
-    { code: "fintech", displayName: "Fintech" },
-    { code: "climate", displayName: "Climate" },
-    { code: "healthtech", displayName: "Healthtech" },
-    { code: "edtech", displayName: "Edtech" },
-    { code: "public_policy", displayName: "Public Policy" },
-    { code: "operating_roles", displayName: "Operating Roles" },
-    { code: "consumer", displayName: "Consumer" },
-    { code: "saas", displayName: "SaaS" },
-    { code: "hardware", displayName: "Hardware" },
+    { code: "product_management", displayName: "Product Management" },
+    { code: "data_analytics", displayName: "Data Science & Analytics" },
+    { code: "strategy", displayName: "Strategy" },
+    { code: "operations", displayName: "Operations" },
+    { code: "business_development", displayName: "Business Development" },
+    { code: "entrepreneurship", displayName: "Entrepreneurship" },
+    { code: "investment_management", displayName: "Investment Management" },
+    { code: "digital_marketing", displayName: "Digital Marketing" },
+    { code: "supply_chain", displayName: "Supply Chain" },
+    { code: "people_hr", displayName: "People & HR" },
+    { code: "brand_management", displayName: "Brand Management" },
+    { code: "sustainability_esg", displayName: "Sustainability & ESG" },
+    { code: "design_ux", displayName: "Design & UX" },
+    { code: "software_engineering", displayName: "Software Engineering" },
   ];
   for (let i = 0; i < nicheData.length; i++) {
     await db.niche.create({

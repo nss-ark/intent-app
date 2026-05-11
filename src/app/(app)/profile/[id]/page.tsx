@@ -255,11 +255,20 @@ export default function ProfileDetailPage({
           </button>
         </div>
 
-        <HeroPlaceholder
-          name={member.fullName}
-          minHeight={320}
-          className="w-full"
-        />
+        {member.photoUrl ? (
+          <img
+            src={member.photoUrl}
+            alt={member.fullName}
+            className="w-full object-cover"
+            style={{ minHeight: 320 }}
+          />
+        ) : (
+          <HeroPlaceholder
+            name={member.fullName}
+            minHeight={320}
+            className="w-full"
+          />
+        )}
       </div>
 
       {/* ── White content section overlapping photo ─────────────── */}

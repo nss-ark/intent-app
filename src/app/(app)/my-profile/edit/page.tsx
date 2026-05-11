@@ -5,12 +5,20 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   Camera,
-  ChevronRight,
   Plus,
   Briefcase,
   Building2,
   X,
   Loader2,
+  GraduationCap,
+  ClipboardCheck,
+  Lightbulb,
+  TrendingUp,
+  Send,
+  BookOpen,
+  Coffee,
+  Rocket,
+  Users,
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { apiFetch } from "@/hooks/use-api";
@@ -18,6 +26,23 @@ import { AvatarPlaceholder } from "@/components/avatar-placeholder";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+
+/* ------------------------------------------------------------------ */
+/* Signal icon map                                                      */
+/* ------------------------------------------------------------------ */
+
+const signalIconMap: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
+  "graduation-cap": GraduationCap,
+  briefcase: Briefcase,
+  "clipboard-check": ClipboardCheck,
+  lightbulb: Lightbulb,
+  "trending-up": TrendingUp,
+  send: Send,
+  "book-open": BookOpen,
+  coffee: Coffee,
+  rocket: Rocket,
+  users: Users,
+};
 
 /* ------------------------------------------------------------------ */
 /* Section header                                                       */
@@ -67,6 +92,7 @@ export default function EditProfilePage() {
   const { data: user, isLoading } = useCurrentUser();
 
   const [intentText, setIntentText] = useState("");
+  const [yearsOfExperience, setYearsOfExperience] = useState<string>("");
   const [discoveryVisible, setDiscoveryVisible] = useState(true);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [userNiches, setUserNiches] = useState<{ id: string; displayName: string }[]>([]);
@@ -77,6 +103,9 @@ export default function EditProfilePage() {
   const [newExpCompany, setNewExpCompany] = useState("");
   const [newExpTitle, setNewExpTitle] = useState("");
   const [newExpIsCurrent, setNewExpIsCurrent] = useState(false);
+
+  // Signals
+  const [signalStates, setSignalStates] = useState<Record<string, boolean>>({});
 
   // Niche add
   const [showNicheSelector, setShowNicheSelector] = useState(false);
@@ -91,13 +120,27 @@ export default function EditProfilePage() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Fetch all available signals
+  const { data: availableSignals } = useQuery<{ id: string; code: string; displayName: string; signalType: string; icon: string }[]>({
+    queryKey: ["all-signals"],
+    queryFn: () => apiFetch("/api/users/me/signals"),
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Initialize form state
   useEffect(() => {
     if (user && !formReady) {
       setIntentText(user.profile?.missionStatement ?? "");
+      setYearsOfExperience(user.profile?.yearsOfExperienceCached?.toString() ?? "");
       setDiscoveryVisible(user.profile?.isVisibleInDiscovery ?? true);
       setPhotoPreview(user.photoUrl);
       setUserNiches(user.niches.map((n) => ({ id: n.niche.id, displayName: n.niche.displayName })));
+      // Initialize signals: map tenantSignal IDs to open state
+      const sigs: Record<string, boolean> = {};
+      for (const s of user.openSignals) {
+        sigs[s.tenantSignal.id] = s.isOpen;
+      }
+      setSignalStates(sigs);
       setFormReady(true);
     }
   }, [user, formReady]);
@@ -155,6 +198,18 @@ export default function EditProfilePage() {
     },
   });
 
+  // Signals update mutation
+  const updateSignalsMutation = useMutation({
+    mutationFn: (signals: { tenantSignalId: string; isOpen: boolean }[]) =>
+      apiFetch("/api/users/me/signals", {
+        method: "PUT",
+        body: JSON.stringify({ signals }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+    },
+  });
+
   const handleSave = () => {
     const payload: Record<string, unknown> = {
       missionStatement: intentText,
@@ -163,6 +218,9 @@ export default function EditProfilePage() {
     // Include photo if changed
     if (photoPreview !== user?.photoUrl) {
       payload.photoUrl = photoPreview;
+    }
+    if (yearsOfExperience) {
+      payload.yearsOfExperience = parseInt(yearsOfExperience, 10);
     }
     saveMutation.mutate(payload);
   };
@@ -198,6 +256,19 @@ export default function EditProfilePage() {
     setShowNicheSelector(false);
   };
 
+  const handleToggleSignal = (signalId: string, isOpen: boolean) => {
+    const updated = { ...signalStates, [signalId]: isOpen };
+    setSignalStates(updated);
+    // Auto-save: build the full signal list from available signals
+    if (availableSignals) {
+      const payload = availableSignals.map((s) => ({
+        tenantSignalId: s.id,
+        isOpen: updated[s.id] ?? false,
+      }));
+      updateSignalsMutation.mutate(payload);
+    }
+  };
+
   const maxChars = 200;
   const charCount = intentText.length;
 
@@ -228,11 +299,6 @@ export default function EditProfilePage() {
   const currentExp = user.experience.find((e) => e.isCurrent);
   const currentRole = currentExp?.title ?? "";
   const currentCompany = currentExp?.company?.name ?? currentExp?.freeTextCompanyName ?? "";
-
-  // Signal counts
-  const askCount = user.openSignals.filter((s) => s.isOpen && s.tenantSignal.template.signalType.toLowerCase() === "ask").length;
-  const offerCount = user.openSignals.filter((s) => s.isOpen && s.tenantSignal.template.signalType.toLowerCase() === "offer").length;
-  const mutualCount = user.openSignals.filter((s) => s.isOpen && s.tenantSignal.template.signalType.toLowerCase() === "mutual").length;
 
   // Available niches not yet selected
   const selectableNiches = (availableNiches ?? []).filter(
@@ -420,6 +486,31 @@ export default function EditProfilePage() {
           )}
         </div>
 
+        {/* Years of experience */}
+        <div className="mt-3 rounded-2xl bg-white p-4 shadow-[var(--card-shadow)]">
+          <div className="flex min-h-[44px] items-center gap-3">
+            <span className="flex-1 text-[14px] text-[var(--intent-text-primary)]">Years of experience</span>
+            <select
+              value={yearsOfExperience}
+              onChange={(e) => setYearsOfExperience(e.target.value)}
+              className="rounded-lg border border-[var(--intent-text-tertiary)] bg-transparent px-3 py-1.5 text-[13px] text-[var(--intent-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--intent-navy)]"
+            >
+              <option value="">Select</option>
+              <option value="0">Fresher</option>
+              <option value="1">1 year</option>
+              <option value="2">2 years</option>
+              <option value="3">3 years</option>
+              <option value="4">4 years</option>
+              <option value="5">5 years</option>
+              <option value="6">6–8 years</option>
+              <option value="9">9–12 years</option>
+              <option value="13">13–15 years</option>
+              <option value="16">16–20 years</option>
+              <option value="21">20+ years</option>
+            </select>
+          </div>
+        </div>
+
         {/* Domain and niches */}
         <SectionHeader title="Domain and interests" />
         <div className="rounded-2xl bg-white p-4 shadow-[var(--card-shadow)]">
@@ -478,25 +569,68 @@ export default function EditProfilePage() {
           </div>
         </div>
 
-        {/* Asks / Offers / Mutuals */}
-        <SectionHeader title="Asks, Offers & Mutuals" />
-        <div className="divide-y divide-[var(--intent-text-tertiary)] overflow-hidden rounded-2xl bg-white shadow-[var(--card-shadow)]">
-          <div className="flex min-h-[56px] items-center gap-3 px-4 py-3">
-            <span className="flex-1 text-[14px] text-[var(--intent-text-primary)]">Asks</span>
-            <span className="text-[13px] text-[var(--intent-text-secondary)]">{askCount} active</span>
-            <ChevronRight size={18} strokeWidth={1.5} className="shrink-0 text-[var(--intent-text-secondary)]" />
-          </div>
-          <div className="flex min-h-[56px] items-center gap-3 px-4 py-3">
-            <span className="flex-1 text-[14px] text-[var(--intent-text-primary)]">Offers</span>
-            <span className="text-[13px] text-[var(--intent-text-secondary)]">{offerCount} active</span>
-            <ChevronRight size={18} strokeWidth={1.5} className="shrink-0 text-[var(--intent-text-secondary)]" />
-          </div>
-          <div className="flex min-h-[56px] items-center gap-3 px-4 py-3">
-            <span className="flex-1 text-[14px] text-[var(--intent-text-primary)]">Mutuals</span>
-            <span className="text-[13px] text-[var(--intent-text-secondary)]">{mutualCount} active</span>
-            <ChevronRight size={18} strokeWidth={1.5} className="shrink-0 text-[var(--intent-text-secondary)]" />
-          </div>
-        </div>
+        {/* Signals — Your Intent / Your Impact / Let's Connect */}
+        {availableSignals && availableSignals.length > 0 && (() => {
+          const asks = availableSignals.filter((s) => s.signalType === "ASK");
+          const offers = availableSignals.filter((s) => s.signalType === "OFFER");
+          const mutuals = availableSignals.filter((s) => s.signalType === "MUTUAL");
+
+          const renderCards = (
+            signals: typeof asks,
+            selectedBg: string,
+            selectedBorder: string,
+          ) => (
+            <div className="grid grid-cols-3 gap-2">
+              {signals.map((signal) => {
+                const Icon = signalIconMap[signal.icon] ?? GraduationCap;
+                const isOn = signalStates[signal.id] ?? false;
+                return (
+                  <button
+                    key={signal.id}
+                    type="button"
+                    onClick={() => handleToggleSignal(signal.id, !isOn)}
+                    className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 p-3 text-center transition-all duration-200 select-none aspect-square ${
+                      isOn
+                        ? `${selectedBg} ${selectedBorder} shadow-md`
+                        : "border-[var(--intent-text-tertiary)] bg-white hover:border-[#B0B8C9] hover:shadow-sm"
+                    }`}
+                  >
+                    <Icon
+                      size={18}
+                      className={isOn ? "text-white" : "text-[var(--intent-navy)]"}
+                    />
+                    <span
+                      className={`text-[11px] font-semibold leading-tight ${
+                        isOn ? "text-white" : "text-[var(--intent-text-primary)]"
+                      }`}
+                    >
+                      {signal.displayName}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          );
+
+          return (
+            <>
+              <SectionHeader title="Your Intent" />
+              <div className="rounded-2xl bg-white p-4 shadow-[var(--card-shadow)]">
+                {renderCards(asks, "bg-[#1B3A5F]", "border-[#2E6399]")}
+              </div>
+
+              <SectionHeader title="Your Impact" />
+              <div className="rounded-2xl bg-white p-4 shadow-[var(--card-shadow)]">
+                {renderCards(offers, "bg-[#2D4A3A]", "border-[#3D6B52]")}
+              </div>
+
+              <SectionHeader title="Let's Connect" />
+              <div className="rounded-2xl bg-white p-4 shadow-[var(--card-shadow)]">
+                {renderCards(mutuals, "bg-[#4A3A6B]", "border-[#7C5FA8]")}
+              </div>
+            </>
+          );
+        })()}
 
         {/* Visibility */}
         <SectionHeader title="Visibility" />

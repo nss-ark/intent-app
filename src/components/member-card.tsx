@@ -51,11 +51,22 @@ export function MemberCard({ member, isSaved, onToggleSave, className }: MemberC
     >
       {/* ── Hero area ────────────────────────────────────────── */}
       <div className="relative">
-        <HeroPlaceholder
-          name={member.fullName}
-          minHeight={240}
-          className="rounded-t-2xl"
-        />
+        {member.photoUrl ? (
+          <div className="relative overflow-hidden rounded-t-2xl" style={{ minHeight: 240 }}>
+            <img
+              src={member.photoUrl}
+              alt={member.fullName}
+              className="h-full w-full object-cover"
+              style={{ minHeight: 240 }}
+            />
+          </div>
+        ) : (
+          <HeroPlaceholder
+            name={member.fullName}
+            minHeight={240}
+            className="rounded-t-2xl"
+          />
+        )}
 
         {/* Bookmark button */}
         {onToggleSave && (

@@ -26,9 +26,12 @@ async function main() {
     { code: "finance", displayName: "Finance" },
     { code: "tech_product", displayName: "Tech / Product" },
     { code: "vc_pe", displayName: "VC / PE" },
+    { code: "sales", displayName: "Sales" },
+    { code: "marketing", displayName: "Marketing" },
     { code: "climate", displayName: "Climate" },
     { code: "public_policy", displayName: "Public Policy" },
     { code: "healthcare", displayName: "Healthcare" },
+    { code: "hospitality_services", displayName: "Hospitality & Services" },
     { code: "social_impact", displayName: "Social Impact" },
   ];
   const domains: Record<string, string> = {};
@@ -42,16 +45,20 @@ async function main() {
 
   // ─── Niches ──────────────────────────────────────────────────────────
   const nicheData = [
-    { code: "ai_ml", displayName: "AI/ML" },
-    { code: "fintech", displayName: "Fintech" },
-    { code: "climate", displayName: "Climate" },
-    { code: "healthtech", displayName: "Healthtech" },
-    { code: "edtech", displayName: "Edtech" },
-    { code: "public_policy", displayName: "Public Policy" },
-    { code: "operating_roles", displayName: "Operating Roles" },
-    { code: "consumer", displayName: "Consumer" },
-    { code: "saas", displayName: "SaaS" },
-    { code: "hardware", displayName: "Hardware" },
+    { code: "product_management", displayName: "Product Management" },
+    { code: "data_analytics", displayName: "Data Science & Analytics" },
+    { code: "strategy", displayName: "Strategy" },
+    { code: "operations", displayName: "Operations" },
+    { code: "business_development", displayName: "Business Development" },
+    { code: "entrepreneurship", displayName: "Entrepreneurship" },
+    { code: "investment_management", displayName: "Investment Management" },
+    { code: "digital_marketing", displayName: "Digital Marketing" },
+    { code: "supply_chain", displayName: "Supply Chain" },
+    { code: "people_hr", displayName: "People & HR" },
+    { code: "brand_management", displayName: "Brand Management" },
+    { code: "sustainability_esg", displayName: "Sustainability & ESG" },
+    { code: "design_ux", displayName: "Design & UX" },
+    { code: "software_engineering", displayName: "Software Engineering" },
   ];
   const niches: Record<string, string> = {};
   for (let i = 0; i < nicheData.length; i++) {
@@ -158,7 +165,7 @@ async function main() {
     {
       email: "arjun.mehta@isb.edu", fullName: "Arjun Mehta", status: "CURRENT_STUDENT",
       graduationYear: 2026, program: "PGP", domain: "tech_product",
-      niches: ["consumer", "climate", "fintech"], city: "Hyderabad", country: "India", yearsExp: 6,
+      niches: ["product_management", "entrepreneurship", "business_development"], city: "Hyderabad", country: "India", yearsExp: 6,
       missionStatement: "Pre-MBA PM at Flipkart looking to break into early-stage venture. Curious about climate, fintech, and consumer ops at scale.",
       signals: ["seek_mentor", "curious_company", "career_switch_ask", "coffee_chat", "cofounder_search"],
       badges: ["current_student"],
@@ -167,7 +174,7 @@ async function main() {
     {
       email: "ananya.krishnan@isb.edu", fullName: "Ananya Krishnan", status: "ALUMNI",
       graduationYear: 2018, program: "PGP", domain: "vc_pe",
-      niches: ["climate", "hardware", "consumer"], city: "Bangalore", country: "India", yearsExp: 8,
+      niches: ["investment_management", "sustainability_esg", "strategy"], city: "Bangalore", country: "India", yearsExp: 8,
       missionStatement: "Building Series A bridges for Indian climate startups. Looking for operators who've scaled hardware in Tier 2 markets.",
       signals: ["offer_mentor", "discuss_company", "offer_referral", "coffee_chat"],
       badges: ["alumni", "domain_expert"],
@@ -179,7 +186,7 @@ async function main() {
     {
       email: "vikram.subramanian@isb.edu", fullName: "Vikram Subramanian", status: "ALUMNI",
       graduationYear: 2014, program: "PGP", domain: "tech_product",
-      niches: ["fintech", "ai_ml", "saas"], city: "Mumbai", country: "India", yearsExp: 12,
+      niches: ["entrepreneurship", "data_analytics", "software_engineering"], city: "Mumbai", country: "India", yearsExp: 12,
       missionStatement: "Scaling fraud detection for sub-prime lending. Looking for a product co-founder with scale experience.",
       signals: ["cofounder_search", "discuss_company", "offer_mentor", "coffee_chat"],
       badges: ["alumni", "founder_revenue_stage"],
@@ -191,7 +198,7 @@ async function main() {
     {
       email: "priya.reddy@isb.edu", fullName: "Priya Reddy", status: "ALUMNI",
       graduationYear: 2020, program: "PGP", domain: "finance",
-      niches: ["fintech", "consumer", "operating_roles"], city: "Hyderabad", country: "India", yearsExp: 5,
+      niches: ["investment_management", "business_development", "operations"], city: "Hyderabad", country: "India", yearsExp: 5,
       missionStatement: "Exploring the pivot from banking to tech investing. Looking for VCs who made the switch.",
       signals: ["career_switch_ask", "seek_mentor", "curious_company", "coffee_chat"],
       badges: ["alumni"],
@@ -200,7 +207,7 @@ async function main() {
     {
       email: "rohan.kapoor@isb.edu", fullName: "Rohan Kapoor", status: "ALUMNI",
       graduationYear: 2016, program: "PGP", domain: "vc_pe",
-      niches: ["saas", "ai_ml", "consumer"], city: "Mumbai", country: "India", yearsExp: 10,
+      niches: ["investment_management", "data_analytics", "strategy"], city: "Mumbai", country: "India", yearsExp: 10,
       missionStatement: "Growth investing in Indian SaaS. Open to mentoring current students exploring PE/VC.",
       signals: ["offer_mentor", "discuss_company", "offer_referral", "coffee_chat"],
       badges: ["alumni", "top_contributor"],
@@ -212,7 +219,7 @@ async function main() {
     {
       email: "rajesh.iyer@isb.edu", fullName: "Rajesh Iyer", status: "ALUMNI",
       graduationYear: 2010, program: "PGP", domain: "strategy_consulting",
-      niches: ["operating_roles", "public_policy", "consumer"], city: "Mumbai", country: "India", yearsExp: 16,
+      niches: ["operations", "strategy", "business_development"], city: "Mumbai", country: "India", yearsExp: 16,
       missionStatement: "Helping the next generation of consultants think about operating roles. Open to structured mentorship.",
       signals: ["offer_mentor", "career_switch_offer", "discuss_company", "coffee_chat"],
       badges: ["alumni", "mentor_of_the_month", "domain_expert"],
@@ -598,13 +605,13 @@ async function main() {
   await db.groupMatch.create({
     data: {
       id: groupMatch1Id, status: "ACTIVE", matchScore: 0.85,
-      matchReason: "Fintech enthusiasts group — shared niche and complementary experience levels",
+      matchReason: "Entrepreneurship group — shared functional interest and complementary experience levels",
       matchingRunId, groupSize: 3, activatedAt: new Date(Date.now() - 5 * 24 * 3600000),
     },
   });
-  // Link to fintech niche
+  // Link to entrepreneurship niche
   await db.groupMatchNiche.create({
-    data: { groupMatchId: groupMatch1Id, nicheId: niches["fintech"] },
+    data: { groupMatchId: groupMatch1Id, nicheId: niches["entrepreneurship"] },
   });
   // Add members
   for (const uid of [arjun, vikram, priya]) {
@@ -614,7 +621,7 @@ async function main() {
   }
   // Create group conversation
   await db.groupConversation.create({
-    data: { id: groupConv1Id, name: "Fintech Circle", groupMatchId: groupMatch1Id, lastMessageAt: new Date(Date.now() - 3600000) },
+    data: { id: groupConv1Id, name: "Entrepreneurship Circle", groupMatchId: groupMatch1Id, lastMessageAt: new Date(Date.now() - 3600000) },
   });
   for (const uid of [arjun, vikram, priya]) {
     await db.groupConversationMember.create({
@@ -622,13 +629,13 @@ async function main() {
     });
   }
   await db.groupMessage.create({
-    data: { id: uuid(), groupConversationId: groupConv1Id, senderUserId: vikram, body: "Welcome to the Fintech Circle! Excited to have this group together. Anyone following the new UPI regulations?", sentAt: new Date(Date.now() - 24 * 3600000) },
+    data: { id: uuid(), groupConversationId: groupConv1Id, senderUserId: vikram, body: "Welcome to the Entrepreneurship Circle! Excited to have this group together. Anyone exploring new venture ideas?", sentAt: new Date(Date.now() - 24 * 3600000) },
   });
   await db.groupMessage.create({
-    data: { id: uuid(), groupConversationId: groupConv1Id, senderUserId: priya, body: "Yes! The impact on cross-border payments is going to be massive. Would love to discuss the implications for lending.", sentAt: new Date(Date.now() - 12 * 3600000) },
+    data: { id: uuid(), groupConversationId: groupConv1Id, senderUserId: priya, body: "Yes! I've been thinking about the gap in financial products for underserved segments. Would love to brainstorm.", sentAt: new Date(Date.now() - 12 * 3600000) },
   });
   await db.groupMessage.create({
-    data: { id: uuid(), groupConversationId: groupConv1Id, senderUserId: arjun, body: "Count me in. I've been digging into embedded finance models — we should do a knowledge share session.", sentAt: new Date(Date.now() - 3600000) },
+    data: { id: uuid(), groupConversationId: groupConv1Id, senderUserId: arjun, body: "Count me in. I've been researching early-stage models — we should do a knowledge share session.", sentAt: new Date(Date.now() - 3600000) },
   });
 
   // Group match 2: Pending (Climate group)
@@ -636,12 +643,12 @@ async function main() {
   await db.groupMatch.create({
     data: {
       id: groupMatch2Id, status: "NOTIFIED", matchScore: 0.78,
-      matchReason: "Climate-tech group — shared niche in sustainability and climate innovation",
+      matchReason: "Sustainability group — shared interest in ESG and impact-driven work",
       matchingRunId, groupSize: 3,
     },
   });
   await db.groupMatchNiche.create({
-    data: { groupMatchId: groupMatch2Id, nicheId: niches["climate"] },
+    data: { groupMatchId: groupMatch2Id, nicheId: niches["sustainability_esg"] },
   });
   await db.groupMatchMember.create({
     data: { groupMatchId: groupMatch2Id, userId: arjun, status: "ACCEPTED", fitScore: 0.80, respondedAt: new Date() },
@@ -723,7 +730,7 @@ async function main() {
       capacity: 50,
     },
   });
-  await db.eventNiche.create({ data: { eventId: event1Id, nicheId: niches["fintech"] } });
+  await db.eventNiche.create({ data: { eventId: event1Id, nicheId: niches["entrepreneurship"] } });
   await db.eventRsvp.create({ data: { id: uuid(), eventId: event1Id, userId: arjun, status: "ATTENDING" } });
   await db.eventRsvp.create({ data: { id: uuid(), eventId: event1Id, userId: priya, status: "ATTENDING" } });
   await db.eventRsvp.create({ data: { id: uuid(), eventId: event1Id, userId: ananya, status: "ATTENDING" } });
@@ -738,7 +745,7 @@ async function main() {
       capacity: 12,
     },
   });
-  await db.eventNiche.create({ data: { eventId: event2Id, nicheId: niches["climate"] } });
+  await db.eventNiche.create({ data: { eventId: event2Id, nicheId: niches["sustainability_esg"] } });
   await db.eventInvite.create({ data: { id: uuid(), eventId: event2Id, inviterId: ananya, inviteeId: rohan, status: "ACCEPTED" } });
   await db.eventInvite.create({ data: { id: uuid(), eventId: event2Id, inviterId: ananya, inviteeId: arjun, status: "PENDING" } });
 

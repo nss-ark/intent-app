@@ -17,38 +17,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const domains = [
-  "Consulting",
-  "Finance & Banking",
-  "Technology",
-  "Healthcare",
-  "Consumer Goods",
-  "Energy",
-  "Real Estate",
-  "Media & Entertainment",
-  "Entrepreneurship",
-  "Non-Profit / Social Impact",
-  "Other",
-];
+interface DomainOption {
+  id: string;
+  code: string;
+  displayName: string;
+}
 
-const defaultNicheOptions = [
-  { value: "product_management", label: "Product Management" },
-  { value: "venture_capital", label: "Venture Capital" },
-  { value: "private_equity", label: "Private Equity" },
-  { value: "investment_banking", label: "Investment Banking" },
-  { value: "strategy_consulting", label: "Strategy Consulting" },
-  { value: "data_science", label: "Data Science" },
-  { value: "digital_marketing", label: "Digital Marketing" },
-  { value: "supply_chain", label: "Supply Chain" },
-  { value: "sustainability", label: "Sustainability" },
-  { value: "fintech", label: "Fintech" },
-  { value: "edtech", label: "EdTech" },
-  { value: "healthtech", label: "HealthTech" },
-  { value: "ai_ml", label: "AI / ML" },
-  { value: "brand_management", label: "Brand Management" },
-  { value: "operations", label: "Operations" },
-  { value: "people_ops", label: "People Ops / HR" },
-];
+interface NicheOption {
+  id: string;
+  code: string;
+  displayName: string;
+}
 
 interface PastExperience {
   company: string;
@@ -60,20 +39,23 @@ export default function OnboardingStep2() {
   const [currentCompany, setCurrentCompany] = useState("");
   const [currentTitle, setCurrentTitle] = useState("");
   const [pastExperiences, setPastExperiences] = useState<PastExperience[]>([]);
+  const [yearsOfExperience, setYearsOfExperience] = useState("");
   const [domain, setDomain] = useState("");
   const [customDomain, setCustomDomain] = useState("");
   const [niches, setNiches] = useState<string[]>([]);
   const [linkedinUrl, setLinkedinUrl] = useState("");
-  const [nicheOptions, setNicheOptions] = useState(defaultNicheOptions);
+  const [domainOptions, setDomainOptions] = useState<DomainOption[]>([]);
+  const [nicheOptions, setNicheOptions] = useState<{ value: string; label: string }[]>([]);
   const [customDomains, setCustomDomains] = useState<string[]>([]);
 
-  // Load saved data and fetch custom options
+  // Load saved data and fetch domains/niches from database
   useEffect(() => {
     try {
       const step2 = JSON.parse(localStorage.getItem("intent_step2") || "{}");
       if (step2.currentCompany) setCurrentCompany(step2.currentCompany);
       if (step2.currentTitle) setCurrentTitle(step2.currentTitle);
       if (step2.pastExperiences) setPastExperiences(step2.pastExperiences);
+      if (step2.yearsOfExperience) setYearsOfExperience(step2.yearsOfExperience);
       if (step2.domain) setDomain(step2.domain);
       if (step2.customDomain) setCustomDomain(step2.customDomain);
       if (step2.niches) setNiches(step2.niches);
@@ -82,22 +64,43 @@ export default function OnboardingStep2() {
       // ignore
     }
 
-    // Fetch custom interests
-    fetch("/api/custom-options?type=INTEREST")
+    // Fetch domains and niches from database
+    fetch("/api/discovery/filters")
       .then((r) => r.json())
       .then((json) => {
-        if (json.success && Array.isArray(json.data)) {
-          const customOpts = json.data
-            .filter((o: { value: string }) => !defaultNicheOptions.some((d) => d.value === o.value))
-            .map((o: { label: string; value: string }) => ({ value: o.value, label: o.label }));
-          if (customOpts.length > 0) {
-            setNicheOptions([...defaultNicheOptions, ...customOpts]);
+        const data = json?.data ?? json;
+        if (json.success) {
+          if (Array.isArray(data.domains)) {
+            setDomainOptions(data.domains);
+          }
+          if (Array.isArray(data.niches)) {
+            const dbNiches = data.niches.map((n: NicheOption) => ({
+              value: n.code,
+              label: n.displayName,
+            }));
+            setNicheOptions(dbNiches);
           }
         }
       })
       .catch(() => {});
 
-    // Fetch custom domains
+    // Fetch custom interests (user-created, supplement DB niches)
+    fetch("/api/custom-options?type=INTEREST")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setNicheOptions((prev) => {
+            const existingValues = new Set(prev.map((o) => o.value));
+            const newOpts = json.data
+              .filter((o: { value: string }) => !existingValues.has(o.value))
+              .map((o: { label: string; value: string }) => ({ value: o.value, label: o.label }));
+            return newOpts.length > 0 ? [...prev, ...newOpts] : prev;
+          });
+        }
+      })
+      .catch(() => {});
+
+    // Fetch custom domains (user-created, supplement DB domains)
     fetch("/api/custom-options?type=DOMAIN")
       .then((r) => r.json())
       .then((json) => {
@@ -140,17 +143,23 @@ export default function OnboardingStep2() {
   };
 
   const handleContinue = () => {
-    const finalDomain = domain === "Other" && customDomain.trim()
-      ? customDomain.trim()
-      : domain;
+    // domain is either a UUID (DB domain), "custom:Label", or "Other"
+    let domainId: string | null = null;
+    let domainLabel: string | null = null;
 
-    // Persist custom domain
     if (domain === "Other" && customDomain.trim()) {
+      domainLabel = customDomain.trim();
+      // Persist custom domain to backend
       fetch("/api/custom-options", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "DOMAIN", label: customDomain.trim() }),
+        body: JSON.stringify({ type: "DOMAIN", label: domainLabel }),
       }).catch(() => {});
+    } else if (domain.startsWith("custom:")) {
+      domainLabel = domain.replace("custom:", "");
+    } else if (domain && domain !== "Other") {
+      // It's a DB domain UUID
+      domainId = domain;
     }
 
     localStorage.setItem(
@@ -159,7 +168,10 @@ export default function OnboardingStep2() {
         currentCompany,
         currentTitle,
         pastExperiences,
-        domain: finalDomain,
+        yearsOfExperience,
+        domain,
+        domainId,
+        domainLabel,
         customDomain,
         niches,
         linkedinUrl,
@@ -274,6 +286,31 @@ export default function OnboardingStep2() {
             </button>
           </div>
 
+          {/* Years of experience */}
+          <div className="mt-8 space-y-2">
+            <Label htmlFor="yearsExp" className="text-sm font-medium text-[#1A1A1A]">
+              Years of experience
+            </Label>
+            <Select value={yearsOfExperience} onValueChange={(v) => setYearsOfExperience(v ?? "")}>
+              <SelectTrigger className="w-full h-11 rounded-xl bg-white text-base">
+                <SelectValue placeholder="Select years of experience" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">Fresher (0 years)</SelectItem>
+                <SelectItem value="1">1 year</SelectItem>
+                <SelectItem value="2">2 years</SelectItem>
+                <SelectItem value="3">3 years</SelectItem>
+                <SelectItem value="4">4 years</SelectItem>
+                <SelectItem value="5">5 years</SelectItem>
+                <SelectItem value="6">6–8 years</SelectItem>
+                <SelectItem value="9">9–12 years</SelectItem>
+                <SelectItem value="13">13–15 years</SelectItem>
+                <SelectItem value="16">16–20 years</SelectItem>
+                <SelectItem value="21">20+ years</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Domain */}
           <div className="mt-8 space-y-2">
             <Label className="text-sm font-medium text-[#1A1A1A]">
@@ -284,18 +321,17 @@ export default function OnboardingStep2() {
                 <SelectValue placeholder="Select your domain" />
               </SelectTrigger>
               <SelectContent>
-                {domains.map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {d}
+                {domainOptions.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.displayName}
                   </SelectItem>
                 ))}
-                {customDomains
-                  .filter((cd) => !domains.includes(cd))
-                  .map((cd) => (
-                    <SelectItem key={cd} value={cd}>
-                      {cd}
-                    </SelectItem>
-                  ))}
+                {customDomains.map((cd) => (
+                  <SelectItem key={`custom-${cd}`} value={`custom:${cd}`}>
+                    {cd}
+                  </SelectItem>
+                ))}
+                <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
             {domain === "Other" && (

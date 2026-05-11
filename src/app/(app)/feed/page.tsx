@@ -12,6 +12,7 @@ import {
   Trash2,
   Send,
   Megaphone,
+  Heart,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { apiFetch } from "@/hooks/use-api";
@@ -52,7 +53,8 @@ interface PostItem {
   status: string;
   createdAt: string;
   author: PostAuthor;
-  _count: { replies: number };
+  _count: { replies: number; likes: number };
+  likedByMe: boolean;
 }
 
 interface PostsResponse {
@@ -111,11 +113,13 @@ function PostCard({
   currentUserId,
   onReport,
   onDelete,
+  onLike,
 }: {
   post: PostItem;
   currentUserId: string | undefined;
   onReport: (postId: string) => void;
   onDelete: (postId: string) => void;
+  onLike: (postId: string) => void;
 }) {
   const isOwn = post.authorId === currentUserId;
 
@@ -167,8 +171,28 @@ function PostCard({
         {post.body}
       </p>
 
-      {/* Bottom row: reply count + reply link */}
+      {/* Bottom row: like + reply */}
       <div className="mt-3 flex items-center gap-4 border-t border-[var(--intent-text-tertiary)] pt-3">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            onLike(post.id);
+          }}
+          className={cn(
+            "flex items-center gap-1.5 text-[13px] font-medium transition-colors",
+            post.likedByMe
+              ? "text-red-500"
+              : "text-[var(--intent-text-secondary)] hover:text-red-500"
+          )}
+        >
+          <Heart
+            size={16}
+            strokeWidth={1.5}
+            className={post.likedByMe ? "fill-red-500" : ""}
+          />
+          {post._count.likes > 0 && post._count.likes}
+        </button>
         <Link
           href={`/feed/${post.id}`}
           className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--intent-text-secondary)] transition-colors hover:text-[var(--intent-navy)]"
@@ -454,6 +478,41 @@ export default function FeedPage() {
     },
   });
 
+  // Like post mutation (optimistic update)
+  const likePost = useMutation({
+    mutationFn: (postId: string) =>
+      apiFetch(`/api/posts/${postId}/like`, { method: "POST" }),
+    onMutate: async (postId) => {
+      // Optimistic update: toggle like state immediately
+      await qc.cancelQueries({ queryKey: ["posts", activeFeed] });
+      const prev = qc.getQueryData<PostsResponse>(["posts", activeFeed]);
+      if (prev) {
+        qc.setQueryData<PostsResponse>(["posts", activeFeed], {
+          ...prev,
+          items: prev.items.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  likedByMe: !p.likedByMe,
+                  _count: {
+                    ...p._count,
+                    likes: p._count.likes + (p.likedByMe ? -1 : 1),
+                  },
+                }
+              : p
+          ),
+        });
+      }
+      return { prev };
+    },
+    onError: (_err, _postId, context) => {
+      // Revert on failure
+      if (context?.prev) {
+        qc.setQueryData(["posts", activeFeed], context.prev);
+      }
+    },
+  });
+
   // Report post mutation
   const reportPost = useMutation({
     mutationFn: ({
@@ -581,6 +640,7 @@ export default function FeedPage() {
                 currentUserId={me?.id}
                 onReport={handleReport}
                 onDelete={handleDelete}
+                onLike={(postId) => likePost.mutate(postId)}
               />
             ))}
 

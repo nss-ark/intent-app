@@ -11,7 +11,9 @@ const profileUpdateSchema = z.object({
   acceptingNewConversations: z.boolean().optional(),
   weeklyInboxLimit: z.number().int().min(0).max(50).optional(),
   fullName: z.string().min(1, "Name is required").optional(),
-  photoUrl: z.string().url("Invalid photo URL").nullable().optional(),
+  photoUrl: z.string().nullable().optional(),
+  domainId: z.string().uuid("Invalid domain ID").optional(),
+  yearsOfExperience: z.number().int().min(0).max(50).optional(),
 });
 
 export const PATCH = withAuth(async (request, _context, session) => {
@@ -28,6 +30,8 @@ export const PATCH = withAuth(async (request, _context, session) => {
       weeklyInboxLimit,
       fullName,
       photoUrl,
+      domainId,
+      yearsOfExperience,
     } = parsed.data;
 
     // Build update payloads
@@ -42,6 +46,8 @@ export const PATCH = withAuth(async (request, _context, session) => {
     if (isVisibleInDiscovery !== undefined) profileUpdate.isVisibleInDiscovery = isVisibleInDiscovery;
     if (acceptingNewConversations !== undefined) profileUpdate.acceptingNewConversations = acceptingNewConversations;
     if (weeklyInboxLimit !== undefined) profileUpdate.weeklyInboxLimit = weeklyInboxLimit;
+    if (domainId !== undefined) profileUpdate.domainId = domainId;
+    if (yearsOfExperience !== undefined) profileUpdate.yearsOfExperienceCached = yearsOfExperience;
 
     const result = await db.$transaction(async (tx) => {
       // Update User fields if any
